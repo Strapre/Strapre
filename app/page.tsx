@@ -919,12 +919,11 @@ function HomePage() {
                 placeholder="What are you looking for?"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-12 rounded-full"
+                className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300"
               />
               <Button
                 size="icon"
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
-                variant="ghost"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
               >
                 <Search className="h-4 w-4" />
               </Button>
@@ -936,20 +935,28 @@ function HomePage() {
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex gap-6">
           {/* Sidebar - Desktop Only */}
-          <aside className="hidden md:block w-64 bg-white rounded-lg shadow-sm p-4">
-            <h3 className="font-semibold text-lg mb-4">All Categories</h3>
-            <div className="space-y-2">
+          <aside className="hidden md:block w-72">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-24">
+              <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
+              <div className="space-y-1">
               {categories.slice(0, 10).map((category) => (
                 <Link
                   key={category.id}
                   href={`/category/${category.id}`}
-                  className="flex items-center justify-between py-2 px-3 hover:bg-gray-100 rounded cursor-pointer"
+                  className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
                 >
-                  <span className="text-sm truncate pr-2 flex-1">{category.name}</span>
-                  <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
+                      {category.name}
+                    </span>
+                    <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
                 </Link>
               ))}
-              {categories.length > 10 && <div className="py-2 px-3 text-sm text-blue-600 cursor-pointer">See More</div>}
+              {categories.length > 10 && (
+                  <div className="py-3 px-4 text-sm text-[#CB0207] cursor-pointer font-medium hover:bg-gray-50 rounded-xl transition-all duration-200">
+                    See More
+                  </div>
+                )}
+              </div>
             </div>
           </aside>
 
@@ -985,33 +992,32 @@ function HomePage() {
               </div>
 
             {/* Products Section */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Products</h2>
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 md:p-8">
+                <div className="flex items-center justify-between mb-4 md:mb-8">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-800">Products</h2>
                 <Button
-                  variant="outline"
-                  className="flex items-center gap-2 bg-transparent"
-                  onClick={() => setShowFilterDialog(true)}
-                >
-                  <Filter className="h-4 w-4" />
-                  Filter
-                </Button>
+                    variant="outline"
+                    className="flex items-center gap-2 border-[2] border-gray-60 text-black hover:bg-[#CB0207] hover:text-white rounded-xl px-3 py-2 font-medium transition-all duration-300 bg-transparent"
+                    onClick={() => setShowFilterDialog(true)}
+                  >
+                    <Filter className="h-2 w-4" />
+                  </Button>
               </div>
 
               {/* Loading State */}
               {loading && (
-                <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                <div className="flex justify-center items-center py-16">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#CB0207] border-t-transparent"></div>
                 </div>
               )}
 
               {/* Products Grid */}
               {!loading && (
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 pb-2">
                   {products.map((product) => (
                     <Link key={product.id} href={`/product/${product.slug}`}>
-                      <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                        <div className="bg-gray-100 h-32 md:h-48 relative">
+                      <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border-0 shadow-lg card-hover rounded-xl">
+                          <div className="bg-gradient-to-br from-gray-50 to-gray-100 h-32 md:h-48 relative">
                           {product.images.length > 0 ? (
                             <Image
                               src={product.images[0].url || "/placeholder.svg"}
@@ -1030,16 +1036,25 @@ function HomePage() {
                             </div>
                           )}
                         </div>
-                        <CardContent className="p-3 md:p-4">
-                          <h3 className="font-medium text-xs md:text-sm mb-2 line-clamp-2">{product.name}</h3>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-bold text-sm md:text-lg">{formatPrice(product.price)}</span>
-                            <span className="bg-red-600 text-white text-xs px-2 py-1 rounded">Ad</span>
-                          </div>
-                          <p className="text-gray-500 text-xs">
-                            {product.store.store_lga || "N/A"}, {product.store.store_state || "N/A"}
-                          </p>
-                        </CardContent>
+                        <CardContent className="p-2">
+                            <h3 className="font-semibold text-xs md:text-sm mb-1 md:mb-3 line-clamp-2 text-gray-800">
+                              {product.name}
+                            </h3>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="font-bold text-sm md:text-lg text-[#CB0207]">
+                                {formatPrice(product.price)}
+                              </span>
+                              {isAuthenticated && (
+                                <span className="bg-[#CB0207] text-white text-xs px-2 py-1 rounded-lg font-medium">
+                                  Ad
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-gray-500 text-xs flex items-center">
+                              <MapPin className="h-3 w-3 mr-1" />
+                              {product.store.store_lga || "N/A"}, {product.store.store_state || "N/A"}
+                            </p>
+                          </CardContent>
                       </Card>
                     </Link>
                   ))}
@@ -1047,37 +1062,66 @@ function HomePage() {
               )}
 
               {/* Pagination */}
-              <div className="flex justify-center items-center space-x-2 mt-8">
-                <Button variant="outline" size="sm">
+              <div className="flex justify-center items-center space-x-2 mt-12">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
+                >
                   Pages
                 </Button>
-                <Button variant="outline" size="sm" className="bg-red-600 text-white">
+                <Button variant="outline" size="sm" className="bg-[#CB0207] text-white border-[#CB0207] rounded-xl">
                   1
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
+                >
                   2
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
+                >
                   3
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
+                >
                   4
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
+                >
                   5
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
+                >
                   More
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
+                >
                   Next
                 </Button>
               </div>
 
+
               {/* No Products Message */}
               {!loading && products.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">No products found</p>
+                <div className="text-center py-16">
+                  <p className="text-gray-500 text-lg">No products found</p>
                 </div>
               )}
             </div>
@@ -1085,21 +1129,34 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Filter Dialog */}
+      {/* Modern Filter Dialog */}
       <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Filter Products</DialogTitle>
+        <DialogContent className="sm:max-w-lg rounded-2xl border-0 shadow-2xl">
+          <DialogHeader className="pb-6">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl font-bold text-gray-800">🔍 Filter Products</DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowFilterDialog(false)}
+                className="rounded-xl hover:bg-gray-100"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
           </DialogHeader>
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div>
-              <h3 className="font-medium mb-3">Location:</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-2 mb-4">
+                <MapPin className="h-5 w-5 text-[#CB0207]" />
+                <h3 className="font-semibold text-lg text-gray-800">Location</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <Select value={filterState} onValueChange={setFilterState}>
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl border-2 border-gray-200 focus:border-[#CB0207] h-12">
                     <SelectValue placeholder="Select State" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     {states.map((state) => (
                       <SelectItem key={state.id} value={state.id}>
                         {state.name}
@@ -1108,10 +1165,10 @@ function HomePage() {
                   </SelectContent>
                 </Select>
                 <Select value={filterLGA} onValueChange={setFilterLGA}>
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl border-2 border-gray-200 focus:border-[#CB0207] h-12">
                     <SelectValue placeholder="Select LGA" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     {lgas.map((lga) => (
                       <SelectItem key={lga.id} value={lga.id}>
                         {lga.name}
@@ -1123,30 +1180,42 @@ function HomePage() {
             </div>
 
             <div>
-              <h3 className="font-medium mb-3">Amount:</h3>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-2 mb-4">
+                <DollarSign className="h-5 w-5 text-[#CB0207]" />
+                <h3 className="font-semibold text-lg text-gray-800">Price Range</h3>
+              </div>
+              <div className="flex items-center space-x-4">
                 <Input
                   placeholder="Min Amount"
                   value={minAmount}
                   onChange={(e) => setMinAmount(e.target.value)}
                   type="number"
+                  className="rounded-xl border-2 border-gray-200 focus:border-[#CB0207] h-12"
                 />
-                <span className="text-gray-400">—</span>
+                <span className="text-gray-400 font-medium">—</span>
                 <Input
                   placeholder="Max Amount"
                   value={maxAmount}
                   onChange={(e) => setMaxAmount(e.target.value)}
                   type="number"
+                  className="rounded-xl border-2 border-gray-200 focus:border-[#CB0207] h-12"
                 />
               </div>
             </div>
 
-            <div className="flex space-x-3">
-              <Button onClick={applyFilters} className="flex-1 bg-red-600 hover:bg-red-700 text-white">
-                Apply Filter
+            <div className="flex space-x-4 pt-4">
+              <Button
+                onClick={applyFilters}
+                className="flex-1 bg-[#CB0207] hover:bg-[#A50206] text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Apply Filters
               </Button>
-              <Button onClick={clearFilters} variant="outline" className="flex-1 bg-transparent">
-                Clear Filter
+              <Button
+                onClick={clearFilters}
+                variant="outline"
+                className="flex-1 border-2 border-gray-200 hover:bg-gray-50 py-3 rounded-xl font-semibold transition-all duration-300 bg-transparent"
+              >
+                Clear All
               </Button>
             </div>
           </div>
@@ -1154,74 +1223,74 @@ function HomePage() {
       </Dialog>
 
       {/* Footer */}
-      <footer className="bg-red-900 text-white mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <footer className="bg-gradient-to-r from-[#CB0207] to-[#A50206] text-white mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="font-semibold text-lg mb-4">Buy</h3>
-              <ul className="space-y-2 text-sm">
+              <h3 className="font-bold text-xl mb-6">Buy</h3>
+              <ul className="space-y-3 text-sm">
                 <li>
-                  <a href="#" className="hover:underline">
+                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
                     Create account
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:underline">
+                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
                     Bid
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:underline">
+                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
                     Gift cards
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-lg mb-4">Sell</h3>
-              <ul className="space-y-2 text-sm">
+              <h3 className="font-bold text-xl mb-6">Sell</h3>
+              <ul className="space-y-3 text-sm">
                 <li>
-                  <a href="#" className="hover:underline">
+                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
                     Become a seller
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:underline">
+                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
                     Auction
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:underline">
+                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
                     Store
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-lg mb-4">Logistics</h3>
-              <ul className="space-y-2 text-sm">
+              <h3 className="font-bold text-xl mb-6">Logistics</h3>
+              <ul className="space-y-3 text-sm">
                 <li>
-                  <a href="#" className="hover:underline">
+                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
                     Local
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:underline">
-                    Cross boarder
+                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
+                    Cross border
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-lg mb-4">Customer Support</h3>
-              <ul className="space-y-2 text-sm">
+              <h3 className="font-bold text-xl mb-6">Customer Support</h3>
+              <ul className="space-y-3 text-sm">
                 <li>
-                  <a href="#" className="hover:underline">
+                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
                     Contact us
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:underline">
+                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
                     Email
                   </a>
                 </li>
@@ -1229,25 +1298,25 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="border-t border-red-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <div className="border-t border-white/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
             <div className="flex space-x-4 mb-4 md:mb-0">
-              <a href="#" className="text-white hover:text-gray-300">
-                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-red-900 font-bold">f</span>
+              <a href="#" className="text-white hover:text-gray-200 transition-colors duration-200">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-all duration-200">
+                  <span className="text-white font-bold">f</span>
                 </div>
               </a>
-              <a href="#" className="text-white hover:text-gray-300">
-                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-red-900 font-bold">in</span>
+              <a href="#" className="text-white hover:text-gray-200 transition-colors duration-200">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-all duration-200">
+                  <span className="text-white font-bold">in</span>
                 </div>
               </a>
-              <a href="#" className="text-white hover:text-gray-300">
-                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                  <span className="text-red-900 font-bold">@</span>
+              <a href="#" className="text-white hover:text-gray-200 transition-colors duration-200">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-all duration-200">
+                  <span className="text-white font-bold">@</span>
                 </div>
               </a>
             </div>
-            <p className="text-sm text-gray-300">© 2025 Strapre. All rights reserved.</p>
+            <p className="text-sm text-white/80">© 2025 Strapre. All rights reserved.</p>
           </div>
         </div>
       </footer>
