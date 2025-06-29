@@ -2,13 +2,14 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Eye, EyeOff } from "lucide-react"
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
@@ -17,11 +18,53 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false)
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([])
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  const validatePassword = (password: string) => {
+    const errors: string[] = []
+
+    if (password.length < 8) {
+      errors.push("Password must be at least 8 characters long")
+    }
+
+    return errors
+  }
+
+  useEffect(() => {
+    if (password) {
+      const errors = validatePassword(password)
+      setPasswordErrors(errors)
+    } else {
+      setPasswordErrors([])
+    }
+  }, [password])
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
+
+    // Email validation
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address")
+      setLoading(false)
+      return
+    }
+
+    // Password validation
+    const passwordValidationErrors = validatePassword(password)
+    if (passwordValidationErrors.length > 0) {
+      setError(passwordValidationErrors[0])
+      setLoading(false)
+      return
+    }
 
     if (password !== passwordConfirmation) {
       setError("Passwords do not match")
@@ -62,67 +105,40 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top Banner */}
-      <div className="bg-red-800 text-white text-center py-2 px-4 text-sm">
-        Best Online store to connect vendors to vendors and vendors to customers
-      </div>
 
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm ">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
+            <div className=" items-center">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
+                    <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
+                </div>
               </div>
-              <span className="text-orange-500 font-bold text-xl">Strapre</span>
-            </div>
-            <Button className="bg-red-600 hover:bg-red-700 text-white px-6">LOGIN / REGISTER</Button>
+
+              
+            <Link href="#">
+                <Button className=" bg-[#CB0207] hover:bg-[#A50206] text-white text-[10px] md:text-[12px] px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300">
+                  LOGIN / REGISTER
+                </Button>
+              </Link>
           </div>
         </div>
       </header>
 
       <div className="flex min-h-[calc(100vh-120px)]">
         {/* Left side - Mobile illustration (hidden on mobile) */}
-        <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-100">
+        <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-50">
           <div className="relative">
-            {/* Phone mockup */}
-            <div className="w-64 h-[500px] bg-white rounded-3xl shadow-2xl p-6 relative">
-              <div className="w-full h-8 bg-gray-200 rounded-full mb-8"></div>
-
-              {/* App interface mockup */}
-              <div className="space-y-6">
-                <div className="w-20 h-20 bg-red-100 rounded-2xl mx-auto flex items-center justify-center">
-                  <div className="w-8 h-8 bg-red-500 rounded-full"></div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="flex-1 h-2 bg-gray-200 rounded"></div>
-                  </div>
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="flex-1 h-2 bg-gray-200 rounded"></div>
-                  </div>
-                </div>
-
-                <div className="w-16 h-6 bg-red-500 rounded mx-auto"></div>
-              </div>
-            </div>
-
-            {/* Character illustration */}
-            <div className="absolute -right-16 bottom-0">
-              <div className="w-24 h-32 relative">
-                {/* Simple character representation */}
-                <div className="w-8 h-8 bg-red-500 rounded-full mx-auto mb-2"></div>
-                <div className="w-12 h-16 bg-red-500 rounded-t-full mx-auto mb-2"></div>
-                <div className="w-6 h-8 bg-gray-800 rounded mx-auto"></div>
-              </div>
+            <div className="relative w-full max-w-sm mx-auto">
+              <img
+                src="/strapre-signin.png"
+                alt="Strapre Sign-in mockup"
+                className="w-full h-auto object-contain"
+              />
             </div>
           </div>
         </div>
@@ -157,34 +173,92 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <div>
+              <div className="relative">
                 <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                   Password
                 </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••"
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                  required
-                />
+                <div className="relative mt-1">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {passwordErrors.length > 0 && (
+                  <div className="mt-1">
+                    {passwordErrors.map((error, index) => (
+                      <p key={index} className="text-xs text-red-600">
+                        {error}
+                      </p>
+                    ))}
+                  </div>
+                )}
+                {password && (
+                  <div className="mt-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            passwordErrors.length === 0
+                              ? "bg-green-500 w-full"
+                              : password.length >= 6
+                                ? "bg-yellow-500 w-2/3"
+                                : "bg-red-500 w-1/3"
+                          }`}
+                        />
+                      </div>
+                      <span
+                        className={`text-xs ${
+                          passwordErrors.length === 0
+                            ? "text-green-600"
+                            : password.length >= 6
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                        }`}
+                      >
+                        {passwordErrors.length === 0 ? "Strong" : password.length >= 6 ? "Medium" : "Weak"}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div>
+              <div className="relative">
                 <Label htmlFor="passwordConfirmation" className="text-sm font-medium text-gray-700">
                   Confirm Password
                 </Label>
-                <Input
-                  id="passwordConfirmation"
-                  type="password"
-                  value={passwordConfirmation}
-                  onChange={(e) => setPasswordConfirmation(e.target.value)}
-                  placeholder="••••"
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                  required
-                />
+                <div className="relative mt-1">
+                  <Input
+                    id="passwordConfirmation"
+                    type={showPasswordConfirmation ? "text" : "password"}
+                    value={passwordConfirmation}
+                    onChange={(e) => setPasswordConfirmation(e.target.value)}
+                    placeholder="••••"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPasswordConfirmation ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {passwordConfirmation && password !== passwordConfirmation && (
+                  <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
+                )}
               </div>
 
               <Button
