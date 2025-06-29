@@ -318,7 +318,6 @@ function HomePage() {
                   </SheetContent>
                 </Sheet>
               </div>
-              
 
               {/* Logo */}
               <div className="hidden md:flex items-center">
@@ -415,7 +414,7 @@ function HomePage() {
           </div>
         </header>
 
-        <div className="w-full md:w-[90%] md:max-w-[1750px] mx-auto mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="w-full md:w-[90%] md:max-w-[1750px] mx-auto mx-auto px-2 sm:px-6 lg:px-8 py-6">
           <div className="flex gap-6">
             {/* Sidebar - Desktop Only */}
             <aside className="hidden md:block w-72">
@@ -476,16 +475,15 @@ function HomePage() {
 
 
               {/* Products Section */}
-              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 md:p-8">
                 <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-bold text-gray-800">🔥 Hot Sales</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-800">🔥 Hot Sales</h2>
                   <Button
                     variant="outline"
-                    className="flex items-center gap-2 border-2 border-[#CB0207] text-[#CB0207] hover:bg-[#CB0207] hover:text-white rounded-xl px-6 py-2 font-medium transition-all duration-300 bg-transparent"
+                    className="flex items-center gap-2 border-0 border-[#CB0207] text-[#CB0207] hover:bg-[#CB0207] hover:text-white rounded-xl px-3 py-2 font-medium transition-all duration-300 bg-transparent"
                     onClick={() => setShowFilterDialog(true)}
                   >
                     <Filter className="h-2 w-4" />
-                    Filter
                   </Button>
                 </div>
 
