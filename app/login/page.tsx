@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -17,11 +17,24 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+    const [showPassword, setShowPassword] = useState(false)
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
+  
+    // Email validation
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address")
+      setLoading(false)
+      return
+    }
 
     try {
       const response = await fetch("https://gadg.vplaza.com.ng/api/v1/auth/login", {
@@ -140,19 +153,28 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div>
+              <div className="relative">
                 <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                   Password
                 </Label>
+                <div className="relative mt-1">
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••"
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   required
                 />
+                <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
               </div>
 
               <div className="text-right">
