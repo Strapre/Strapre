@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Search, Menu, Filter, ChevronDown, ChevronRight, Heart, User, LogOut, MapPin, DollarSign } from "lucide-react"
+import { Search, Menu, Filter, ChevronDown, ChevronRight, Heart, User, X, LogOut, MapPin, DollarSign } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"

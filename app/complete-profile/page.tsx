@@ -165,70 +165,34 @@ export default function CompleteProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Banner */}
-      <div className="bg-red-800 text-white text-center py-2 px-4 text-sm">
-        Best Online store to connect vendors to vendors and vendors to customers
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 ">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
+            <div className=" items-center">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
+                    <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
+                </div>
               </div>
-              <span className="text-red-600 font-bold text-xl">LOGO</span>
-            </div>
 
-            {/* Desktop Search Bar */}
-            <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-              <div className="relative w-full">
-                <Input type="text" placeholder="iPhone 14" className="w-full pr-12 rounded-full border-gray-300" />
-                <Button
-                  size="icon"
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
-                  variant="ghost"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
+              
+            <Link href="#">
+                <Button className=" bg-[#CB0207] hover:bg-[#A50206] text-white text-[10px] md:text-[12px] px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300">
+                  LOGIN / REGISTER
                 </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="hidden md:flex">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                  />
-                </svg>
-              </Button>
-              <Button className="bg-red-600 hover:bg-red-700 text-white px-6 text-sm">LOGIN / REGISTER</Button>
-            </div>
+              </Link>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6  ">
+        <div className="flex gap-8 justify-center">
           {/* Main Content */}
           <div className="flex-1 max-w-2xl">
-            {/* Back Button */}
-            <Link href="/" className="flex items-center text-gray-600 hover:text-gray-800 mb-6">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Link>
 
             <div className="bg-white rounded-lg shadow-sm p-8">
               <div className="mb-8">
@@ -382,42 +346,22 @@ export default function CompleteProfilePage() {
           </div>
 
           {/* Right Side Illustration - Desktop Only */}
-          <div className="hidden lg:block w-96">
-            <div className="relative h-96 bg-gradient-to-br from-pink-100 to-red-100 rounded-lg p-8 overflow-hidden">
-              {/* Geometric shapes and people illustration */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative">
-                  {/* 3D Box */}
-                  <div className="w-32 h-32 bg-gray-600 transform rotate-12 relative">
-                    <div className="absolute top-0 left-0 w-full h-full bg-gray-700 transform -translate-x-2 -translate-y-2"></div>
-                    <div className="absolute top-0 right-0 w-8 h-full bg-gray-500 transform skew-y-12"></div>
-                  </div>
-
-                  {/* People figures */}
-                  <div className="absolute -top-8 -left-8">
-                    <div className="w-8 h-8 bg-red-500 rounded-full"></div>
-                    <div className="w-6 h-12 bg-red-500 rounded-t-lg mx-1"></div>
-                  </div>
-
-                  <div className="absolute -top-8 -right-8">
-                    <div className="w-8 h-8 bg-purple-900 rounded-full"></div>
-                    <div className="w-6 h-12 bg-purple-900 rounded-t-lg mx-1"></div>
-                  </div>
-
-                  {/* Location pins */}
-                  <div className="absolute bottom-0 left-4 w-4 h-6 bg-red-500 rounded-full"></div>
-                  <div className="absolute bottom-0 right-4 w-4 h-6 bg-red-500 rounded-full"></div>
-                  <div className="absolute -bottom-4 left-8 w-4 h-6 bg-red-500 rounded-full"></div>
-                  <div className="absolute -bottom-4 right-8 w-4 h-6 bg-red-500 rounded-full"></div>
-                </div>
-              </div>
+          <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-50">
+          <div className="relative">
+            <div className="relative w-full max-w-sm mx-auto">
+              <img
+                src="/strapre-profile.png"
+                alt="Strapre Sign-in mockup"
+                className="w-full h-auto object-contain"
+              />
             </div>
           </div>
+        </div>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="bg-red-900 text-white mt-12">
+      <footer className="bg-red-900 text-white mt-12 hidden lg:block w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>

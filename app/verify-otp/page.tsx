@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function VerifyOTPPage() {
-  const [otp, setOtp] = useState(["", "", "", ""])
+  const [otp, setOtp] = useState(["", "", "", "", "", ""])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [email, setEmail] = useState("")
@@ -51,7 +51,7 @@ export default function VerifyOTPPage() {
     setOtp(newOtp)
 
     // Auto-focus next input
-    if (value && index < 3) {
+    if (value && index < 5) {
       inputRefs.current[index + 1]?.focus()
     }
   }
@@ -68,7 +68,7 @@ export default function VerifyOTPPage() {
     setError("")
 
     const otpCode = otp.join("")
-    if (otpCode.length !== 4) {
+    if (otpCode.length !== 6) {
       setError("Please enter complete OTP")
       setLoading(false)
       return
@@ -116,79 +116,85 @@ export default function VerifyOTPPage() {
   const handleResendOTP = async () => {
     if (!canResend) return
 
-    setCanResend(false)
-    setResendTimer(55)
+    const token = localStorage.getItem("temp_token")
+    if (!token) {
+      setError("Session expired. Please register again.")
+      return
+    }
 
-    // Start countdown again
-    const timer = setInterval(() => {
-      setResendTimer((prev) => {
-        if (prev <= 1) {
-          setCanResend(true)
-          clearInterval(timer)
-          return 0
-        }
-        return prev - 1
+    try {
+      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/auth/resend-otp", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       })
-    }, 1000)
 
-    // Here you would call the resend OTP API if available
-    // For now, we'll just reset the timer
+      const data = await response.json()
+
+      if (response.ok) {
+        // Reset timer and disable resend button
+        setCanResend(false)
+        setResendTimer(55)
+        setError("") // Clear any previous errors
+
+        // Start countdown again
+        const timer = setInterval(() => {
+          setResendTimer((prev) => {
+            if (prev <= 1) {
+              setCanResend(true)
+              clearInterval(timer)
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
+
+        // Show success message (optional)
+        console.log("OTP resent successfully")
+      } else {
+        setError(data.message || "Failed to resend OTP. Please try again.")
+      }
+    } catch (error) {
+      setError("Network error. Please try again.")
+    }
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top Banner */}
-      <div className="bg-red-800 text-white text-center py-2 px-4 text-sm">
-        Best Online store to connect vendors to vendors and vendors to customers
-      </div>
-
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm ">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
+            <div className=" items-center">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
+                    <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
+                </div>
               </div>
-              <span className="text-orange-500 font-bold text-xl">Strapre</span>
-            </div>
-            <Button className="bg-red-600 hover:bg-red-700 text-white px-6">LOGIN / REGISTER</Button>
+
+              
+            <Link href="#">
+                <Button className=" bg-[#CB0207] hover:bg-[#A50206] text-white text-[10px] md:text-[12px] px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300">
+                  LOGIN / REGISTER
+                </Button>
+              </Link>
           </div>
         </div>
       </header>
 
       <div className="flex min-h-[calc(100vh-120px)]">
-        {/* Left side - Character illustration (hidden on mobile) */}
-        <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-100">
+        {/* Left side - Mobile illustration (hidden on mobile) */}
+        <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-50">
           <div className="relative">
-            {/* Character with question mark */}
-            <div className="w-64 h-64 relative">
-              {/* Question mark */}
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2">
-                <div className="text-6xl text-red-600 font-bold">?</div>
-              </div>
-
-              {/* Character */}
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
-                <div className="w-32 h-40 relative">
-                  {/* Head */}
-                  <div className="w-16 h-16 bg-purple-900 rounded-full mx-auto mb-2 relative">
-                    <div className="w-12 h-12 bg-purple-700 rounded-full absolute top-1 left-2"></div>
-                  </div>
-                  {/* Body */}
-                  <div className="w-20 h-24 bg-purple-900 rounded-t-3xl mx-auto"></div>
-                </div>
-              </div>
-
-              {/* Speech bubble with dots */}
-              <div className="absolute top-16 right-8 bg-white rounded-2xl p-4 shadow-lg">
-                <div className="flex space-x-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                </div>
-              </div>
+            <div className="relative w-full max-w-sm mx-auto">
+              <img
+                src="/strapre-otp.png"
+                alt="Strapre Sign-in mockup"
+                className="w-full h-auto object-contain"
+              />
             </div>
           </div>
         </div>
@@ -226,7 +232,7 @@ export default function VerifyOTPPage() {
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="w-16 h-16 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-10 h-10 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
                 ))}
               </div>

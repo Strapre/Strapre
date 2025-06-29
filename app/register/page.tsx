@@ -46,62 +46,71 @@ export default function RegisterPage() {
     }
   }, [password])
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
+const handleRegister = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-    // Email validation
-    if (!validateEmail(email)) {
-      setError("Please enter a valid email address")
-      setLoading(false)
-      return
-    }
-
-    // Password validation
-    const passwordValidationErrors = validatePassword(password)
-    if (passwordValidationErrors.length > 0) {
-      setError(passwordValidationErrors[0])
-      setLoading(false)
-      return
-    }
-
-    if (password !== passwordConfirmation) {
-      setError("Passwords do not match")
-      setLoading(false)
-      return
-    }
-
-    try {
-      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          password_confirmation: passwordConfirmation,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        // Store token and email for OTP verification
-        localStorage.setItem("temp_token", data.token)
-        localStorage.setItem("temp_email", email)
-        // Redirect to OTP page
-        router.push("/verify-otp")
-      } else {
-        setError(data.message || "Registration failed")
-      }
-    } catch (error) {
-      setError("Network error. Please try again.")
-    } finally {
-      setLoading(false)
-    }
+  // Email validation
+  if (!validateEmail(email)) {
+    setError("Please enter a valid email address");
+    setLoading(false);
+    return;
   }
+
+  // Password validation
+  const passwordValidationErrors = validatePassword(password);
+  if (passwordValidationErrors.length > 0) {
+    setError(passwordValidationErrors[0]);
+    setLoading(false);
+    return;
+  }
+
+  if (password !== passwordConfirmation) {
+    setError("Passwords do not match");
+    setLoading(false);
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("email", email);
+  formData.append("password", password);
+  formData.append("password_confirmation", passwordConfirmation);
+
+  console.log("📤 Payload to backend (FormData):");
+  for (let pair of formData.entries()) {
+    console.log(`${pair[0]}: ${pair[1]}`);
+  }
+
+  try {
+    const response = await fetch("https://gadg.vplaza.com.ng/api/v1/auth/register", {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        Accept: "application/json", // Expecting JSON from backend
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    console.log("🚀 Response status:", response.status);
+    console.log("📦 Response body:", data);
+
+    if (response.ok) {
+      localStorage.setItem("temp_token", data.token);
+      localStorage.setItem("temp_email", email);
+      router.push("/verify-otp");
+    } else {
+      setError(data.message || "Registration failed");
+    }
+  } catch (error) {
+    console.error("❌ Network or server error:", error);
+    setError("Network error. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gray-50">
