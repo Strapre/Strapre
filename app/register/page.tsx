@@ -1,0 +1,210 @@
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+
+export default function RegisterPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [passwordConfirmation, setPasswordConfirmation] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const router = useRouter()
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError("")
+
+    if (password !== passwordConfirmation) {
+      setError("Passwords do not match")
+      setLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          password_confirmation: passwordConfirmation,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Store token and email for OTP verification
+        localStorage.setItem("temp_token", data.token)
+        localStorage.setItem("temp_email", email)
+        // Redirect to OTP page
+        router.push("/verify-otp")
+      } else {
+        setError(data.message || "Registration failed")
+      }
+    } catch (error) {
+      setError("Network error. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Top Banner */}
+      <div className="bg-red-800 text-white text-center py-2 px-4 text-sm">
+        Best Online store to connect vendors to vendors and vendors to customers
+      </div>
+
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">S</span>
+              </div>
+              <span className="text-orange-500 font-bold text-xl">Strapre</span>
+            </div>
+            <Button className="bg-red-600 hover:bg-red-700 text-white px-6">LOGIN / REGISTER</Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex min-h-[calc(100vh-120px)]">
+        {/* Left side - Mobile illustration (hidden on mobile) */}
+        <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-100">
+          <div className="relative">
+            {/* Phone mockup */}
+            <div className="w-64 h-[500px] bg-white rounded-3xl shadow-2xl p-6 relative">
+              <div className="w-full h-8 bg-gray-200 rounded-full mb-8"></div>
+
+              {/* App interface mockup */}
+              <div className="space-y-6">
+                <div className="w-20 h-20 bg-red-100 rounded-2xl mx-auto flex items-center justify-center">
+                  <div className="w-8 h-8 bg-red-500 rounded-full"></div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <div className="flex-1 h-2 bg-gray-200 rounded"></div>
+                  </div>
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <div className="flex-1 h-2 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+
+                <div className="w-16 h-6 bg-red-500 rounded mx-auto"></div>
+              </div>
+            </div>
+
+            {/* Character illustration */}
+            <div className="absolute -right-16 bottom-0">
+              <div className="w-24 h-32 relative">
+                {/* Simple character representation */}
+                <div className="w-8 h-8 bg-red-500 rounded-full mx-auto mb-2"></div>
+                <div className="w-12 h-16 bg-red-500 rounded-t-full mx-auto mb-2"></div>
+                <div className="w-6 h-8 bg-gray-800 rounded mx-auto"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right side - Register form */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+          <div className="w-full max-w-md space-y-8">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-red-600 mb-2">Register</h1>
+              <p className="text-gray-600">Create an account with us today</p>
+            </div>
+
+            {error && (
+              <Alert className="border-red-200 bg-red-50">
+                <AlertDescription className="text-red-600">{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <form onSubmit={handleRegister} className="space-y-6">
+              <div>
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                  Email Address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="example@gmail.com"
+                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••"
+                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="passwordConfirmation" className="text-sm font-medium text-gray-700">
+                  Confirm Password
+                </Label>
+                <Input
+                  id="passwordConfirmation"
+                  type="password"
+                  value={passwordConfirmation}
+                  onChange={(e) => setPasswordConfirmation(e.target.value)}
+                  placeholder="••••"
+                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium"
+              >
+                {loading ? "REGISTERING..." : "REGISTER"}
+              </Button>
+            </form>
+
+            <div className="text-center">
+              <span className="text-gray-500">Already have an account? </span>
+              <Link href="/login" className="text-red-600 hover:text-red-700 font-medium">
+                Login
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
