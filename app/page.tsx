@@ -318,6 +318,7 @@ function HomePage() {
                   </SheetContent>
                 </Sheet>
               </div>
+              
 
               {/* Logo */}
               <div className="hidden md:flex items-center">
