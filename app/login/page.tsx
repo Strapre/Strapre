@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ArrowLeft } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -62,10 +63,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm ">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="hidden md:flex items-center">
+            <div className=" items-center">
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
                     <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
@@ -73,63 +74,45 @@ export default function LoginPage() {
                   <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
                 </div>
               </div>
+
+              
             <Link href="#">
-                <Button className="bg-[#CB0207] hover:bg-[#A50206] text-white text-[10px] md:text-[12px] px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300">
+                <Button className=" bg-[#CB0207] hover:bg-[#A50206] text-white text-[10px] md:text-[12px] px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300">
                   LOGIN / REGISTER
                 </Button>
               </Link>
           </div>
         </div>
       </header>
+      {/* Back Button */}
+        
 
       <div className="flex min-h-[calc(100vh-120px)]">
         {/* Left side - Mobile illustration (hidden on mobile) */}
-        <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-100">
+        <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-50">
           <div className="relative">
-            {/* Phone mockup */}
-            <div className="w-64 h-[500px] bg-white rounded-3xl shadow-2xl p-6 relative">
-              <div className="w-full h-8 bg-gray-200 rounded-full mb-8"></div>
-
-              {/* App interface mockup */}
-              <div className="space-y-6">
-                <div className="w-20 h-20 bg-red-100 rounded-2xl mx-auto flex items-center justify-center">
-                  <div className="w-8 h-8 bg-red-500 rounded-full"></div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="flex-1 h-2 bg-gray-200 rounded"></div>
-                  </div>
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="flex-1 h-2 bg-gray-200 rounded"></div>
-                  </div>
-                </div>
-
-                <div className="w-16 h-6 bg-red-500 rounded mx-auto"></div>
-              </div>
-            </div>
-
-            {/* Character illustration */}
-            <div className="absolute -right-16 bottom-0">
-              <div className="w-24 h-32 relative">
-                {/* Simple character representation */}
-                <div className="w-8 h-8 bg-red-500 rounded-full mx-auto mb-2"></div>
-                <div className="w-12 h-16 bg-red-500 rounded-t-full mx-auto mb-2"></div>
-                <div className="w-6 h-8 bg-gray-800 rounded mx-auto"></div>
-              </div>
+            <div className="relative w-full max-w-sm mx-auto">
+              <img
+                src="/strapre-signin.png"
+                alt="Strapre Sign-in mockup"
+                className="w-full h-auto object-contain"
+              />
             </div>
           </div>
         </div>
 
         {/* Right side - Login form */}
         <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-          <div className="w-full max-w-md space-y-8">
+          <div className="w-full max-w-md space-y-8 ">
+            {/* <div className="w-full flex justify-center">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-white flex items-center justify-center">
+                  <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
+              </div>
+            </div> */}
+
             <div className="text-center">
               <h1 className="text-3xl font-bold text-red-600 mb-2">Welcome Back</h1>
               <p className="text-gray-600">LOGIN TO CONTINUE</p>
@@ -198,7 +181,7 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-red-900 text-white">
+      <footer className="bg-red-900 text-white hidden md:flex">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
