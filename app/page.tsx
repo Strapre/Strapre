@@ -966,7 +966,7 @@ function HomePage() {
                   <h1 className="text-white text-xl md:text-4xl font-bold mb-2">New iPhone 14 Pro Max</h1>
                   <p className="text-white/90 text-[5px] md:text-base mb-4 max-w-[257px] md:max-w-2xl">
                     Apple's top-tier phone with a 6.7" OLED display, A16 Bionic chip, and Dynamic Island. It features a
-                    48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless steel.
+                    48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless stel.
                   </p>
                   <div className="inline-block bg-white text-[8px] md:text-[12px] text-black font-bold hover:bg-gray-100 px-2 md:px-4 py-1 md:py-2 rounded cursor-pointer">
                     VIEW INFO
