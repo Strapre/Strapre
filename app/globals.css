@@ -24,6 +24,9 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+    --primary-red: #cb0207;
+    --primary-red-hover: #a50206;
+    --primary-red-light: #fef2f2;
   }
 
   .dark {
@@ -58,82 +61,199 @@
   }
 }
 
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* PWA specific styles */
-@media (display-mode: standalone) {
-  body {
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-tap-highlight-color: transparent;
+@layer components {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
-}
 
-/* iOS Safari specific fixes */
-@supports (-webkit-touch-callout: none) {
-  .min-h-screen {
-    min-height: -webkit-fill-available;
+  /* Modern UI Enhancements */
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.9);
   }
-}
 
-/* Prevent horizontal scrolling on mobile */
-html,
-body {
-  overflow-x: hidden;
-  max-width: 100vw;
-}
+  .card-hover {
+    transition: all 0.3s ease;
+  }
 
-* {
-  box-sizing: border-box;
-}
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
 
-/* Ensure all containers don't exceed viewport width */
-.container,
-.max-w-7xl,
-.max-w-\[1500px\] {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
+  .gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
 
-/* Fix any potential grid or flex overflow */
-.grid {
-  overflow-x: hidden;
-}
+  .primary-red {
+    background-color: #cb0207;
+  }
 
-.flex {
-  flex-wrap: wrap;
-}
+  .primary-red:hover {
+    background-color: #a50206;
+  }
 
-/* Better text truncation for category names */
-.category-text {
-  max-width: 180px;
-}
+  .border-primary-red {
+    border-color: #cb0207;
+  }
 
-/* Ensure images load properly */
-img {
-  image-rendering: auto;
-}
+  .text-primary-red {
+    color: #cb0207;
+  }
 
-/* Fix for image loading issues */
-.next-image {
-  object-fit: cover;
-}
+  .bg-primary-red-light {
+    background-color: #fef2f2;
+  }
 
-/* Custom truncate with specific width */
-.truncate-category {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 200px;
-}
+  /* Modern button styles */
+  .btn-modern {
+    padding: 1.5rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    transition: all 0.3s ease-in-out;
+  }
 
-@media (max-width: 768px) {
+  .btn-primary {
+    background-color: #cb0207;
+    color: white;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    background-color: #a50206;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .btn-secondary {
+    background-color: white;
+    border: 2px solid #cb0207;
+    color: #cb0207;
+    transition: all 0.3s ease;
+  }
+
+  .btn-secondary:hover {
+    background-color: #cb0207;
+    color: white;
+  }
+
+  /* Modern card styles */
+  .card-modern {
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f3f4f6;
+    overflow: hidden;
+  }
+
+  /* Modern input styles */
+  .input-modern {
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .input-modern:focus {
+    border-color: #cb0207;
+    box-shadow: 0 0 0 3px rgba(203, 2, 7, 0.1);
+  }
+
+  /* Better text truncation for category names */
+  .category-text {
+    max-width: 180px;
+  }
+
+  /* Custom truncate with specific width */
   .truncate-category {
-    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+  }
+
+  @media (max-width: 768px) {
+    .truncate-category {
+      max-width: 150px;
+    }
+  }
+}
+
+@layer utilities {
+  /* PWA specific styles */
+  @media (display-mode: standalone) {
+    body {
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+  }
+
+  /* iOS Safari specific fixes */
+  @supports (-webkit-touch-callout: none) {
+    .min-h-screen {
+      min-height: -webkit-fill-available;
+    }
+  }
+
+  /* Prevent horizontal scrolling on mobile */
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Ensure all containers don't exceed viewport width */
+  .container,
+  .max-w-7xl,
+  .max-w-\[1500px\] {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Fix any potential grid or flex overflow */
+  .grid {
+    overflow-x: hidden;
+  }
+
+  .flex {
+    flex-wrap: wrap;
+  }
+
+  /* Ensure images load properly */
+  img {
+    image-rendering: auto;
+  }
+
+  /* Fix for image loading issues */
+  .next-image {
+    object-fit: cover;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #cb0207;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a50206;
   }
 }
