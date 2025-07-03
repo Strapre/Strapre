@@ -69,7 +69,7 @@ export default function CompleteProfilePage() {
   // Update the fetchStates and fetchLGAs functions to sort alphabetically
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/states")
+      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/states")
       const data: ApiResponse<State> = await response.json()
       // Sort states alphabetically by name
       const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -81,7 +81,7 @@ export default function CompleteProfilePage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://gadg.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://gadget.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
       const data: ApiResponse<LGA> = await response.json()
       // Sort LGAs alphabetically by name
       const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -141,23 +141,56 @@ export default function CompleteProfilePage() {
         formData.append("profile_pic", profilePicture)
       }
 
-      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/auth/complete-profile", {
+      // Console log all form data being sent
+      console.log("=== FORM DATA BEING SENT TO BACKEND ===")
+      console.log("Token:", token)
+      console.log("Endpoint:", "https://gadget.vplaza.com.ng/api/v1/auth/complete-profile")
+      console.log("Method:", "POST")
+      console.log("Headers:", {
+        Authorization: `Bearer ${token}`,
+      })
+
+      console.log("Form Data Contents:")
+      for (const [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}:`, {
+            name: value.name,
+            size: value.size,
+            type: value.type,
+            lastModified: value.lastModified,
+          })
+        } else {
+          console.log(`${key}:`, value)
+        }
+      }
+      console.log("=== END FORM DATA ===")
+
+      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/auth/complete-profile", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json", 
         },
         body: formData,
       })
 
       const data = await response.json()
 
+      console.log("=== BACKEND RESPONSE ===")
+      console.log("Status:", response.status)
+      console.log("Response Data:", data)
+      console.log("=== END RESPONSE ===")
+
       if (response.ok) {
+        console.log("✅ Profile completed successfully!")
         // Profile completed successfully, redirect to home
         router.push("/")
       } else {
+        console.log("❌ Profile completion failed:", data.message || "Unknown error")
         setError(data.message || "Failed to complete profile")
       }
     } catch (error) {
+      console.log("❌ Network error:", error)
       setError("Network error. Please try again.")
     } finally {
       setLoading(false)

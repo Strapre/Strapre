@@ -82,7 +82,7 @@ export default function VerifyOTPPage() {
     }
 
     try {
-      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/auth/verify-email", {
+      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/auth/verify-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,7 +123,7 @@ export default function VerifyOTPPage() {
     }
 
     try {
-      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/auth/resend-otp", {
+      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/auth/resend-otp", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -164,7 +164,7 @@ export default function VerifyOTPPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm ">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full md:w-[90%] md:max-w-[1750px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className=" items-center">
                 <div className="flex items-center space-x-2">
@@ -185,7 +185,7 @@ export default function VerifyOTPPage() {
         </div>
       </header>
 
-      <div className="flex min-h-[calc(100vh-120px)]">
+      <div className="flex min-h-[calc(100vh-120px)] w-full md:w-[90%] md:max-w-[1750px] mx-auto">
         {/* Left side - Mobile illustration (hidden on mobile) */}
         <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-50">
           <div className="relative">

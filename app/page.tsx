@@ -104,6 +104,11 @@ interface ApiResponse<T> {
     per_page: number
     to: number
     total: number
+    links: Array<{
+      url: string | null
+      label: string
+      active: boolean
+    }>
   }
 }
 
@@ -126,6 +131,24 @@ function HomePage() {
   const [filterState, setFilterState] = useState("")
   const [filterLGA, setFilterLGA] = useState("")
   const router = useRouter()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [paginationLinks, setPaginationLinks] = useState<
+    Array<{
+      url: string | null
+      label: string
+      active: boolean
+    }>
+  >([])
+
+
+  const slides = [
+    "/strapre-hero.png",
+    "/strapre-hero1.jpg",
+    "/strapre-hero2.jpg",
+    "/strapre-hero3.jpg",
+    "/strapre-hero4.jpg",
+  ];
 
   // Check authentication and fetch user data
   useEffect(() => {
@@ -155,9 +178,14 @@ function HomePage() {
     }
   }, [selectedState])
 
+  // Add this useEffect after the existing ones
+  useEffect(() => {
+    fetchProducts(1) // Reset to page 1 when filters change
+  }, [selectedState, selectedLGA])
+
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/auth/get-profile", {
+      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -165,6 +193,9 @@ function HomePage() {
       const data = await response.json()
       if (response.ok) {
         setUserProfile(data.data)
+      
+      // ✅ Store in localStorage
+      localStorage.setItem("userDetails", JSON.stringify(data.data))
 
         // Check if profile is incomplete (first_name is null)
         if (!data.data.first_name) {
@@ -177,25 +208,36 @@ function HomePage() {
     }
   }
 
+  useEffect(() => {
+  const interval = setInterval(() => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  }, 4000); // every 4 seconds
+
+  return () => clearInterval(interval); // cleanup
+}, []);
+
   const fetchUserStore = async (token: string) => {
-    try {
-      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/mystore", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setUserStore(data)
-      }
-    } catch (error) {
-      console.error("Error fetching user store:", error)
+  try {
+    const response = await fetch("https://gadget.vplaza.com.ng/api/v1/mystore", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    if (response.ok) {
+      const data = await response.json()
+      setUserStore(data)
+      
+      // Store in localStorage
+      localStorage.setItem('userStore', JSON.stringify(data))
     }
+  } catch (error) {
+    console.error("Error fetching user store:", error)
   }
+}
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/categories")
+      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/categories")
       const data: ApiResponse<Category> = await response.json()
       setCategories(data.data)
     } catch (error) {
@@ -205,7 +247,7 @@ function HomePage() {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/states")
+      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/states")
       const data: ApiResponse<State> = await response.json()
       // Sort states alphabetically by name
       const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -217,7 +259,7 @@ function HomePage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://gadg.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://gadget.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
       const data: ApiResponse<LGA> = await response.json()
       // Sort LGAs alphabetically by name
       const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -227,12 +269,30 @@ function HomePage() {
     }
   }
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (page = 1) => {
     setLoading(true)
     try {
-      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/products")
+      let url = `https://gadget.vplaza.com.ng/api/v1/products?page=${page}`
+
+      // Add state filter if selected
+      if (selectedState) {
+        url += `&state_id=${selectedState.id}`
+      }
+
+      // Add LGA filter if selected
+      if (selectedLGA) {
+        url += `&lga_id=${selectedLGA.id}`
+      }
+
+      const response = await fetch(url)
       const data: ApiResponse<Product> = await response.json()
       setProducts(data.data)
+
+      if (data.meta) {
+        setCurrentPage(data.meta.current_page)
+        setTotalPages(data.meta.last_page)
+        setPaginationLinks(data.meta.links)
+      }
     } catch (error) {
       console.error("Error fetching products:", error)
     } finally {
@@ -276,6 +336,17 @@ function HomePage() {
     setMaxAmount("")
   }
 
+  const handlePageChange = (url: string | null) => {
+    if (!url) return
+
+    // Extract page number from URL
+    const urlParams = new URLSearchParams(url.split("?")[1])
+    const page = urlParams.get("page")
+    if (page) {
+      fetchProducts(Number.parseInt(page))
+    }
+  }
+
   const getUserInitials = () => {
     if (!userProfile || !userProfile.first_name || !userProfile.last_name) return "U"
     return `${userProfile.first_name[0]}${userProfile.last_name[0]}`
@@ -297,10 +368,31 @@ function HomePage() {
                       <Menu className="h-6 w-6" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="left" className="w-80 bg-white">
-                    <div className="py-6">
+                  <SheetContent side="left" className="w-80 bg-white overflow-y-auto">
+                    <div className="py-6 h-full flex flex-col">
+                      {/* User Profile Section */}
+                      {userProfile && (
+                        <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200 flex-shrink-0">
+                          <Avatar className="h-14 w-14 ring-2 ring-[#CB0207]/20">
+                            <AvatarImage
+                              src={userProfile.profile_picture || ""}
+                              alt={`${userProfile.first_name} ${userProfile.last_name}`}
+                            />
+                            <AvatarFallback className="bg-[#CB0207] text-white font-bold">
+                              {getUserInitials()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h3 className="font-bold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</h3>
+                            <p className="text-sm text-gray-500">{userProfile.email}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Scrollable content */}
+                      <div className="flex-1 overflow-y-auto">
                       <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
-                      <div className="space-y-1">
+                      <div className="space-y-1 mb-8">
                         {categories.map((category) => (
                           <Link
                             key={category.id}
@@ -313,6 +405,31 @@ function HomePage() {
                             <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
                           </Link>
                         ))}
+                        </div>
+
+                        <div className="space-y-3 mb-8">
+                          <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
+                            🔔 Notifications
+                          </div>
+                          <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
+                            💬 Message Support
+                          </div>
+                          <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 flex items-center font-medium">
+                            <User className="h-4 w-4 mr-2" />
+                            Settings
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Fixed bottom button */}
+                      <div className="flex-shrink-0 pt-4 border-t border-gray-200">
+                        <Button
+                          className={`w-full ${
+                            userStore ? "bg-green-600 hover:bg-green-700" : "bg-[#CB0207] hover:bg-[#A50206]"
+                          } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300`}
+                        >
+                          {userStore ? "View My Store" : "Become a Merchant"}
+                        </Button>
                       </div>
                     </div>
                   </SheetContent>
@@ -445,15 +562,18 @@ function HomePage() {
             {/* Main Content */}
             <main className="flex-1">
               {/* Hero Section */}
-              <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-[url('/strapre-hero.png')] bg-cover bg-center">
+              <div
+                className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[200px] md:h-[400px] transition-all duration-500"
+                style={{ backgroundImage: `url(${slides[currentSlide]})` }}
+              >
                 {/* Black overlay */}
                 <div className="absolute inset-0 bg-black/10 z-0"></div>
 
                 {/* Content */}
-                <div className="relative z-10">
+                <div className="relative z-10 mt-4">
                   <h1 className="text-white text-xl md:text-4xl font-bold mb-2">New iPhone 14 Pro Max</h1>
                   <p className="text-white/90 text-[5px] md:text-base mb-4 max-w-[257px] md:max-w-2xl">
-                    Apple's top-tier phone with a 6.7" OLED display, A16 Bionic chip, and Dynamic Island. It features a
+                    Apple's top-tier phone with a 6.7&quot; OLED display, A16 Bionic chip, and Dynamic Island. It features a
                     48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless steel.
                   </p>
                   <div className="inline-block bg-white text-[8px] md:text-[12px] text-black font-bold hover:bg-gray-100 px-2 md:px-4 py-1 md:py-2 rounded cursor-pointer">
@@ -461,12 +581,14 @@ function HomePage() {
                   </div>
                 </div>
 
-                {/* Slide Indicators (centered horizontally) */}
+                {/* Slide Indicators */}
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
-                  {[0, 1, 2, 3, 4].map((index) => (
+                  {slides.map((_, index) => (
                     <button
                       key={index}
-                      className={`w-3 h-3 rounded-full ${currentSlide === index ? "bg-white" : "bg-white/50"}`}
+                      className={`w-3 h-3 rounded-full ${
+                        currentSlide === index ? "bg-white" : "bg-white/50"
+                      }`}
                       onClick={() => setCurrentSlide(index)}
                     />
                   ))}
@@ -757,6 +879,7 @@ function HomePage() {
       <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
+
             {/* Mobile Menu */}
             <div className="md:hidden">
               <Sheet>
@@ -765,13 +888,17 @@ function HomePage() {
                     <Menu className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-80 bg-white">
-                  <div className="py-6">
+                <SheetContent side="left" className="w-80 bg-white overflow-y-auto">
+                  <div className="py-6 h-full flex">
                     {/* User Profile Section */}
+
                     {userProfile && (
-                      <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200">
+                      <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200 flex-shrink-0">
                         <Avatar className="h-14 w-14 ring-2 ring-[#CB0207]/20">
-                          <AvatarImage src={userProfile.profile_picture || ""} />
+                          <AvatarImage
+                            src={userProfile.profile_picture || ""}
+                            alt={`${userProfile.first_name} ${userProfile.last_name}`}
+                          />
                           <AvatarFallback className="bg-[#CB0207] text-white font-bold">
                             {getUserInitials()}
                           </AvatarFallback>
@@ -867,7 +994,7 @@ function HomePage() {
                       variant="ghost"
                       className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 py-2"
                     >
-                      <Avatar className="h-10 w-10 ring-2 ring-[#CB0207]/20">
+                      <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
                         <AvatarImage src={userProfile.profile_picture || ""} />
                         <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
                           {getUserInitials()}
@@ -901,7 +1028,7 @@ function HomePage() {
             {/* Mobile User Avatar */}
             <div className="md:hidden">
               {userProfile && (
-                <Avatar className="h-10 w-10 ring-2 ring-[#CB0207]/20">
+                <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
                   <AvatarImage src={userProfile.profile_picture  || ""} />
                   <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
                     {getUserInitials()}
@@ -932,14 +1059,14 @@ function HomePage() {
         </div>
       </header>
 
-      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex gap-6">
-          {/* Sidebar - Desktop Only */}
-          <aside className="hidden md:block w-72">
+      <div className="w-full md:w-[90%] md:max-w-[1750px] mx-auto mx-auto px-2 sm:px-6 lg:px-8 py-6">
+          <div className="flex gap-6">
+            {/* Sidebar - Desktop Only */}
+            <aside className="hidden md:block w-72">
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-24">
               <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
               <div className="space-y-1">
-              {categories.slice(0, 10).map((category) => (
+              {categories.slice(0, 20).map((category) => (
                 <Link
                   key={category.id}
                   href={`/category/${category.id}`}
@@ -951,7 +1078,7 @@ function HomePage() {
                     <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
                 </Link>
               ))}
-              {categories.length > 10 && (
+              {categories.length > 20 && (
                   <div className="py-3 px-4 text-sm text-[#CB0207] cursor-pointer font-medium hover:bg-gray-50 rounded-xl transition-all duration-200">
                     See More
                   </div>
@@ -963,33 +1090,39 @@ function HomePage() {
           {/* Main Content */}
           <main className="flex-1">
             {/* Hero Section */}
-              <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-[url('/strapre-hero.png')] bg-cover bg-center">
+              <div
+                className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[200px] md:h-[400px] transition-all duration-500"
+                style={{ backgroundImage: `url(${slides[currentSlide]})` }}
+              >
                 {/* Black overlay */}
                 <div className="absolute inset-0 bg-black/10 z-0"></div>
 
                 {/* Content */}
-                <div className="relative z-10">
+                <div className="relative z-10 mt-4">
                   <h1 className="text-white text-xl md:text-4xl font-bold mb-2">New iPhone 14 Pro Max</h1>
                   <p className="text-white/90 text-[5px] md:text-base mb-4 max-w-[257px] md:max-w-2xl">
-                    Apple's top-tier phone with a 6.7" OLED display, A16 Bionic chip, and Dynamic Island. It features a
-                    48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless stel.
+                    Apple's top-tier phone with a 6.7&quot; OLED display, A16 Bionic chip, and Dynamic Island. It features a
+                    48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless steel.
                   </p>
                   <div className="inline-block bg-white text-[8px] md:text-[12px] text-black font-bold hover:bg-gray-100 px-2 md:px-4 py-1 md:py-2 rounded cursor-pointer">
                     VIEW INFO
                   </div>
                 </div>
 
-                {/* Slide Indicators (centered horizontally) */}
+                {/* Slide Indicators */}
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
-                  {[0, 1, 2, 3, 4].map((index) => (
+                  {slides.map((_, index) => (
                     <button
                       key={index}
-                      className={`w-3 h-3 rounded-full ${currentSlide === index ? "bg-white" : "bg-white/50"}`}
+                      className={`w-3 h-3 rounded-full ${
+                        currentSlide === index ? "bg-white" : "bg-white/50"
+                      }`}
                       onClick={() => setCurrentSlide(index)}
                     />
                   ))}
                 </div>
               </div>
+
 
             {/* Products Section */}
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 md:p-8">
@@ -1062,60 +1195,54 @@ function HomePage() {
               )}
 
               {/* Pagination */}
-              <div className="flex justify-center items-center space-x-2 mt-12">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                >
-                  Pages
-                </Button>
-                <Button variant="outline" size="sm" className="bg-[#CB0207] text-white border-[#CB0207] rounded-xl">
-                  1
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                >
-                  2
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                >
-                  3
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                >
-                  4
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                >
-                  5
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                >
-                  More
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                >
-                  Next
-                </Button>
-              </div>
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center space-x-2 mt-12">
+                  {paginationLinks.map((link, index) => {
+                    if (link.label.includes("Previous")) {
+                      return (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          disabled={!link.url}
+                          onClick={() => handlePageChange(link.url)}
+                          className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
+                        >
+                          Previous
+                        </Button>
+                      )
+                    } else if (link.label.includes("Next")) {
+                      return (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          disabled={!link.url}
+                          onClick={() => handlePageChange(link.url)}
+                          className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
+                        >
+                          Next
+                        </Button>
+                      )
+                    } else if (!isNaN(Number.parseInt(link.label))) {
+                      return (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(link.url)}
+                          className={`rounded-xl border-2 font-medium ${
+                            link.active ? "bg-[#CB0207] text-white border-[#CB0207]" : "border-gray-200 bg-transparent"
+                          }`}
+                        >
+                          {link.label}
+                        </Button>
+                      )
+                    }
+                    return null
+                  })}
+                </div>
+              )}
 
 
               {/* No Products Message */}

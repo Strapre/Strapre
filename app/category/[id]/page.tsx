@@ -4,14 +4,15 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, Menu, Search, Filter, ChevronRight } from "lucide-react"
+import { Heart, Menu, User, Search, Filter, ChevronRight, MapPin, ChevronDown, LogOut,ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface Category {
   id: string
@@ -45,6 +46,33 @@ interface ProductStore {
   phone_number: string
 }
 
+interface UserProfile {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  profile_picture: string | null
+}
+
+interface UserStore {
+  id: string
+  user_id: string
+  store_name: string
+  slug: string
+  store_description: string
+  store_image: string
+  phone: string
+  email: string
+  state_id: string
+  lga_id: string
+  address: string
+  subscription_expires_at: string
+  is_active: number
+  created_at: string
+  updated_at: string
+}
+
 interface Product {
   id: string
   category_id: string
@@ -75,12 +103,18 @@ interface ApiResponse<T> {
     per_page: number
     to: number
     total: number
+    links: Array<{
+      url: string | null
+      label: string
+      active: boolean
+    }>
   }
 }
 
 export default function CategoryPage() {
   const params = useParams()
   const router = useRouter()
+  const [currentSlide, setCurrentSlide] = useState(0)
   const [category, setCategory] = useState<Category | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [states, setStates] = useState<State[]>([])
@@ -88,6 +122,8 @@ export default function CategoryPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [selectedState, setSelectedState] = useState<State | null>(null)
   const [selectedLGA, setSelectedLGA] = useState<LGA | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [userStore, setUserStore] = useState<UserStore | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
@@ -99,6 +135,13 @@ export default function CategoryPage() {
   const [filterLGA, setFilterLGA] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [paginationLinks, setPaginationLinks] = useState<
+    Array<{
+      url: string | null
+      label: string
+      active: boolean
+    }>
+  >([])
 
   useEffect(() => {
     // Check authentication
@@ -114,6 +157,16 @@ export default function CategoryPage() {
       fetchCategoryProducts(params.id as string)
     }
   }, [params.id])
+
+  // Check authentication and fetch user data
+    useEffect(() => {
+      const token = localStorage.getItem("auth_token")
+      if (token) {
+        setIsAuthenticated(true)
+        fetchUserProfile(token)
+        fetchUserStore(token)
+      }
+    }, [])
 
   useEffect(() => {
     if (selectedState) {
@@ -132,9 +185,50 @@ export default function CategoryPage() {
     }
   }, [selectedState, selectedLGA, currentPage, params.id])
 
+  const fetchUserProfile = async (token: string) => {
+    try {
+      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/auth/get-profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      const data = await response.json()
+      if (response.ok) {
+        setUserProfile(data.data)
+      
+      // ✅ Store in localStorage
+      localStorage.setItem("userDetails", JSON.stringify(data.data))
+
+        // Check if profile is incomplete (first_name is null)
+        if (!data.data.first_name) {
+          router.push("/complete-profile")
+          return
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error)
+    }
+  }
+  
+  const fetchUserStore = async (token: string) => {
+    try {
+      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/mystore", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setUserStore(data)
+      }
+    } catch (error) {
+      console.error("Error fetching user store:", error)
+    }
+  }
+
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/categories")
+      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/categories")
       const data: ApiResponse<Category> = await response.json()
       setCategories(data.data)
 
@@ -148,7 +242,7 @@ export default function CategoryPage() {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://gadg.vplaza.com.ng/api/v1/states")
+      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/states")
       const data: ApiResponse<State> = await response.json()
       // Sort states alphabetically by name
       const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -160,7 +254,7 @@ export default function CategoryPage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://gadg.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://gadget.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
       const data: ApiResponse<LGA> = await response.json()
       // Sort LGAs alphabetically by name
       const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -173,7 +267,7 @@ export default function CategoryPage() {
   const fetchCategoryProducts = async (categoryId: string, page = 1) => {
     setLoading(true)
     try {
-      let url = `https://gadg.vplaza.com.ng/api/v1/products/category/${categoryId}?page=${page}`
+      let url = `https://gadget.vplaza.com.ng/api/v1/products/category/${categoryId}?page=${page}`
 
       // Add state filter if selected
       if (selectedState) {
@@ -193,6 +287,7 @@ export default function CategoryPage() {
         if (data.meta) {
           setTotalPages(data.meta.last_page)
           setCurrentPage(data.meta.current_page)
+          setPaginationLinks(data.meta.links)
         }
       } else {
         setError("Failed to load products")
@@ -209,6 +304,14 @@ export default function CategoryPage() {
     return `₦${numPrice.toLocaleString()}`
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token")
+    setIsAuthenticated(false)
+    setUserProfile(null)
+    setUserStore(null)
+    router.push("/login")
+  }
+
   const handleStateChange = (stateId: string) => {
     const state = states.find((s) => s.id === stateId)
     setSelectedState(state || null)
@@ -219,14 +322,26 @@ export default function CategoryPage() {
     setSelectedLGA(lga || null)
   }
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+  const handlePageChange = (url: string | null) => {
+    if (!url || !params.id) return
+
+    // Extract page number from URL
+    const urlParams = new URLSearchParams(url.split("?")[1])
+    const page = urlParams.get("page")
+    if (page) {
+      fetchCategoryProducts(params.id as string, Number.parseInt(page))
+    }
   }
 
   const applyFilters = () => {
     // Here you would implement additional filter logic
     console.log("Applying filters:", { filterState, filterLGA, minAmount, maxAmount })
     setShowFilterDialog(false)
+  }
+
+  const getUserInitials = () => {
+    if (!userProfile || !userProfile.first_name || !userProfile.last_name) return "U"
+    return `${userProfile.first_name[0]}${userProfile.last_name[0]}`
   }
 
   const clearFilters = () => {
@@ -250,45 +365,92 @@ export default function CategoryPage() {
     <div className="min-h-screen bg-gray-50">
 
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-100 sticky top-0 z-50">
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
+
             {/* Mobile Menu */}
             <div className="md:hidden">
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-xl">
                     <Menu className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-80">
-                  <div className="py-4">
-                    <h3 className="font-semibold text-lg mb-4">All Categories</h3>
-                    <div className="space-y-2">
-                      {categories.map((cat) => (
+                <SheetContent side="left" className="w-80 bg-white overflow-y-auto">
+                  <div className="py-6 h-full flex">
+                    {/* User Profile Section */}
+
+                    {userProfile && (
+                      <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200 flex-shrink-0">
+                        <Avatar className="h-14 w-14 ring-2 ring-[#CB0207]/20">
+                          <AvatarImage
+                            src={userProfile.profile_picture || ""}
+                            alt={`${userProfile.first_name} ${userProfile.last_name}`}
+                          />
+                          <AvatarFallback className="bg-[#CB0207] text-white font-bold">
+                            {getUserInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-bold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</h3>
+                          <p className="text-sm text-gray-500">{userProfile.email}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
+                    <div className="space-y-1 mb-8">
+                      {categories.map((category) => (
                         <Link
-                          key={cat.id}
-                          href={`/category/${cat.id}`}
-                          className="flex items-center justify-between py-2 px-3 hover:bg-gray-100 rounded cursor-pointer"
+                          key={category.id}
+                          href={`/category/${category.id}`}
+                          className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
                         >
-                          <span className="text-sm truncate pr-2 flex-1">{cat.name}</span>
-                          <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                          <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
+                            {category.name}
+                          </span>
+                          <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
                         </Link>
                       ))}
                     </div>
+
+                    <div className="space-y-3 mb-8">
+                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
+                        🔔 Notifications
+                      </div>
+                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
+                        💬 Message Support
+                      </div>
+                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 flex items-center font-medium">
+                        <User className="h-4 w-4 mr-2" />
+                        Settings
+                      </div>
+                    </div>
+
+                    <Button
+                      className={`w-full ${
+                        userStore ? "bg-green-600 hover:bg-green-700" : "bg-[#CB0207] hover:bg-[#A50206]"
+                      } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300`}
+                    >
+                      {userStore ? "View My Store" : "Become a Merchant"}
+                    </Button>
                   </div>
                 </SheetContent>
               </Sheet>
             </div>
 
             {/* Logo */}
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center space-x-2">
-                <span className="text-red-600 font-bold text-xl">LOGO</span>
-              </Link>
+            <div className="hidden md:flex items-center">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
+                    <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
+                </div>
             </div>
 
-            {/* Desktop Search Bar */}
+            {/* Search Bar - Desktop */}
             <div className="hidden md:flex flex-1 max-w-2xl mx-8">
               <div className="relative w-full">
                 <Input
@@ -296,11 +458,11 @@ export default function CategoryPage() {
                   placeholder="What are you looking for?"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pr-12 rounded-full border-gray-300"
+                  className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300 h-12"
                 />
                 <Button
                   size="icon"
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
                   variant="ghost"
                 >
                   <Search className="h-4 w-4" />
@@ -308,20 +470,59 @@ export default function CategoryPage() {
               </div>
             </div>
 
-            {/* Right side icons */}
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon">
+            {/* Desktop User Actions */}
+            <div className="hidden md:flex items-center space-x-4">
+              <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-xl">
                 <Heart className="h-5 w-5" />
               </Button>
 
-              {isAuthenticated ? (
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-red-100 text-red-600 text-sm">U</AvatarFallback>
+              {userProfile && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 h-14"
+                    >
+                      <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
+                        <AvatarImage src={userProfile.profile_picture || ""} />
+                        <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-left">
+                        <p className="text-sm font-semibold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</p>
+                        <p className="text-xs text-gray-500">{userProfile.email}</p>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-gray-400" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-0">
+                    <DropdownMenuItem className="rounded-lg">
+                      <User className="h-4 w-4 mr-2" />
+                      My Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <span className="h-4 w-4 mr-2">S</span>
+                      {userStore ? "View My Store" : "Become a Merchant"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-red-600">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Log Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+
+            {/* Mobile User Avatar */}
+            <div className="md:hidden">
+              {userProfile && (
+                <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
+                  <AvatarImage src={userProfile.profile_picture  || ""} />
+                  <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
+                    {getUserInitials()}
+                  </AvatarFallback>
                 </Avatar>
-              ) : (
-                <Link href="/login">
-                  <Button className="bg-red-600 hover:bg-red-700 text-white px-4 text-sm">LOGIN / REGISTER</Button>
-                </Link>
               )}
             </div>
           </div>
@@ -334,12 +535,11 @@ export default function CategoryPage() {
                 placeholder="What are you looking for?"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-12 rounded-full"
+                className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300"
               />
               <Button
                 size="icon"
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
-                variant="ghost"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
               >
                 <Search className="h-4 w-4" />
               </Button>
@@ -373,40 +573,43 @@ export default function CategoryPage() {
           {/* Main Content */}
           <main className="flex-1">
             {/* Hero Section */}
-            <div className="bg-gradient-to-r from-blue-900 via-purple-900 to-blue-800 rounded-lg p-8 mb-8 relative overflow-hidden">
-              <div className="relative z-10">
-                <h1 className="text-white text-3xl md:text-4xl font-bold mb-4">New iPhone 14 Pro Max</h1>
-                <p className="text-white/90 text-sm md:text-base mb-6 max-w-2xl">
-                  Apple's top-tier phone with a 6.7" OLED display, A16 Bionic chip, and Dynamic Island. It features a
-                  48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless steel and
-                  Ceramic Shield, it's IP68 rated and includes Crash Detection and SOS via satellite. Comes in Purple,
-                  Deep Purple, Gold, Silver, and Space Black.
-                </p>
-                <Button className="bg-white text-black hover:bg-gray-100">View More</Button>
-              </div>
+            <Link href="/" className="flex items-center text-gray-600 hover:text-gray-800 mb-6">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Main Menu
+            </Link>
+              <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-[url('/strapre-hero.png')] bg-cover bg-center">
+                {/* Black overlay */}
+                <div className="absolute inset-0 bg-black/10 z-0"></div>
 
-              {/* Phone Image */}
-              <div className="absolute right-4 top-4 bottom-4 w-48 md:w-64">
-                <div className="relative w-full h-full">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-600 rounded-3xl transform rotate-12 opacity-20"></div>
-                  <div className="absolute inset-2 bg-black rounded-3xl flex items-center justify-center">
-                    <div className="w-32 h-48 md:w-40 md:h-60 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl"></div>
+                {/* Content */}
+                <div className="relative z-10">
+                  <h1 className="text-white text-xl md:text-4xl font-bold mb-2">New iPhone 14 Pro Max</h1>
+                  <p className="text-white/90 text-[5px] md:text-base mb-4 max-w-[257px] md:max-w-2xl">
+                    Apple's top-tier phone with a 6.7" OLED display, A16 Bionic chip, and Dynamic Island. It features a
+                    48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless steel.
+                  </p>
+                  <div className="inline-block bg-white text-[8px] md:text-[12px] text-black font-bold hover:bg-gray-100 px-2 md:px-4 py-1 md:py-2 rounded cursor-pointer">
+                    VIEW INFO
                   </div>
+                </div>
+
+                {/* Slide Indicators (centered horizontally) */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
+                  {[0, 1, 2, 3, 4].map((index) => (
+                    <button
+                      key={index}
+                      className={`w-3 h-3 rounded-full ${currentSlide === index ? "bg-white" : "bg-white/50"}`}
+                      onClick={() => setCurrentSlide(index)}
+                    />
+                  ))}
                 </div>
               </div>
 
-              {/* Slide Indicators */}
-              <div className="absolute bottom-4 left-8 flex space-x-2">
-                {[0, 1, 2, 3, 4].map((index) => (
-                  <div key={index} className="w-3 h-3 rounded-full bg-white/50"></div>
-                ))}
-              </div>
-            </div>
-
             {/* Category Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
-                <h2 className="text-xl font-semibold">Category ({category?.name || "Loading..."})</h2>
+            <div className="flex flex-col  justify-between mb-6">
+              <div className="flex items-center space-x-4 justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-semibold">Category ({category?.name || "Loading..."})</h2>
 
                 {/* Desktop State/LGA Filters */}
                 <div className="hidden md:flex items-center space-x-3">
@@ -438,16 +641,15 @@ export default function CategoryPage() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
+                </div>
 
               <Button
-                variant="outline"
-                className="flex items-center gap-2 bg-transparent"
-                onClick={() => setShowFilterDialog(true)}
-              >
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
+                    variant="outline"
+                    className="flex items-center gap-2 border-[2] border-gray-60 text-black hover:bg-[#CB0207] hover:text-white rounded-xl px-3 py-2 font-medium transition-all duration-300 bg-transparent"
+                    onClick={() => setShowFilterDialog(true)}
+                  >
+                    <Filter className="h-2 w-4" />
+                  </Button>
             </div>
 
             {/* Loading State */}
@@ -459,12 +661,11 @@ export default function CategoryPage() {
 
             {/* Products Grid */}
             {!loading && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 pb-2">
                   {products.map((product) => (
                     <Link key={product.id} href={`/product/${product.slug}`}>
-                      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                        <div className="bg-gray-100 h-32 md:h-48 relative">
+                      <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border-0 shadow-lg card-hover rounded-xl">
+                          <div className="bg-gradient-to-br from-gray-50 to-gray-100 h-32 md:h-48 relative">
                           {product.images.length > 0 ? (
                             <Image
                               src={product.images[0].url || "/placeholder.svg"}
@@ -483,64 +684,89 @@ export default function CategoryPage() {
                             </div>
                           )}
                         </div>
-                        <CardContent className="p-3 md:p-4">
-                          <h3 className="font-medium text-xs md:text-sm mb-2 line-clamp-2">{product.name}</h3>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-bold text-sm md:text-lg">{formatPrice(product.price)}</span>
-                            <span className="bg-red-600 text-white text-xs px-2 py-1 rounded">Ad</span>
-                          </div>
-                          <p className="text-gray-500 text-xs">
-                            {product.store.store_lga}, {product.store.store_state}
-                          </p>
-                        </CardContent>
+                        <CardContent className="p-2">
+                            <h3 className="font-semibold text-xs md:text-sm mb-1 md:mb-3 line-clamp-2 text-gray-800">
+                              {product.name}
+                            </h3>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="font-bold text-sm md:text-lg text-[#CB0207]">
+                                {formatPrice(product.price)}
+                              </span>
+                              {isAuthenticated && (
+                                <span className="bg-[#CB0207] text-white text-xs px-2 py-1 rounded-lg font-medium">
+                                  Ad
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-gray-500 text-xs flex items-center">
+                              <MapPin className="h-3 w-3 mr-1" />
+                              {product.store.store_lga || "N/A"}, {product.store.store_state || "N/A"}
+                            </p>
+                          </CardContent>
                       </Card>
                     </Link>
                   ))}
                 </div>
+              )}
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center items-center space-x-2 mt-8">
-                    <Button variant="outline" size="sm">
-                      Pages
-                    </Button>
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((page) => (
-                      <Button
-                        key={page}
-                        variant="outline"
-                        size="sm"
-                        className={currentPage === page ? "bg-red-600 text-white" : ""}
-                        onClick={() => handlePageChange(page)}
-                      >
-                        {page}
-                      </Button>
-                    ))}
-                    {totalPages > 5 && (
-                      <>
-                        <Button variant="outline" size="sm">
-                          More
-                        </Button>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center space-x-2 mt-12">
+                  {paginationLinks.map((link, index) => {
+                    if (link.label.includes("Previous")) {
+                      return (
                         <Button
+                          key={index}
                           variant="outline"
                           size="sm"
-                          disabled={currentPage >= totalPages}
-                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={!link.url}
+                          onClick={() => handlePageChange(link.url)}
+                          className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
+                        >
+                          Previous
+                        </Button>
+                      )
+                    } else if (link.label.includes("Next")) {
+                      return (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          disabled={!link.url}
+                          onClick={() => handlePageChange(link.url)}
+                          className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
                         >
                           Next
                         </Button>
-                      </>
-                    )}
-                  </div>
-                )}
+                      )
+                    } else if (!isNaN(Number.parseInt(link.label))) {
+                      return (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(link.url)}
+                          className={`rounded-xl border-2 font-medium ${
+                            link.active ? "bg-[#CB0207] text-white border-[#CB0207]" : "border-gray-200 bg-transparent"
+                          }`}
+                        >
+                          {link.label}
+                        </Button>
+                      )
+                    }
+                    return null
+                  })}
+                </div>
+              )}
 
-                {/* No Products Message */}
-                {products.length === 0 && !loading && (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500">No products found in this category</p>
-                  </div>
-                )}
-              </div>
-            )}
+
+              {/* No Products Message */}
+              {!loading && products.length === 0 && (
+                <div className="text-center py-16">
+                  <p className="text-gray-500 text-lg">No products found</p>
+                </div>
+              )}
+            </div>
           </main>
         </div>
       </div>

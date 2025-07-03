@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to Strapre</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f9fafb;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #1f2937;
+      }
+
+      .container {
+        max-width: 620px;
+        margin: auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      }
+
+      .header {
+        background-color: #dc2626;
+        padding: 40px 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        color: #ffffff;
+        font-size: 30px;
+        margin: 0;
+      }
+
+      .body {
+        padding: 40px 30px;
+        text-align: left;
+      }
+
+      .body h2 {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 14px;
+        color: #111827;
+      }
+
+      .body p {
+        color: #4b5563;
+        font-size: 15px;
+        line-height: 1.8;
+        margin-bottom: 20px;
+      }
+
+      .highlight {
+        color: #dc2626;
+        font-weight: 600;
+      }
+
+      .cta-button {
+        background-color: #dc2626;
+        color: #ffffff;
+        padding: 14px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 8px;
+        display: inline-block;
+        margin: 20px 0;
+      }
+
+      .features {
+        background-color: #f3f4f6;
+        padding: 30px;
+        border-radius: 8px;
+        margin-top: 20px;
+      }
+
+      .features h3 {
+        font-size: 18px;
+        margin-bottom: 16px;
+        color: #111827;
+      }
+
+      .features ul {
+        padding-left: 20px;
+        color: #374151;
+      }
+
+      .features li {
+        margin-bottom: 10px;
+        font-size: 15px;
+      }
+
+      .footer {
+        background-color: #f9fafb;
+        padding: 30px;
+        font-size: 13px;
+        color: #6b7280;
+        text-align: center;
+      }
+
+      .footer a {
+        color: #dc2626;
+        text-decoration: underline;
+      }
+
+      @media (max-width: 600px) {
+        .body,
+        .features {
+          padding: 25px 20px;
+        }
+
+        .cta-button {
+          width: 90%;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <h1>Welcome to Strapre, {{userName}} 👋</h1>
+      </div>
+
+      <!-- Body -->
+      <div class="body">
+        <h2>We're thrilled to have you!</h2>
+        <p>
+          You’ve just joined <span class="highlight>">Strapre</span> — your go-to marketplace for the latest tech, hottest gadgets, and jaw-dropping deals from trusted sellers across Nigeria.
+        </p>
+
+        <div>
+            <a href="https://strapre.com" class="cta-button">Visit Your Dashboard</a>
+        </div>
+
+        <div class="features">
+          <h3>Here’s what you can do on Strapre:</h3>
+          <ul>
+            <li>🛒 Discover gadgets, electronics, accessories & more</li>
+            <li>💬 Chat directly with verified sellers and merchants</li>
+            <li>📍 Find products near you using our state & LGA filter</li>
+            <li>🛍 Save favorites and get instant deal alerts</li>
+            <li>⚡️ Become a seller and launch your online store easily</li>
+          </ul>
+        </div>
+
+        <p style="margin-top: 30px;">
+          Need help getting started? Our support team is here for you 24/7.
+        </p>
+
+        <p style="margin-top: 10px;">
+          📧 Email us: <a href="mailto:support@strapre.com" class="highlight">support@strapre.com</a><br />
+          🔒 Your data is safe. Always check for <strong>strapre.com</strong> in the URL.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        &copy; 2025 Strapre. All rights reserved.<br />
+        123 Tech Street, Lagos, Nigeria<br />
+        <a href="https://strapre.com">www.strapre.com</a>
+      </div>
+    </div>
+  </body>
+</html>
