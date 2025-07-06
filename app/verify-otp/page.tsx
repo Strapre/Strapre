@@ -82,7 +82,7 @@ export default function VerifyOTPPage() {
     }
 
     try {
-      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/auth/verify-email", {
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/verify-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -69,7 +69,7 @@ export default function CompleteProfilePage() {
   // Update the fetchStates and fetchLGAs functions to sort alphabetically
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/states")
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/states")
       const data: ApiResponse<State> = await response.json()
       // Sort states alphabetically by name
       const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -81,7 +81,7 @@ export default function CompleteProfilePage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://gadget.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
       const data: ApiResponse<LGA> = await response.json()
       // Sort LGAs alphabetically by name
       const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -138,13 +138,13 @@ export default function CompleteProfilePage() {
       formData.append("lga_id", selectedLGA)
 
       if (profilePicture) {
-        formData.append("profile_pic", profilePicture)
+        formData.append("profile_picture", profilePicture)
       }
 
       // Console log all form data being sent
       console.log("=== FORM DATA BEING SENT TO BACKEND ===")
       console.log("Token:", token)
-      console.log("Endpoint:", "https://gadget.vplaza.com.ng/api/v1/auth/complete-profile")
+      console.log("Endpoint:", "https://ga.vplaza.com.ng/api/v1/auth/complete-profile")
       console.log("Method:", "POST")
       console.log("Headers:", {
         Authorization: `Bearer ${token}`,
@@ -165,7 +165,7 @@ export default function CompleteProfilePage() {
       }
       console.log("=== END FORM DATA ===")
 
-      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/auth/complete-profile", {
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/complete-profile", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

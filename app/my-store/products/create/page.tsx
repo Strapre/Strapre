@@ -1,0 +1,872 @@
+"use client"
+import { useState, useEffect, useRef } from "react"
+import type React from "react"
+
+import { useRouter } from "next/navigation"
+import {
+  ArrowLeft,
+  Search,
+  Heart,
+  User,
+  Menu,
+  ChevronDown,
+  ChevronRight,
+  LogOut,
+  Camera,
+  Upload,
+  X,
+  Plus,
+  Package,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
+
+interface UserProfile {
+  id: string
+  first_name: string
+  last_name: string
+  phone: string
+  email: string
+  profile_picture?: string
+  state_id?: string
+  lga_id?: string
+}
+
+interface Category {
+  id: string
+  name: string
+  slug: string
+}
+
+interface CategoriesResponse {
+  data: Category[]
+}
+
+interface ProductResponse {
+  data: {
+    id: string
+    name: string
+    slug: string
+    description: string
+    price: string
+    wholesale_price: string
+    category_id: string
+    images: Array<{
+      id: string
+      url: string
+    }>
+    created_at: string
+    updated_at: string
+  }
+}
+
+export default function CreateProductPage() {
+  const [productName, setProductName] = useState("")
+  const [description, setDescription] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("")
+  const [price, setPrice] = useState("")
+  const [wholesalePrice, setWholesalePrice] = useState("")
+  const [productImages, setProductImages] = useState<File[]>([])
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(false)
+  const [loadingCategories, setLoadingCategories] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [staticCategories] = useState<Category[]>([
+    { id: "1", name: "Electronics", slug: "electronics" },
+    { id: "2", name: "Fashion", slug: "fashion" },
+    { id: "3", name: "Home & Garden", slug: "home-garden" },
+    { id: "4", name: "Sports", slug: "sports" },
+    { id: "5", name: "Books", slug: "books" },
+  ])
+  const [userStore] = useState(true)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    // Check if user has auth token
+    const token = localStorage.getItem("auth_token")
+    if (!token) {
+      router.push("/login")
+      return
+    }
+
+    // Load existing profile data from userDetails
+    loadProfileData()
+    // Fetch categories
+    fetchCategories()
+  }, [router])
+
+  const loadProfileData = () => {
+    try {
+      const userDetailsStr = localStorage.getItem("userDetails")
+      if (userDetailsStr) {
+        const userDetails: UserProfile = JSON.parse(userDetailsStr)
+        setUserProfile(userDetails)
+      }
+    } catch (error) {
+      console.error("Error loading user details:", error)
+    }
+  }
+
+  const fetchCategories = async () => {
+    setLoadingCategories(true)
+    const token = localStorage.getItem("auth_token")
+
+    try {
+      console.log("=== FETCHING CATEGORIES ===")
+      console.log("Token:", token)
+      console.log("Endpoint:", "https://ga.vplaza.com.ng/api/v1/categories")
+
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/categories", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      })
+
+      const responseData: CategoriesResponse = await response.json()
+
+      console.log("=== CATEGORIES RESPONSE ===")
+      console.log("Status:", response.status)
+      console.log("Response Data:", responseData)
+
+      if (response.ok) {
+        // Sort categories alphabetically by name
+        const sortedCategories = responseData.data.sort((a, b) => a.name.localeCompare(b.name))
+        setCategories(sortedCategories)
+      } else {
+        setError("Failed to load categories. Please try again.")
+        // Fallback to static categories
+        setCategories(staticCategories)
+      }
+    } catch (error) {
+      console.error("Network error:", error)
+      setError("Failed to load categories. Using default categories.")
+      // Fallback to static categories
+      setCategories(staticCategories)
+    } finally {
+      setLoadingCategories(false)
+    }
+  }
+
+  const getUserInitials = () => {
+    if (!userProfile) return "U"
+    return `${userProfile.first_name?.[0] || ""}${userProfile.last_name?.[0] || ""}`.toUpperCase()
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token")
+    localStorage.removeItem("userDetails")
+    localStorage.removeItem("userStore")
+    router.push("/login")
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    if (files.length === 0) return
+
+    // Limit to 5 images total
+    const remainingSlots = 5 - productImages.length
+    const filesToAdd = files.slice(0, remainingSlots)
+
+    if (files.length > remainingSlots) {
+      setError(`You can only upload ${remainingSlots} more image(s). Maximum 5 images allowed.`)
+    }
+
+    const newImages = [...productImages, ...filesToAdd]
+    setProductImages(newImages)
+
+    // Create preview URLs
+    const newPreviewUrls = [...imagePreviewUrls]
+    filesToAdd.forEach((file) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        newPreviewUrls.push(e.target?.result as string)
+        setImagePreviewUrls([...newPreviewUrls])
+      }
+      reader.readAsDataURL(file)
+    })
+
+    // Clear the input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const handleTakePhoto = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.setAttribute("capture", "camera")
+      fileInputRef.current.setAttribute("multiple", "")
+      fileInputRef.current.click()
+    }
+  }
+
+  const handleUploadFromGallery = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.removeAttribute("capture")
+      fileInputRef.current.setAttribute("multiple", "")
+      fileInputRef.current.click()
+    }
+  }
+
+  const removeImage = (index: number) => {
+    const newImages = productImages.filter((_, i) => i !== index)
+    const newPreviewUrls = imagePreviewUrls.filter((_, i) => i !== index)
+    setProductImages(newImages)
+    setImagePreviewUrls(newPreviewUrls)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError("")
+    setSuccess("")
+
+    const token = localStorage.getItem("auth_token")
+    if (!token) {
+      setError("Session expired. Please login again.")
+      setLoading(false)
+      return
+    }
+
+    // Validation
+    if (!productName.trim()) {
+      setError("Product name is required.")
+      setLoading(false)
+      return
+    }
+
+    if (!description.trim()) {
+      setError("Product description is required.")
+      setLoading(false)
+      return
+    }
+
+    if (!selectedCategory) {
+      setError("Please select a category.")
+      setLoading(false)
+      return
+    }
+
+    if (!price.trim()) {
+      setError("Product price is required.")
+      setLoading(false)
+      return
+    }
+
+    if (Number.parseFloat(price) <= 0) {
+      setError("Product price must be greater than 0.")
+      setLoading(false)
+      return
+    }
+
+    if (!wholesalePrice.trim()) {
+      setError("Wholesale price is required.")
+      setLoading(false)
+      return
+    }
+
+    if (Number.parseFloat(wholesalePrice) <= 0) {
+      setError("Wholesale price must be greater than 0.")
+      setLoading(false)
+      return
+    }
+
+    if (Number.parseFloat(wholesalePrice) >= Number.parseFloat(price)) {
+      setError("Wholesale price must be less than the regular price.")
+      setLoading(false)
+      return
+    }
+
+    if (productImages.length === 0) {
+      setError("At least one product image is required.")
+      setLoading(false)
+      return
+    }
+
+    try {
+      const formData = new FormData()
+      formData.append("name", productName.trim())
+      formData.append("description", description.trim())
+      formData.append("category_id", selectedCategory)
+      formData.append("price", price.trim())
+      formData.append("wholesale_price", wholesalePrice.trim())
+
+      // Append images as array
+      productImages.forEach((image, index) => {
+        formData.append(`images[${index}]`, image)
+      })
+
+      // Console log for debugging
+      console.log("=== CREATING PRODUCT ===")
+      console.log("Token:", token)
+      console.log("Endpoint:", "https://ga.vplaza.com.ng/api/v1/products")
+      console.log("Form Data Contents:")
+      for (const [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}:`, {
+            name: value.name,
+            size: value.size,
+            type: value.type,
+          })
+        } else {
+          console.log(`${key}:`, value)
+        }
+      }
+
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/products", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: formData,
+      })
+
+      const data: ProductResponse = await response.json()
+
+      console.log("=== CREATE PRODUCT RESPONSE ===")
+      console.log("Status:", response.status)
+      console.log("Response Data:", data)
+
+      if (response.ok) {
+        setSuccess("Product created successfully!")
+
+        // Redirect after success
+        setTimeout(() => {
+          router.push("/my-store/products")
+        }, 2000)
+      } else {
+        setError(data.message || "Failed to create product")
+      }
+    } catch (error) {
+      console.error("Network error:", error)
+      setError("Network error. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCancel = () => {
+    router.back()
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-100 sticky top-0 z-50">
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Mobile Menu */}
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-xl">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80 bg-white overflow-y-auto">
+                  <div className="py-6 h-full flex flex-col">
+                    {/* User Profile Section */}
+                    {userProfile && (
+                      <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200 flex-shrink-0">
+                        <Avatar className="h-14 w-14 ring-2 ring-[#CB0207]/20">
+                          <AvatarImage
+                            src={userProfile.profile_picture || ""}
+                            alt={`${userProfile.first_name} ${userProfile.last_name}`}
+                          />
+                          <AvatarFallback className="bg-[#CB0207] text-white font-bold">
+                            {getUserInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-bold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</h3>
+                          <p className="text-sm text-gray-500">{userProfile.email}</p>
+                        </div>
+                      </div>
+                    )}
+                    <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
+                    <div className="space-y-1 mb-8">
+                      {staticCategories.map((category) => (
+                        <Link
+                          key={category.id}
+                          href={`/category/${category.id}`}
+                          className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
+                        >
+                          <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
+                            {category.name}
+                          </span>
+                          <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="space-y-3 mb-8">
+                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
+                        🔔 Notifications
+                      </div>
+                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
+                        💬 Message Support
+                      </div>
+                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 flex items-center font-medium">
+                        <User className="h-4 w-4 mr-2" />
+                        Settings
+                      </div>
+                    </div>
+                    <Button
+                      className={`w-full ${
+                        userStore ? "bg-green-600 hover:bg-green-700" : "bg-[#CB0207] hover:bg-[#A50206]"
+                      } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300`}
+                    >
+                      {userStore ? "View My Store" : "Become a Merchant"}
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+            {/* Logo */}
+            <div className="hidden md:flex items-center">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
+                  <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
+              </div>
+            </div>
+            {/* Search Bar - Desktop */}
+            <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+              <div className="relative w-full">
+                <Input
+                  type="text"
+                  placeholder="What are you looking for?"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300 h-12"
+                />
+                <Button
+                  size="icon"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
+                  variant="ghost"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            {/* Desktop User Actions */}
+            <div className="hidden md:flex items-center space-x-4">
+              <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-xl">
+                <Heart className="h-5 w-5" />
+              </Button>
+              {userProfile && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 py-2"
+                    >
+                      <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
+                        <AvatarImage src={userProfile.profile_picture || ""} />
+                        <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-left">
+                        <p className="text-sm font-semibold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</p>
+                        <p className="text-xs text-gray-500">{userProfile.email}</p>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-gray-400" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-0">
+                    <DropdownMenuItem className="rounded-lg">
+                      <User className="h-4 w-4 mr-2" />
+                      My Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <span className="h-4 w-4 mr-2">S</span>
+                      {userStore ? "View My Store" : "Become a Merchant"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-red-600">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Log Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+            {/* Mobile User Avatar */}
+            <div className="md:hidden">
+              {userProfile && (
+                <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
+                  <AvatarImage src={userProfile.profile_picture || ""} />
+                  <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+            </div>
+          </div>
+          {/* Mobile Search Bar */}
+          <div className="md:hidden pb-4">
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="What are you looking for?"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300"
+              />
+              <Button
+                size="icon"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Mobile Back Button */}
+        <div className="lg:hidden mb-6">
+          <Button
+            onClick={handleCancel}
+            variant="ghost"
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 p-0"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span className="font-medium">Back</span>
+          </Button>
+        </div>
+
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="w-10 h-10 bg-[#CB0207] rounded-lg flex items-center justify-center">
+              <Package className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Create New Product</h1>
+              <p className="text-gray-600">Add a new product to your store</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Alerts */}
+        {error && (
+          <Alert className="border-red-200 bg-red-50 mb-6 rounded-lg">
+            <AlertDescription className="text-red-600 font-medium">{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {success && (
+          <Alert className="border-green-200 bg-green-50 mb-6 rounded-lg">
+            <AlertDescription className="text-green-600 font-medium">{success}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Main Form Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Product Images Section */}
+              <div className="border-b border-gray-200 pb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Product Images</h3>
+
+                {/* Image Upload Area */}
+                <div className="mb-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-4">
+                    {imagePreviewUrls.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200">
+                          <img
+                            src={url || "/placeholder.svg"}
+                            alt={`Product ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+
+                    {/* Add Image Button */}
+                    {productImages.length < 5 && (
+                      <div className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div className="text-center">
+                          <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                          <p className="text-xs text-gray-500">Add Image</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      type="button"
+                      onClick={handleTakePhoto}
+                      disabled={productImages.length >= 5}
+                      className="bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center justify-center space-x-2 disabled:opacity-50"
+                    >
+                      <Camera className="h-4 w-4" />
+                      <span>Take Photos</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleUploadFromGallery}
+                      disabled={productImages.length >= 5}
+                      variant="outline"
+                      className="border-gray-300 hover:border-[#CB0207] hover:text-[#CB0207] flex items-center justify-center space-x-2 bg-transparent disabled:opacity-50"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span>Upload Images</span>
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Upload up to 5 images. First image will be the main product image.
+                  </p>
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Product Information */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-gray-900">Product Information</h3>
+
+                <div>
+                  <Label htmlFor="productName" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Product Name *
+                  </Label>
+                  <Input
+                    id="productName"
+                    type="text"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    placeholder="Enter product name"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CB0207] focus:border-[#CB0207]"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="description" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Product Description *
+                  </Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe your product in detail. Include features, specifications, and benefits."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CB0207] focus:border-[#CB0207] min-h-[120px]"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="category" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Category *
+                  </Label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CB0207] focus:border-[#CB0207]">
+                      <SelectValue placeholder={loadingCategories ? "Loading categories..." : "Select Category"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Pricing Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="price" className="text-sm font-medium text-gray-700 mb-2 block">
+                      Regular Price (₦) *
+                    </Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CB0207] focus:border-[#CB0207]"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Price customers will see and pay</p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="wholesalePrice" className="text-sm font-medium text-gray-700 mb-2 block">
+                      Wholesale Price (₦) *
+                    </Label>
+                    <Input
+                      id="wholesalePrice"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={wholesalePrice}
+                      onChange={(e) => setWholesalePrice(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CB0207] focus:border-[#CB0207]"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Special price for other vendors on the platform</p>
+                  </div>
+                </div>
+
+                {/* Wholesale Price Info */}
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-semibold text-blue-900 flex items-center">
+                      💼 Wholesale Pricing Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-blue-800 text-sm">
+                      The wholesale price is a special vendor-to-vendor price that other merchants on the platform will
+                      see when they want to purchase your products for resale. This price should be lower than your
+                      regular price to encourage bulk purchases from other vendors.
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                <Button
+                  type="button"
+                  onClick={handleCancel}
+                  variant="outline"
+                  className="flex-1 py-3 border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-[#CB0207] hover:bg-[#A50206] text-white py-3 disabled:opacity-50"
+                >
+                  {loading ? "Creating Product..." : "Create Product"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-red-900 text-white mt-16 hidden lg:block w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="font-semibold text-lg mb-4">Buy</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="#" className="hover:underline">
+                    Create account
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:underline">
+                    Bid
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:underline">
+                    Gift cards
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg mb-4">Sell</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="#" className="hover:underline">
+                    Become a seller
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:underline">
+                    Auction
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:underline">
+                    Store
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg mb-4">Logistics</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="#" className="hover:underline">
+                    Local
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:underline">
+                    Cross boarder
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg mb-4">Customer Support</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="#" className="hover:underline">
+                    Contact us
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:underline">
+                    Email
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-red-800 mt-8 pt-8 text-center">
+            <p className="text-sm text-gray-300">© 2025 Strapre. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}

@@ -185,7 +185,7 @@ function HomePage() {
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/auth/get-profile", {
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -218,7 +218,7 @@ function HomePage() {
 
   const fetchUserStore = async (token: string) => {
   try {
-    const response = await fetch("https://gadget.vplaza.com.ng/api/v1/mystore", {
+    const response = await fetch("https://ga.vplaza.com.ng/api/v1/mystore", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -237,7 +237,7 @@ function HomePage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/categories")
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/categories")
       const data: ApiResponse<Category> = await response.json()
       setCategories(data.data)
     } catch (error) {
@@ -247,7 +247,7 @@ function HomePage() {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/states")
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/states")
       const data: ApiResponse<State> = await response.json()
       // Sort states alphabetically by name
       const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -259,7 +259,7 @@ function HomePage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://gadget.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
       const data: ApiResponse<LGA> = await response.json()
       // Sort LGAs alphabetically by name
       const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -272,7 +272,7 @@ function HomePage() {
   const fetchProducts = async (page = 1) => {
     setLoading(true)
     try {
-      let url = `https://gadget.vplaza.com.ng/api/v1/products?page=${page}`
+      let url = `https://ga.vplaza.com.ng/api/v1/products?page=${page}`
 
       // Add state filter if selected
       if (selectedState) {
@@ -1008,14 +1008,27 @@ function HomePage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-0">
-                    <DropdownMenuItem className="rounded-lg">
+                    <DropdownMenuItem
+                      className="rounded-lg"
+                      onClick={() => router.push("/edit-profile")}
+                    >
                       <User className="h-4 w-4 mr-2" />
                       My Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (userStore) {
+                          router.push('/my-store')
+                        } else {
+                          router.push('/edit-profile')
+                        }
+                      }}
+                    >
                       <span className="h-4 w-4 mr-2">S</span>
                       {userStore ? "View My Store" : "Become a Merchant"}
                     </DropdownMenuItem>
+
                     <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-red-600">
                       <LogOut className="h-4 w-4 mr-2" />
                       Log Out

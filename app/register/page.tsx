@@ -83,7 +83,7 @@ const handleRegister = async (e: React.FormEvent) => {
   }
 
   try {
-    const response = await fetch("https://gadget.vplaza.com.ng/api/v1/auth/register", {
+    const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/register", {
       method: "POST",
       mode: "cors",
       headers: {
