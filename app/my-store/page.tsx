@@ -554,23 +554,25 @@ export default function MyStorePage() {
               </Card>
 
               {/* Banner Request */}
-              <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200">
-                <CardHeader className="pb-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <ImageIcon className="h-7 w-7 text-white" />
-                  </div>
-                  <CardTitle className="text-xl font-bold text-gray-900">Banner Request</CardTitle>
-                  <CardDescription className="text-gray-600">Request promotional banners and ads</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    variant="outline"
-                    className="w-full border-2 border-purple-500 text-purple-700 hover:bg-purple-500 hover:text-white font-semibold py-3 rounded-xl transition-all bg-transparent"
-                  >
-                    Request Banner
-                  </Button>
-                </CardContent>
-              </Card>
+              <Link href="/banner-request">
+                <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200">
+                  <CardHeader className="pb-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                      <ImageIcon className="h-7 w-7 text-white" />
+                    </div>
+                    <CardTitle className="text-xl font-bold text-gray-900">Banner Request</CardTitle>
+                    <CardDescription className="text-gray-600">Request promotional banners and ads</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      variant="outline"
+                      className="w-full border-2 border-purple-500 text-purple-700 hover:bg-purple-500 hover:text-white font-semibold py-3 rounded-xl transition-all bg-transparent"
+                    >
+                      Request Banner
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
 
               {/* Settings */}
               <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200">

@@ -2,7 +2,19 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Search, Menu, Filter, ChevronDown, ChevronRight, Heart, User, X, LogOut, MapPin, DollarSign } from "lucide-react"
+import {
+  Search,
+  Menu,
+  Filter,
+  ChevronDown,
+  ChevronRight,
+  Heart,
+  User,
+  X,
+  LogOut,
+  MapPin,
+  DollarSign,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -60,6 +72,7 @@ interface Product {
   images: ProductImage[]
   store: ProductStore
   created_at: string
+  is_featured: number // Added is_featured field
 }
 
 interface UserProfile {
@@ -141,6 +154,9 @@ function HomePage() {
     }>
   >([])
 
+  // Wishlist state
+  const [wishlistItems, setWishlistItems] = useState<string[]>([])
+  const [wishlistLoading, setWishlistLoading] = useState<string[]>([])
 
   const slides = [
     "/strapre-hero.png",
@@ -148,7 +164,7 @@ function HomePage() {
     "/strapre-hero2.jpg",
     "/strapre-hero3.jpg",
     "/strapre-hero4.jpg",
-  ];
+  ]
 
   // Check authentication and fetch user data
   useEffect(() => {
@@ -157,6 +173,7 @@ function HomePage() {
       setIsAuthenticated(true)
       fetchUserProfile(token)
       fetchUserStore(token)
+      fetchWishlist(token)
     }
   }, [])
 
@@ -193,9 +210,9 @@ function HomePage() {
       const data = await response.json()
       if (response.ok) {
         setUserProfile(data.data)
-      
-      // ✅ Store in localStorage
-      localStorage.setItem("userDetails", JSON.stringify(data.data))
+
+        // ✅ Store in localStorage
+        localStorage.setItem("userDetails", JSON.stringify(data.data))
 
         // Check if profile is incomplete (first_name is null)
         if (!data.data.first_name) {
@@ -209,31 +226,107 @@ function HomePage() {
   }
 
   useEffect(() => {
-  const interval = setInterval(() => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
-  }, 4000); // every 4 seconds
-
-  return () => clearInterval(interval); // cleanup
-}, []);
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length)
+    }, 4000) // every 4 seconds
+    return () => clearInterval(interval) // cleanup
+  }, [])
 
   const fetchUserStore = async (token: string) => {
-  try {
-    const response = await fetch("https://ga.vplaza.com.ng/api/v1/mystore", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    if (response.ok) {
-      const data = await response.json()
-      setUserStore(data)
-      
-      // Store in localStorage
-      localStorage.setItem('userStore', JSON.stringify(data))
+    try {
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/mystore", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setUserStore(data)
+
+        // Store in localStorage
+        localStorage.setItem("userStore", JSON.stringify(data))
+      }
+    } catch (error) {
+      console.error("Error fetching user store:", error)
     }
-  } catch (error) {
-    console.error("Error fetching user store:", error)
   }
-}
+
+  // Wishlist functions
+  const fetchWishlist = async (token: string) => {
+    try {
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        // Extract product IDs from wishlist data
+        const productIds = data.data?.map((item: any) => item.product_id) || []
+        setWishlistItems(productIds)
+      }
+    } catch (error) {
+      console.error("Error fetching wishlist:", error)
+    }
+  }
+
+  const addToWishlist = async (productId: string) => {
+    const token = localStorage.getItem("auth_token")
+    if (!token) return
+
+    setWishlistLoading((prev) => [...prev, productId])
+
+    try {
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ product_id: productId }),
+      })
+
+      if (response.ok) {
+        setWishlistItems((prev) => [...prev, productId])
+      }
+    } catch (error) {
+      console.error("Error adding to wishlist:", error)
+    } finally {
+      setWishlistLoading((prev) => prev.filter((id) => id !== productId))
+    }
+  }
+
+  const removeFromWishlist = async (productId: string) => {
+    const token = localStorage.getItem("auth_token")
+    if (!token) return
+
+    setWishlistLoading((prev) => [...prev, productId])
+
+    try {
+      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/wishlist/${productId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        setWishlistItems((prev) => prev.filter((id) => id !== productId))
+      }
+    } catch (error) {
+      console.error("Error removing from wishlist:", error)
+    } finally {
+      setWishlistLoading((prev) => prev.filter((id) => id !== productId))
+    }
+  }
+
+  const toggleWishlist = (productId: string) => {
+    if (wishlistItems.includes(productId)) {
+      removeFromWishlist(productId)
+    } else {
+      addToWishlist(productId)
+    }
+  }
 
   const fetchCategories = async () => {
     try {
@@ -320,6 +413,7 @@ function HomePage() {
     setIsAuthenticated(false)
     setUserProfile(null)
     setUserStore(null)
+    setWishlistItems([])
     router.push("/login")
   }
 
@@ -391,20 +485,20 @@ function HomePage() {
 
                       {/* Scrollable content */}
                       <div className="flex-1 overflow-y-auto">
-                      <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
-                      <div className="space-y-1 mb-8">
-                        {categories.map((category) => (
-                          <Link
-                            key={category.id}
-                            href={`/category/${category.id}`}
-                            className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
-                          >
-                            <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
-                              {category.name}
-                            </span>
-                            <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
-                          </Link>
-                        ))}
+                        <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
+                        <div className="space-y-1 mb-8">
+                          {categories.map((category) => (
+                            <Link
+                              key={category.id}
+                              href={`/category/${category.id}`}
+                              className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
+                            >
+                              <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
+                                {category.name}
+                              </span>
+                              <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
+                            </Link>
+                          ))}
                         </div>
 
                         <div className="space-y-3 mb-8">
@@ -445,7 +539,6 @@ function HomePage() {
                   <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
                 </div>
               </div>
-
 
               {/* Search Bar - Desktop */}
               <div className="hidden md:flex flex-1 max-w-2xl mx-8">
@@ -538,23 +631,23 @@ function HomePage() {
               <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-24">
                 <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
                 <div className="space-y-1">
-                {categories.slice(0, 20).map((category) => (
-                  <Link
-                    key={category.id}
-                    href={`/category/${category.id}`}
-                    className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
-                  >
-                    <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
+                  {categories.slice(0, 20).map((category) => (
+                    <Link
+                      key={category.id}
+                      href={`/category/${category.id}`}
+                      className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
+                    >
+                      <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
                         {category.name}
                       </span>
                       <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
-                  </Link>
-                ))}
-                {categories.length > 20 && (
-                  <div className="py-3 px-4 text-sm text-[#CB0207] cursor-pointer font-medium hover:bg-gray-50 rounded-xl transition-all duration-200">
+                    </Link>
+                  ))}
+                  {categories.length > 20 && (
+                    <div className="py-3 px-4 text-sm text-[#CB0207] cursor-pointer font-medium hover:bg-gray-50 rounded-xl transition-all duration-200">
                       See More
                     </div>
-                )}
+                  )}
                 </div>
               </div>
             </aside>
@@ -573,8 +666,9 @@ function HomePage() {
                 <div className="relative z-10 mt-4">
                   <h1 className="text-white text-xl md:text-4xl font-bold mb-2">New iPhone 14 Pro Max</h1>
                   <p className="text-white/90 text-[5px] md:text-base mb-4 max-w-[257px] md:max-w-2xl">
-                    Apple's top-tier phone with a 6.7&quot; OLED display, A16 Bionic chip, and Dynamic Island. It features a
-                    48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless steel.
+                    Apple's top-tier phone with a 6.7&quot; OLED display, A16 Bionic chip, and Dynamic Island. It
+                    features a 48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless
+                    steel.
                   </p>
                   <div className="inline-block bg-white text-[8px] md:text-[12px] text-black font-bold hover:bg-gray-100 px-2 md:px-4 py-1 md:py-2 rounded cursor-pointer">
                     VIEW INFO
@@ -586,15 +680,12 @@ function HomePage() {
                   {slides.map((_, index) => (
                     <button
                       key={index}
-                      className={`w-3 h-3 rounded-full ${
-                        currentSlide === index ? "bg-white" : "bg-white/50"
-                      }`}
+                      className={`w-3 h-3 rounded-full ${currentSlide === index ? "bg-white" : "bg-white/50"}`}
                       onClick={() => setCurrentSlide(index)}
                     />
                   ))}
                 </div>
               </div>
-
 
               {/* Products Section */}
               <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 md:p-8">
@@ -649,7 +740,8 @@ function HomePage() {
                               <span className="font-bold text-sm md:text-lg text-[#CB0207]">
                                 {formatPrice(product.price)}
                               </span>
-                              {isAuthenticated && (
+                              {/* Only show Ad badge when is_featured is 1 */}
+                              {product.is_featured === 1 && (
                                 <span className="bg-[#CB0207] text-white text-xs px-2 py-1 rounded-lg font-medium">
                                   Ad
                                 </span>
@@ -874,12 +966,10 @@ function HomePage() {
   // SIGNED IN - Show logged in homepage with user profile
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-
             {/* Mobile Menu */}
             <div className="md:hidden">
               <Sheet>
@@ -891,7 +981,6 @@ function HomePage() {
                 <SheetContent side="left" className="w-80 bg-white overflow-y-auto">
                   <div className="py-6 h-full flex">
                     {/* User Profile Section */}
-
                     {userProfile && (
                       <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200 flex-shrink-0">
                         <Avatar className="h-14 w-14 ring-2 ring-[#CB0207]/20">
@@ -953,12 +1042,12 @@ function HomePage() {
 
             {/* Logo */}
             <div className="hidden md:flex items-center">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
-                    <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
-                  </div>
-                  <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
+                  <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
                 </div>
+                <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
+              </div>
             </div>
 
             {/* Search Bar - Desktop */}
@@ -983,8 +1072,18 @@ function HomePage() {
 
             {/* Desktop User Actions */}
             <div className="hidden md:flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-xl">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-gray-100 rounded-xl relative"
+                onClick={() => router.push("/wishlist")}
+              >
                 <Heart className="h-5 w-5" />
+                {wishlistItems.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#CB0207] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {wishlistItems.length}
+                  </span>
+                )}
               </Button>
 
               {userProfile && (
@@ -1008,27 +1107,22 @@ function HomePage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-0">
-                    <DropdownMenuItem
-                      className="rounded-lg"
-                      onClick={() => router.push("/edit-profile")}
-                    >
+                    <DropdownMenuItem className="rounded-lg" onClick={() => router.push("/edit-profile")}>
                       <User className="h-4 w-4 mr-2" />
                       My Profile
                     </DropdownMenuItem>
-
                     <DropdownMenuItem
                       onClick={() => {
                         if (userStore) {
-                          router.push('/my-store')
+                          router.push("/my-store")
                         } else {
-                          router.push('/edit-profile')
+                          router.push("/edit-profile")
                         }
                       }}
                     >
                       <span className="h-4 w-4 mr-2">S</span>
                       {userStore ? "View My Store" : "Become a Merchant"}
                     </DropdownMenuItem>
-
                     <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-red-600">
                       <LogOut className="h-4 w-4 mr-2" />
                       Log Out
@@ -1042,7 +1136,7 @@ function HomePage() {
             <div className="md:hidden">
               {userProfile && (
                 <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
-                  <AvatarImage src={userProfile.profile_picture  || ""} />
+                  <AvatarImage src={userProfile.profile_picture || ""} />
                   <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
                     {getUserInitials()}
                   </AvatarFallback>
@@ -1073,25 +1167,25 @@ function HomePage() {
       </header>
 
       <div className="w-full md:w-[90%] md:max-w-[1750px] mx-auto mx-auto px-2 sm:px-6 lg:px-8 py-6">
-          <div className="flex gap-6">
-            {/* Sidebar - Desktop Only */}
-            <aside className="hidden md:block w-72">
+        <div className="flex gap-6">
+          {/* Sidebar - Desktop Only */}
+          <aside className="hidden md:block w-72">
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-24">
               <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
               <div className="space-y-1">
-              {categories.slice(0, 20).map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/category/${category.id}`}
-                  className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
-                >
-                  <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
+                {categories.slice(0, 20).map((category) => (
+                  <Link
+                    key={category.id}
+                    href={`/category/${category.id}`}
+                    className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
+                  >
+                    <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
                       {category.name}
                     </span>
                     <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
-                </Link>
-              ))}
-              {categories.length > 20 && (
+                  </Link>
+                ))}
+                {categories.length > 20 && (
                   <div className="py-3 px-4 text-sm text-[#CB0207] cursor-pointer font-medium hover:bg-gray-50 rounded-xl transition-all duration-200">
                     See More
                   </div>
@@ -1103,51 +1197,48 @@ function HomePage() {
           {/* Main Content */}
           <main className="flex-1">
             {/* Hero Section */}
-              <div
-                className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[200px] md:h-[400px] transition-all duration-500"
-                style={{ backgroundImage: `url(${slides[currentSlide]})` }}
-              >
-                {/* Black overlay */}
-                <div className="absolute inset-0 bg-black/10 z-0"></div>
+            <div
+              className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[200px] md:h-[400px] transition-all duration-500"
+              style={{ backgroundImage: `url(${slides[currentSlide]})` }}
+            >
+              {/* Black overlay */}
+              <div className="absolute inset-0 bg-black/10 z-0"></div>
 
-                {/* Content */}
-                <div className="relative z-10 mt-4">
-                  <h1 className="text-white text-xl md:text-4xl font-bold mb-2">New iPhone 14 Pro Max</h1>
-                  <p className="text-white/90 text-[5px] md:text-base mb-4 max-w-[257px] md:max-w-2xl">
-                    Apple's top-tier phone with a 6.7&quot; OLED display, A16 Bionic chip, and Dynamic Island. It features a
-                    48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless steel.
-                  </p>
-                  <div className="inline-block bg-white text-[8px] md:text-[12px] text-black font-bold hover:bg-gray-100 px-2 md:px-4 py-1 md:py-2 rounded cursor-pointer">
-                    VIEW INFO
-                  </div>
-                </div>
-
-                {/* Slide Indicators */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
-                  {slides.map((_, index) => (
-                    <button
-                      key={index}
-                      className={`w-3 h-3 rounded-full ${
-                        currentSlide === index ? "bg-white" : "bg-white/50"
-                      }`}
-                      onClick={() => setCurrentSlide(index)}
-                    />
-                  ))}
+              {/* Content */}
+              <div className="relative z-10 mt-4">
+                <h1 className="text-white text-xl md:text-4xl font-bold mb-2">New iPhone 14 Pro Max</h1>
+                <p className="text-white/90 text-[5px] md:text-base mb-4 max-w-[257px] md:max-w-2xl">
+                  Apple's top-tier phone with a 6.7&quot; OLED display, A16 Bionic chip, and Dynamic Island. It features
+                  a 48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless steel.
+                </p>
+                <div className="inline-block bg-white text-[8px] md:text-[12px] text-black font-bold hover:bg-gray-100 px-2 md:px-4 py-1 md:py-2 rounded cursor-pointer">
+                  VIEW INFO
                 </div>
               </div>
 
+              {/* Slide Indicators */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
+                {slides.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`w-3 h-3 rounded-full ${currentSlide === index ? "bg-white" : "bg-white/50"}`}
+                    onClick={() => setCurrentSlide(index)}
+                  />
+                ))}
+              </div>
+            </div>
 
             {/* Products Section */}
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 md:p-8">
-                <div className="flex items-center justify-between mb-4 md:mb-8">
+              <div className="flex items-center justify-between mb-4 md:mb-8">
                 <h2 className="text-xl md:text-2xl font-bold text-gray-800">Products</h2>
                 <Button
-                    variant="outline"
-                    className="flex items-center gap-2 border-[2] border-gray-60 text-black hover:bg-[#CB0207] hover:text-white rounded-xl px-3 py-2 font-medium transition-all duration-300 bg-transparent"
-                    onClick={() => setShowFilterDialog(true)}
-                  >
-                    <Filter className="h-2 w-4" />
-                  </Button>
+                  variant="outline"
+                  className="flex items-center gap-2 border-[2] border-gray-60 text-black hover:bg-[#CB0207] hover:text-white rounded-xl px-3 py-2 font-medium transition-all duration-300 bg-transparent"
+                  onClick={() => setShowFilterDialog(true)}
+                >
+                  <Filter className="h-2 w-4" />
+                </Button>
               </div>
 
               {/* Loading State */}
@@ -1161,28 +1252,29 @@ function HomePage() {
               {!loading && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 pb-2">
                   {products.map((product) => (
-                    <Link key={product.id} href={`/product/${product.slug}`}>
-                      <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border-0 shadow-lg card-hover rounded-xl">
+                    <div key={product.id} className="relative">
+                      <Link href={`/product/${product.slug}`}>
+                        <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border-0 shadow-lg card-hover rounded-xl">
                           <div className="bg-gradient-to-br from-gray-50 to-gray-100 h-32 md:h-48 relative">
-                          {product.images.length > 0 ? (
-                            <Image
-                              src={product.images[0].url || "/placeholder.svg"}
-                              alt={product.name}
-                              fill
-                              className="object-cover"
-                              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement
-                                target.src = "/placeholder.svg?height=200&width=200"
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                              <span className="text-gray-400 text-xs">No Image</span>
-                            </div>
-                          )}
-                        </div>
-                        <CardContent className="p-2">
+                            {product.images.length > 0 ? (
+                              <Image
+                                src={product.images[0].url || "/placeholder.svg"}
+                                alt={product.name}
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement
+                                  target.src = "/placeholder.svg?height=200&width=200"
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                <span className="text-gray-400 text-xs">No Image</span>
+                              </div>
+                            )}
+                          </div>
+                          <CardContent className="p-2">
                             <h3 className="font-semibold text-xs md:text-sm mb-1 md:mb-3 line-clamp-2 text-gray-800">
                               {product.name}
                             </h3>
@@ -1190,7 +1282,8 @@ function HomePage() {
                               <span className="font-bold text-sm md:text-lg text-[#CB0207]">
                                 {formatPrice(product.price)}
                               </span>
-                              {isAuthenticated && (
+                              {/* Only show Ad badge when is_featured is 1 */}
+                              {product.is_featured === 1 && (
                                 <span className="bg-[#CB0207] text-white text-xs px-2 py-1 rounded-lg font-medium">
                                   Ad
                                 </span>
@@ -1201,8 +1294,34 @@ function HomePage() {
                               {product.store.store_lga || "N/A"}, {product.store.store_state || "N/A"}
                             </p>
                           </CardContent>
-                      </Card>
-                    </Link>
+                        </Card>
+                      </Link>
+
+                      {/* Wishlist Heart Button - Only for logged in users */}
+                      {isAuthenticated && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`absolute top-2 right-2 z-10 rounded-full w-8 h-8 ${
+                            wishlistItems.includes(product.id)
+                              ? "bg-red-500 hover:bg-red-600 text-white"
+                              : "bg-white/80 hover:bg-white text-gray-600"
+                          } shadow-lg transition-all duration-200`}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            toggleWishlist(product.id)
+                          }}
+                          disabled={wishlistLoading.includes(product.id)}
+                        >
+                          {wishlistLoading.includes(product.id) ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                          ) : (
+                            <Heart className={`h-4 w-4 ${wishlistItems.includes(product.id) ? "fill-current" : ""}`} />
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
@@ -1256,7 +1375,6 @@ function HomePage() {
                   })}
                 </div>
               )}
-
 
               {/* No Products Message */}
               {!loading && products.length === 0 && (
@@ -1437,7 +1555,6 @@ function HomePage() {
               </ul>
             </div>
           </div>
-
           <div className="border-t border-white/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
             <div className="flex space-x-4 mb-4 md:mb-0">
               <a href="#" className="text-white hover:text-gray-200 transition-colors duration-200">
