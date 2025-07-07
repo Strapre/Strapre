@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
@@ -115,6 +115,23 @@ export default function CreateStorePage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
+  // Constants
+  const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2MB in bytes
+
+  // Check if all required fields are filled
+  const isFormValid = useMemo(() => {
+    return (
+      storeName.trim() !== "" &&
+      storeDescription.trim() !== "" &&
+      address.trim() !== "" &&
+      phone.trim() !== "" &&
+      email.trim() !== "" &&
+      selectedState !== "" &&
+      selectedLGA !== "" &&
+      storeImage !== null
+    )
+  }, [storeName, storeDescription, address, phone, email, selectedState, selectedLGA, storeImage])
+
   useEffect(() => {
     // Check if user has auth token
     const token = localStorage.getItem("auth_token")
@@ -211,7 +228,7 @@ export default function CreateStorePage() {
 
   const getUserInitials = () => {
     if (!userProfile) return "U"
-    return `${userProfile.first_name?.[0] || ""}${userProfile.last_name?.[0] || ""}`.toUpperCase()
+    return `${userProfile.first_name?.[0] || ""}${userProfile.last_name?.[0] || ""}.toUpperCase()`
   }
 
   const getCurrentStateName = () => {
@@ -232,9 +249,39 @@ export default function CreateStorePage() {
     router.push("/login")
   }
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes"
+    const k = 1024
+    const sizes = ["Bytes", "KB", "MB"]
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+  }
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
+      // Check file size (2MB = 2 * 1024 * 1024 bytes)
+      if (file.size > MAX_IMAGE_SIZE) {
+        setError(`Image size must be less than 2MB. Selected file is ${formatFileSize(file.size)}.`)
+        // Clear the file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
+        return
+      }
+
+      // Check file type
+      if (!file.type.startsWith("image/")) {
+        setError("Please select a valid image file.")
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
+        return
+      }
+
+      // Clear any previous errors
+      setError("")
+
       setStoreImage(file)
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -302,6 +349,12 @@ export default function CreateStorePage() {
       return
     }
 
+    if (!email.trim()) {
+      setError("Email is required.")
+      setLoading(false)
+      return
+    }
+
     if (!selectedState) {
       setError("Please select a state.")
       setLoading(false)
@@ -316,6 +369,12 @@ export default function CreateStorePage() {
 
     if (!storeImage) {
       setError("Store image is required.")
+      setLoading(false)
+      return
+    }
+
+    if (storeImage.size > MAX_IMAGE_SIZE) {
+      setError(`Image size must be less than 2MB. Selected file is ${formatFileSize(storeImage.size)}.`)
       setLoading(false)
       return
     }
@@ -627,8 +686,11 @@ export default function CreateStorePage() {
                     </div>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-4 text-center sm:text-left">
+                    <p className="text-sm text-gray-600 mb-2 text-center sm:text-left">
                       Upload your store logo or take a photo
+                    </p>
+                    <p className="text-xs text-gray-500 mb-4 text-center sm:text-left">
+                      Maximum file size: 2MB. Supported formats: JPG, PNG, GIF
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Button
@@ -649,6 +711,11 @@ export default function CreateStorePage() {
                         <span>Upload Image</span>
                       </Button>
                     </div>
+                    {storeImage && (
+                      <p className="text-xs text-green-600 mt-2 text-center sm:text-left">
+                        ✓ Selected: {storeImage.name} ({formatFileSize(storeImage.size)})
+                      </p>
+                    )}
                   </div>
                 </div>
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
@@ -721,17 +788,17 @@ export default function CreateStorePage() {
 
                   <div>
                     <Label htmlFor="email" className="text-sm font-medium text-gray-700 mb-2 block">
-                      Email Address
+                      Email Address *
                     </Label>
                     <Input
                       id="email"
                       type="email"
                       value={email}
-                      placeholder="Email address"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
-                      disabled
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email address"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CB0207] focus:border-[#CB0207]"
+                      required
                     />
-                    <p className="text-xs text-gray-500 mt-1">From your profile</p>
                   </div>
                 </div>
 
@@ -818,12 +885,21 @@ export default function CreateStorePage() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-[#CB0207] hover:bg-[#A50206] text-white py-3 disabled:opacity-50"
+                  disabled={loading || !isFormValid}
+                  className="flex-1 bg-[#CB0207] hover:bg-[#A50206] text-white py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? "Creating Store..." : "Create Store"}
                 </Button>
               </div>
+
+              {/* Form validation indicator */}
+              {!isFormValid && (
+                <div className="text-center">
+                  <p className="text-sm text-gray-500">
+                    Please fill in all required fields to create your store
+                  </p>
+                </div>
+              )}
             </form>
           </div>
         </div>

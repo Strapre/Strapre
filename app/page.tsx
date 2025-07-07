@@ -502,28 +502,19 @@ function HomePage() {
                         </div>
 
                         <div className="space-y-3 mb-8">
-                          <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
-                            🔔 Notifications
-                          </div>
-                          <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
+                          <div
+                            onClick={() => {
+                              window.open("https://wa.me/2348138695216?text=Hello%2C%20I%20need%20help%21", "_blank")
+                            }}
+                            className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium"
+                          >
                             💬 Message Support
                           </div>
-                          <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 flex items-center font-medium">
+                          {/* <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 flex items-center font-medium">
                             <User className="h-4 w-4 mr-2" />
                             Settings
-                          </div>
+                          </div> */}
                         </div>
-                      </div>
-
-                      {/* Fixed bottom button */}
-                      <div className="flex-shrink-0 pt-4 border-t border-gray-200">
-                        <Button
-                          className={`w-full ${
-                            userStore ? "bg-green-600 hover:bg-green-700" : "bg-[#CB0207] hover:bg-[#A50206]"
-                          } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300`}
-                        >
-                          {userStore ? "View My Store" : "Become a Merchant"}
-                        </Button>
                       </div>
                     </div>
                   </SheetContent>
@@ -979,7 +970,7 @@ function HomePage() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80 bg-white overflow-y-auto">
-                  <div className="py-6 h-full flex">
+                  <div className="py-6 h-full flex mb-4">
                     {/* User Profile Section */}
                     {userProfile && (
                       <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200 flex-shrink-0">
@@ -1016,25 +1007,39 @@ function HomePage() {
                     </div>
 
                     <div className="space-y-3 mb-8">
-                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
-                        🔔 Notifications
-                      </div>
-                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
-                        💬 Message Support
-                      </div>
-                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 flex items-center font-medium">
+                      <div
+                            onClick={() => {
+                              window.open("https://wa.me/2348138695216?text=Hello%2C%20I%20need%20help%21", "_blank")
+                            }}
+                            className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium"
+                          >
+                            💬 Message Support
+                          </div>
+                      {/* <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 flex items-center font-medium">
                         <User className="h-4 w-4 mr-2" />
                         Settings
-                      </div>
+                      </div> */}
                     </div>
 
                     <Button
+                      onClick={() => {
+                        if (userStore) {
+                          router.push("/my-store")
+                        } else {
+                          router.push("/create-store")
+                        }
+                      }}
                       className={`w-full ${
-                        userStore ? "bg-green-600 hover:bg-green-700" : "bg-[#CB0207] hover:bg-[#A50206]"
+                        userStore
+                          ? "bg-green-600 hover:bg-green-700"
+                          : "bg-[#CB0207] hover:bg-[#A50206]"
                       } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300`}
                     >
                       {userStore ? "View My Store" : "Become a Merchant"}
                     </Button>
+                    <div className="h-4 text-white">
+                      Fill up
+                    </div>
                   </div>
                 </SheetContent>
               </Sheet>
@@ -1091,7 +1096,7 @@ function HomePage() {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 py-2"
+                      className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 h-14"
                     >
                       <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
                         <AvatarImage src={userProfile.profile_picture || ""} />
@@ -1116,7 +1121,7 @@ function HomePage() {
                         if (userStore) {
                           router.push("/my-store")
                         } else {
-                          router.push("/edit-profile")
+                          router.push("/create-store")
                         }
                       }}
                     >
@@ -1133,7 +1138,20 @@ function HomePage() {
             </div>
 
             {/* Mobile User Avatar */}
-            <div className="md:hidden">
+            <div className="flex md:hidden space-x-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-gray-100 rounded-xl relative"
+                onClick={() => router.push("/wishlist")}
+              >
+                <Heart className="h-7 w-7" />
+                {wishlistItems.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#CB0207] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {wishlistItems.length}
+                  </span>
+                )}
+              </Button>
               {userProfile && (
                 <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
                   <AvatarImage src={userProfile.profile_picture || ""} />

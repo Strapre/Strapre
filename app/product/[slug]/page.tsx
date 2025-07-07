@@ -676,12 +676,6 @@ export default function ProductPage() {
                   <p className="text-sm text-gray-500 mb-2">
                     📍 {product.store.store_lga}, {product.store.store_state}
                   </p>
-                  <div className="flex items-center space-x-4 text-xs text-gray-400">
-                    <span className="flex items-center space-x-1">
-                      <div className="h-1.5 w-1.5 bg-green-400 rounded-full"></div>
-                      <span>Active seller</span>
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>

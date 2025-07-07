@@ -304,7 +304,7 @@ export default function MyStorePage() {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 py-2"
+                      className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 h-14"
                     >
                       <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
                         <AvatarImage src={userProfile.profile_picture || ""} />
@@ -431,7 +431,7 @@ export default function MyStorePage() {
                         >
                           {storeData.is_active === 1 ? "🟢 Active" : "⚫ Inactive"}
                         </Badge>
-                        <Badge
+                        {/* <Badge
                           variant={isSubscriptionActive() ? "default" : "destructive"}
                           className={`px-4 py-2 text-sm font-semibold ${
                             isSubscriptionActive()
@@ -440,7 +440,7 @@ export default function MyStorePage() {
                           }`}
                         >
                           {isSubscriptionActive() ? "💎 Premium" : "⏰ Expired"}
-                        </Badge>
+                        </Badge> */}
                       </div>
                     </div>
 

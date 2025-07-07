@@ -66,6 +66,18 @@ export default function CompleteProfilePage() {
     }
   }, [selectedState, states])
 
+  // Check if all required fields are filled
+  const isFormValid = () => {
+    return (
+      firstName.trim() !== "" &&
+      lastName.trim() !== "" &&
+      phone.trim() !== "" &&
+      selectedState !== "" &&
+      selectedLGA !== "" &&
+      profilePicture !== null
+    )
+  }
+
   // Update the fetchStates and fetchLGAs functions to sort alphabetically
   const fetchStates = async () => {
     try {
@@ -94,6 +106,20 @@ export default function CompleteProfilePage() {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
+      // Check file size (2MB = 2 * 1024 * 1024 bytes)
+      const maxSizeInBytes = 2 * 1024 * 1024
+      if (file.size > maxSizeInBytes) {
+        setError(`Image size must be less than 2MB. Selected file is ${(file.size / (1024 * 1024)).toFixed(2)}MB.`)
+        // Clear the file input
+        if (event.target) {
+          event.target.value = ''
+        }
+        return
+      }
+      
+      // Clear any previous error
+      setError("")
+      
       setProfilePicture(file)
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -119,6 +145,13 @@ export default function CompleteProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate form before submission
+    if (!isFormValid()) {
+      setError("Please fill in all required fields including uploading a profile picture.")
+      return
+    }
+
     setLoading(true)
     setError("")
 
@@ -242,22 +275,29 @@ export default function CompleteProfilePage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Profile Picture Section */}
                 <div className="flex items-center space-x-6 mb-8">
-                  <div className="relative">
+                  <div className="relative flex-shrink-0">
                     <Avatar className="h-24 w-24">
                       <AvatarImage src={profilePicturePreview || "/placeholder.svg"} />
                       <AvatarFallback className="bg-gray-100 text-gray-400 text-lg">
                         <Camera className="h-8 w-8" />
                       </AvatarFallback>
                     </Avatar>
+                    {!profilePicture && (
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">!</span>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600 mb-3">Let's start with your gadgets</p>
+                  <div className="flex-1 space-y-2 min-w-0">
+                    <p className="text-[10px] md:text-sm text-gray-600 mb-3">
+                      Let's start with your profile picture <span className="text-red-500">*</span>
+                    </p>
                     <div className="space-y-2">
                       <Button
                         type="button"
                         onClick={handleTakePhoto}
-                        className="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 flex items-center space-x-2"
+                        className="w-auto bg-red-600 hover:bg-red-700 text-white text-[10px] md:text-sm px-4 py-2 flex items-center space-x-2 whitespace-nowrap"
                       >
                         <Camera className="h-4 w-4" />
                         <span>Take new photo</span>
@@ -266,7 +306,7 @@ export default function CompleteProfilePage() {
                         type="button"
                         onClick={handleUploadFromGallery}
                         variant="outline"
-                        className="text-sm px-4 py-2 flex items-center space-x-2 bg-transparent"
+                        className="w-auto text-[10px] md:text-sm px-4 py-2 flex items-center space-x-2 bg-transparent whitespace-nowrap"
                       >
                         <Upload className="h-4 w-4" />
                         <span>Upload from gallery</span>
@@ -287,7 +327,7 @@ export default function CompleteProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
-                      First Name
+                      First Name <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="firstName"
@@ -295,14 +335,16 @@ export default function CompleteProfilePage() {
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       placeholder="First Name"
-                      className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      className={`mt-1 w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                        firstName.trim() === "" ? "border-red-300" : "border-gray-300"
+                      }`}
                       required
                     />
                   </div>
 
                   <div>
                     <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
-                      Last Name
+                      Last Name <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="lastName"
@@ -310,17 +352,21 @@ export default function CompleteProfilePage() {
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       placeholder="Last Name"
-                      className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      className={`mt-1 w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                        lastName.trim() === "" ? "border-red-300" : "border-gray-300"
+                      }`}
                       required
                     />
                   </div>
 
                   <div>
                     <Label htmlFor="state" className="text-sm font-medium text-gray-700">
-                      State
+                      State <span className="text-red-500">*</span>
                     </Label>
                     <Select value={selectedState} onValueChange={setSelectedState} required>
-                      <SelectTrigger className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg">
+                      <SelectTrigger className={`mt-1 w-full px-4 py-3 border rounded-lg ${
+                        selectedState === "" ? "border-red-300" : "border-gray-300"
+                      }`}>
                         <SelectValue placeholder="Select State" />
                       </SelectTrigger>
                       <SelectContent>
@@ -335,10 +381,12 @@ export default function CompleteProfilePage() {
 
                   <div>
                     <Label htmlFor="lga" className="text-sm font-medium text-gray-700">
-                      LGA
+                      LGA <span className="text-red-500">*</span>
                     </Label>
                     <Select value={selectedLGA} onValueChange={setSelectedLGA} disabled={!selectedState} required>
-                      <SelectTrigger className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg">
+                      <SelectTrigger className={`mt-1 w-full px-4 py-3 border rounded-lg ${
+                        selectedLGA === "" ? "border-red-300" : "border-gray-300"
+                      }`}>
                         <SelectValue placeholder="Select LGA" />
                       </SelectTrigger>
                       <SelectContent>
@@ -354,7 +402,7 @@ export default function CompleteProfilePage() {
 
                 <div>
                   <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
-                    Phone Number
+                    Phone Number <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="phone"
@@ -362,18 +410,30 @@ export default function CompleteProfilePage() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Enter Whatsapp Number"
-                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className={`mt-1 w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                      phone.trim() === "" ? "border-red-300" : "border-gray-300"
+                    }`}
                     required
                   />
                 </div>
 
                 <Button
                   type="submit"
-                  disabled={loading}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium text-lg"
+                  disabled={loading || !isFormValid()}
+                  className={`w-full py-3 rounded-lg font-medium text-lg transition-all duration-300 ${
+                    isFormValid() 
+                      ? "bg-red-600 hover:bg-red-700 text-white" 
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
                 >
                   {loading ? "SUBMITTING..." : "SUBMIT"}
                 </Button>
+                
+                {!isFormValid() && (
+                  <p className="text-sm text-red-500 text-center mt-2">
+                    Please fill in all required fields to continue
+                  </p>
+                )}
               </form>
             </div>
           </div>
