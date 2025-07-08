@@ -1,30 +1,13 @@
 "use client"
+
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import {
-  ArrowLeft,
-  Search,
-  Heart,
-  User,
-  Menu,
-  ChevronDown,
-  ChevronRight,
-  LogOut,
-  Plus,
-  Edit,
-  Trash2,
-  Calendar,
-  ChevronLeft,
-  ChevronRightIcon,
-} from "lucide-react"
+import { ArrowLeft, Plus, Edit, Trash2, Calendar, ChevronLeft, ChevronRightIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import Header from "@/components/header"
 import Link from "next/link"
 import {
   AlertDialog,
@@ -179,11 +162,6 @@ export default function MyProductsPage() {
     }
   }
 
-  const getUserInitials = () => {
-    if (!userProfile) return "U"
-    return `${userProfile.first_name?.[0] || ""}${userProfile.last_name?.[0] || ""}`.toUpperCase()
-  }
-
   const formatPrice = (price: string) => {
     return new Intl.NumberFormat("en-NG", {
       style: "currency",
@@ -198,13 +176,6 @@ export default function MyProductsPage() {
       month: "short",
       day: "numeric",
     })
-  }
-
-  const handleLogout = () => {
-    localStorage.removeItem("auth_token")
-    localStorage.removeItem("userDetails")
-    localStorage.removeItem("userStore")
-    router.push("/login")
   }
 
   const handleBackToStore = () => {
@@ -226,7 +197,6 @@ export default function MyProductsPage() {
 
   const handleDeleteProduct = async (product: Product) => {
     const token = localStorage.getItem("auth_token")
-
     try {
       const response = await fetch(`https://ga.vplaza.com.ng/api/v1/products/${product.slug}`, {
         method: "DELETE",
@@ -266,6 +236,22 @@ export default function MyProductsPage() {
     setDeleteDialog({ isOpen: false, product: null })
   }
 
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      console.log("Searching for:", searchQuery)
+    }
+  }
+
+  const handleStateChange = (stateId: string) => {
+    // This page doesn't need state selection functionality
+    console.log("State changed:", stateId)
+  }
+
+  const handleLGAChange = (lgaId: string) => {
+    // This page doesn't need LGA selection functionality
+    console.log("LGA changed:", lgaId)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -280,177 +266,16 @@ export default function MyProductsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Mobile Menu */}
-            <div className="md:hidden">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-xl">
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 bg-white overflow-y-auto">
-                  <div className="py-6 h-full flex flex-col">
-                    {/* User Profile Section */}
-                    {userProfile && (
-                      <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200 flex-shrink-0">
-                        <Avatar className="h-14 w-14 ring-2 ring-[#CB0207]/20">
-                          <AvatarImage
-                            src={userProfile.profile_picture || ""}
-                            alt={`${userProfile.first_name} ${userProfile.last_name}`}
-                          />
-                          <AvatarFallback className="bg-[#CB0207] text-white font-bold">
-                            {getUserInitials()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-bold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</h3>
-                          <p className="text-sm text-gray-500">{userProfile.email}</p>
-                        </div>
-                      </div>
-                    )}
-                    <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
-                    <div className="space-y-1 mb-8">
-                      {categories.map((category) => (
-                        <Link
-                          key={category.id}
-                          href={`/category/${category.id}`}
-                          className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
-                        >
-                          <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
-                            {category.name}
-                          </span>
-                          <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
-                        </Link>
-                      ))}
-                    </div>
-                    <div className="space-y-3 mb-8">
-                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
-                        🔔 Notifications
-                      </div>
-                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
-                        💬 Message Support
-                      </div>
-                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 flex items-center font-medium">
-                        <User className="h-4 w-4 mr-2" />
-                        Settings
-                      </div>
-                    </div>
-                    <Button
-                      className={`w-full ${
-                        userStore ? "bg-green-600 hover:bg-green-700" : "bg-[#CB0207] hover:bg-[#A50206]"
-                      } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300`}
-                    >
-                      {userStore ? "View My Store" : "Become a Merchant"}
-                    </Button>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-            {/* Logo */}
-            <div className="hidden md:flex items-center">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
-                  <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
-                </div>
-                <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
-              </div>
-            </div>
-            {/* Search Bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-              <div className="relative w-full">
-                <Input
-                  type="text"
-                  placeholder="What are you looking for?"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300 h-12"
-                />
-                <Button
-                  size="icon"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
-                  variant="ghost"
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            {/* Desktop User Actions */}
-            <div className="hidden md:flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-xl">
-                <Heart className="h-5 w-5" />
-              </Button>
-              {userProfile && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 py-2"
-                    >
-                      <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
-                        <AvatarImage src={userProfile.profile_picture || ""} />
-                        <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
-                          {getUserInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</p>
-                        <p className="text-xs text-gray-500">{userProfile.email}</p>
-                      </div>
-                      <ChevronDown className="h-4 w-4 text-gray-400" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-0">
-                    <DropdownMenuItem className="rounded-lg">
-                      <User className="h-4 w-4 mr-2" />
-                      My Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <span className="h-4 w-4 mr-2">S</span>
-                      {userStore ? "View My Store" : "Become a Merchant"}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-red-600">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Log Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-            {/* Mobile User Avatar */}
-            <div className="md:hidden">
-              {userProfile && (
-                <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
-                  <AvatarImage src={userProfile.profile_picture || ""} />
-                  <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-            </div>
-          </div>
-          {/* Mobile Search Bar */}
-          <div className="md:hidden pb-4">
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="What are you looking for?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300"
-              />
-              <Button
-                size="icon"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSearch={handleSearch}
+        showStateSelectors={false}
+        selectedState={null}
+        selectedLGA={null}
+        onStateChange={handleStateChange}
+        onLGAChange={handleLGAChange}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -464,7 +289,6 @@ export default function MyProductsPage() {
             <ArrowLeft className="h-5 w-5" />
             <span className="font-medium">Back to Store</span>
           </Button>
-
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">My Products</h1>
@@ -507,7 +331,6 @@ export default function MyProductsPage() {
                         </div>
                       )}
                     </div>
-
                     {/* Featured Badge */}
                     {product.is_featured === 1 && (
                       <Badge className="absolute top-2 right-2 bg-[#CB0207] text-white font-bold px-2 py-1 text-xs">
@@ -515,7 +338,6 @@ export default function MyProductsPage() {
                       </Badge>
                     )}
                   </div>
-
                   <CardContent className="p-3 sm:p-4">
                     <div className="mb-2 sm:mb-3">
                       <Link href={`/my-store/products/${product.slug}`}>
@@ -527,12 +349,10 @@ export default function MyProductsPage() {
                         {formatPrice(product.price)}
                       </p>
                     </div>
-
                     <div className="flex items-center text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
                       <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                       <span className="truncate">Posted {formatDate(product.created_at)}</span>
                     </div>
-
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                       <Button
@@ -543,7 +363,6 @@ export default function MyProductsPage() {
                         <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                         Edit
                       </Button>
-
                       {product.is_featured === 0 ? (
                         <Button
                           size="sm"
@@ -563,7 +382,6 @@ export default function MyProductsPage() {
                           Ad Running
                         </Button>
                       )}
-
                       <Button
                         size="sm"
                         variant="outline"
@@ -591,7 +409,6 @@ export default function MyProductsPage() {
                   <ChevronLeft className="h-4 w-4" />
                   Previous
                 </Button>
-
                 <div className="flex items-center space-x-1 overflow-x-auto max-w-full">
                   {Array.from({ length: Math.min(pagination.last_page, 5) }, (_, i) => {
                     let page
@@ -604,7 +421,6 @@ export default function MyProductsPage() {
                     } else {
                       page = currentPage - 2 + i
                     }
-
                     return (
                       <Button
                         key={page}
@@ -622,7 +438,6 @@ export default function MyProductsPage() {
                     )
                   })}
                 </div>
-
                 <Button
                   variant="outline"
                   size="sm"

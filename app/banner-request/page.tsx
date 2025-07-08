@@ -1,16 +1,11 @@
 "use client"
+
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, Calendar, ExternalLink, Plus, Star, TrendingUp, Eye, Menu, Search, Phone, MessageCircle, ChevronRight, User, ChevronDown, LogOut, Heart } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { ArrowLeft, Calendar, ExternalLink, Plus, Star, TrendingUp, Eye } from "lucide-react"
 import { useRouter } from "next/navigation"
-
+import Header from "@/components/header"
 
 interface Banner {
   id: string
@@ -79,7 +74,7 @@ interface ApiResponse<T = any> {
 }
 
 export default function BannerRequestPage() {
-    const router = useRouter()
+  const router = useRouter()
   const [myBanners, setMyBanners] = useState<Banner[]>([])
   const [allBanners, setAllBanners] = useState<Banner[]>([])
   const [states, setStates] = useState<State[]>([])
@@ -97,9 +92,9 @@ export default function BannerRequestPage() {
 
   useEffect(() => {
     // Check authentication
-    const token = typeof window !== 'undefined' ? localStorage.getItem("auth_token") : null
-    const userStoreData = typeof window !== 'undefined' ? localStorage.getItem("userStore") : null
-    
+    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null
+    const userStoreData = typeof window !== "undefined" ? localStorage.getItem("userStore") : null
+
     setIsAuthenticated(!!token)
     setIsMerchant(!!userStoreData)
 
@@ -139,10 +134,10 @@ export default function BannerRequestPage() {
         const data = await response.json()
         setUserStore(data)
         setIsMerchant(true)
-        
+
         // Store in localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('userStore', JSON.stringify(data))
+        if (typeof window !== "undefined") {
+          localStorage.setItem("userStore", JSON.stringify(data))
         }
       }
     } catch (error) {
@@ -160,9 +155,9 @@ export default function BannerRequestPage() {
       const data = await response.json()
       if (response.ok) {
         setUserProfile(data.data)
-      
+
         // Store in localStorage
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           localStorage.setItem("userDetails", JSON.stringify(data.data))
         }
       }
@@ -248,7 +243,6 @@ export default function BannerRequestPage() {
       setLgas([])
       return
     }
-
     const state = states.find((s) => s.id === stateId)
     if (state) {
       setSelectedState(state)
@@ -262,16 +256,15 @@ export default function BannerRequestPage() {
       setSelectedLGA(null)
       return
     }
-
     const lga = lgas.find((l) => l.id === lgaId)
     setSelectedLGA(lga || null)
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     })
   }
 
@@ -283,254 +276,25 @@ export default function BannerRequestPage() {
     return diffDays
   }
 
-  const getUserInitials = () => {
-    if (!userProfile || !userProfile.first_name || !userProfile.last_name) return "U"
-    return `${userProfile.first_name[0]}${userProfile.last_name[0]}`
-  }
-
-  const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem("auth_token")
-      localStorage.removeItem("userStore")
-      localStorage.removeItem("userDetails")
-    }
-    setIsAuthenticated(false)
-    setUserProfile(null)
-    setUserStore(null)
-    setIsMerchant(false)
-    // router.push("/")
-  }
-
   const handleSearch = () => {
     if (searchQuery.trim()) {
       console.log("Searching for:", searchQuery)
     }
   }
 
-  const handleSearchKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch()
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-100 sticky top-0 z-50">
-        <div className="w-full md:w-[90%] md:max-w-[1750px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Mobile Menu */}
-            <div className="md:hidden">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-xl">
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 bg-white overflow-y-auto">
-                  <div className="py-6 h-full flex flex-col">
-                    {/* User Profile Section */}
-                    {userProfile && (
-                      <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200 flex-shrink-0">
-                        <Avatar className="h-14 w-14 ring-2 ring-[#CB0207]/20">
-                          <AvatarImage
-                            src={userProfile.profile_picture || ""}
-                            alt={`${userProfile.first_name} ${userProfile.last_name}`}
-                          />
-                          <AvatarFallback className="bg-[#CB0207] text-white font-bold">
-                            {getUserInitials()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-bold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</h3>
-                          <p className="text-sm text-gray-500">{userProfile.email}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Scrollable content */}
-                    <div className="flex-1 overflow-y-auto">
-                      <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
-                      <div className="space-y-1 mb-8">
-                        {categories.map((category) => (
-                          <Link
-                            key={category.id}
-                            href={`/category/${category.id}`}
-                            className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
-                          >
-                            <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
-                              {category.name}
-                            </span>
-                            <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
-                          </Link>
-                        ))}
-                      </div>
-
-                      <div className="space-y-3 mb-8">
-                        <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
-                          🔔 Notifications
-                        </div>
-                        <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
-                          💬 Message Support
-                        </div>
-                        <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 flex items-center font-medium">
-                          <User className="h-4 w-4 mr-2" />
-                          Settings
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Fixed bottom button */}
-                    <div className="flex-shrink-0 pt-4 border-t border-gray-200">
-                      <Button
-                        className={`w-full ${
-                          userStore ? "bg-green-600 hover:bg-green-700" : "bg-[#CB0207] hover:bg-[#A50206]"
-                        } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300`}
-                      >
-                        {userStore ? "View My Store" : "Become a Merchant"}
-                      </Button>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-
-            {/* Logo */}
-            <div className="hidden md:flex items-center">
-              <Link href="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
-                  <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
-                </div>
-                <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
-              </Link>
-            </div>
-
-            {/* Search Bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-              <div className="relative w-full">
-                <Input
-                  type="text"
-                  placeholder="What are you looking for?"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={handleSearchKeyPress}
-                  className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300 h-12"
-                />
-                <Button
-                  size="icon"
-                  onClick={handleSearch}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
-                  variant="ghost"
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* State/LGA Selectors - Desktop */}
-            <div className="hidden lg:flex items-center space-x-3">
-              <Select onValueChange={handleStateChange} value={selectedState?.id || "defaultState"}>
-                <SelectTrigger className="w-36 rounded-xl border-2 border-gray-200 focus:border-[#CB0207] h-12">
-                  <SelectValue placeholder="State" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="defaultState">All States</SelectItem>
-                  {states.map((state) => (
-                    <SelectItem key={state.id} value={state.id}>
-                      {state.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                onValueChange={handleLGAChange}
-                value={selectedLGA?.id || "defaultLGA"}
-                disabled={!selectedState}
-              >
-                <SelectTrigger className="w-36 rounded-xl border-2 border-gray-200 focus:border-[#CB0207] h-12">
-                  <SelectValue placeholder="LGA" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="defaultLGA">All LGAs</SelectItem>
-                  {lgas.map((lga) => (
-                    <SelectItem key={lga.id} value={lga.id}>
-                      {lga.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Login/Register Button or User Dropdown */}
-            {!isAuthenticated ? (
-              <Link href="/login">
-                <Button className="bg-[#CB0207] hover:bg-[#A50206] text-white text-[10px] md:text-[12px] px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300">
-                  LOGIN / REGISTER
-                </Button>
-              </Link>
-            ) : (
-              userProfile && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 h-14"
-                    >
-                      <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
-                        <AvatarImage src={userProfile.profile_picture || ""} />
-                        <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
-                          {getUserInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="text-left hidden md:block">
-                        <p className="text-sm font-semibold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</p>
-                        <p className="text-xs text-gray-500">{userProfile.email}</p>
-                      </div>
-                      <ChevronDown className="h-4 w-4 text-gray-400 hidden md:block" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-0">
-                    <DropdownMenuItem className="rounded-lg">
-                      <User className="h-4 w-4 mr-2" />
-                      My Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <span className="h-4 w-4 mr-2">S</span>
-                      {userStore ? "View My Store" : "Become a Merchant"}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-red-600">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Log Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )
-            )}
-          </div>
-
-          {/* Mobile Search Bar */}
-          <div className="md:hidden pb-4">
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="What are you looking for?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleSearchKeyPress}
-                className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300"
-              />
-              <Button
-                size="icon"
-                onClick={handleSearch}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSearch={handleSearch}
+        showStateSelectors={true}
+        selectedState={selectedState}
+        selectedLGA={selectedLGA}
+        onStateChange={handleStateChange}
+        onLGAChange={handleLGAChange}
+      />
 
       {/* Main Content */}
       <div className="w-full md:w-[90%] md:max-w-[1750px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -550,7 +314,8 @@ export default function BannerRequestPage() {
             Banner <span className="text-[#CB0207]">Advertisement</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Boost your store's visibility with premium banner placements. Track your campaigns and discover new opportunities.
+            Boost your store's visibility with premium banner placements. Track your campaigns and discover new
+            opportunities.
           </p>
         </div>
 
@@ -598,14 +363,16 @@ export default function BannerRequestPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-2xl font-bold mb-2">Ready to Launch Your Next Campaign?</h3>
-                  <p className="text-red-100 mb-4">Next available banner slot: <span className="font-semibold">{nextAvailableDate}</span></p>
+                  <p className="text-red-100 mb-4">
+                    Next available banner slot: <span className="font-semibold">{nextAvailableDate}</span>
+                  </p>
                   <button
-                        onClick={() => router.push('/banner-request/new')}
-                        className="bg-white text-[#CB0207] px-6 py-3 rounded-full font-semibold hover:bg-red-50 transition-colors flex items-center"
-                        >
-                        <Plus className="h-5 w-5 mr-2" />
-                        Create New Banner
-                    </button>
+                    onClick={() => router.push("/banner-request/new")}
+                    className="bg-white text-[#CB0207] px-6 py-3 rounded-full font-semibold hover:bg-red-50 transition-colors flex items-center"
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Create New Banner
+                  </button>
                 </div>
                 <div className="hidden md:block">
                   <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
@@ -631,13 +398,16 @@ export default function BannerRequestPage() {
               {myBanners.map((banner) => {
                 const daysRemaining = getDaysRemaining(banner.ends_at)
                 return (
-                  <div key={banner.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
+                  <div
+                    key={banner.id}
+                    className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
+                  >
                     <div className="aspect-[16/9] relative overflow-hidden">
-                      <Image 
-                        src={banner.image || "/placeholder.svg"} 
-                        alt={banner.title || "Banner"} 
-                        fill 
-                        className="object-cover group-hover:scale-105 transition-transform duration-300" 
+                      <Image
+                        src={banner.image || "/placeholder.svg"}
+                        alt={banner.title || "Banner"}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                       <div className="absolute bottom-4 left-4 right-4">
@@ -645,7 +415,7 @@ export default function BannerRequestPage() {
                           {banner.title || "Untitled Banner"}
                         </h3>
                         {banner.link && (
-                          <a 
+                          <a
                             href={banner.link}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -657,14 +427,16 @@ export default function BannerRequestPage() {
                         )}
                       </div>
                       <div className="absolute top-4 right-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          daysRemaining > 7 
-                            ? 'bg-green-100 text-green-700' 
-                            : daysRemaining > 0 
-                              ? 'bg-yellow-100 text-yellow-700' 
-                              : 'bg-red-100 text-red-700'
-                        }`}>
-                          {daysRemaining > 0 ? `${daysRemaining} days left` : 'Expired'}
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            daysRemaining > 7
+                              ? "bg-green-100 text-green-700"
+                              : daysRemaining > 0
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {daysRemaining > 0 ? `${daysRemaining} days left` : "Expired"}
                         </span>
                       </div>
                     </div>
@@ -701,8 +473,7 @@ export default function BannerRequestPage() {
             </div>
           </div>
         )}
-
-        </div>
+      </div>
 
       {/* Footer */}
       <footer className="bg-red-900 text-white mt-12">

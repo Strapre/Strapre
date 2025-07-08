@@ -1,18 +1,17 @@
 "use client"
 
+import { Input } from "@/components/ui/input"
+
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, Menu, User, Search, Filter, ChevronRight, MapPin, ChevronDown, LogOut,ArrowLeft } from "lucide-react"
+import { Filter, ChevronRight, MapPin, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Header from "@/components/header"
 
 interface Category {
   id: string
@@ -147,11 +146,9 @@ export default function CategoryPage() {
     // Check authentication
     const token = localStorage.getItem("auth_token")
     setIsAuthenticated(!!token)
-
     // Fetch initial data
     fetchCategories()
     fetchStates()
-
     // Fetch category products
     if (params.id) {
       fetchCategoryProducts(params.id as string)
@@ -159,14 +156,14 @@ export default function CategoryPage() {
   }, [params.id])
 
   // Check authentication and fetch user data
-    useEffect(() => {
-      const token = localStorage.getItem("auth_token")
-      if (token) {
-        setIsAuthenticated(true)
-        fetchUserProfile(token)
-        fetchUserStore(token)
-      }
-    }, [])
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token")
+    if (token) {
+      setIsAuthenticated(true)
+      fetchUserProfile(token)
+      fetchUserStore(token)
+    }
+  }, [])
 
   useEffect(() => {
     if (selectedState) {
@@ -195,10 +192,9 @@ export default function CategoryPage() {
       const data = await response.json()
       if (response.ok) {
         setUserProfile(data.data)
-      
-      // ✅ Store in localStorage
-      localStorage.setItem("userDetails", JSON.stringify(data.data))
 
+        // ✅ Store in localStorage
+        localStorage.setItem("userDetails", JSON.stringify(data.data))
         // Check if profile is incomplete (first_name is null)
         if (!data.data.first_name) {
           router.push("/complete-profile")
@@ -209,7 +205,7 @@ export default function CategoryPage() {
       console.error("Error fetching user profile:", error)
     }
   }
-  
+
   const fetchUserStore = async (token: string) => {
     try {
       const response = await fetch("https://gadget.vplaza.com.ng/api/v1/mystore", {
@@ -231,7 +227,6 @@ export default function CategoryPage() {
       const response = await fetch("https://gadget.vplaza.com.ng/api/v1/categories")
       const data: ApiResponse<Category> = await response.json()
       setCategories(data.data)
-
       // Find current category
       const currentCategory = data.data.find((cat) => cat.id === params.id)
       setCategory(currentCategory || null)
@@ -268,20 +263,16 @@ export default function CategoryPage() {
     setLoading(true)
     try {
       let url = `https://gadget.vplaza.com.ng/api/v1/products/category/${categoryId}?page=${page}`
-
       // Add state filter if selected
       if (selectedState) {
         url += `&state_id=${selectedState.id}`
       }
-
       // Add LGA filter if selected
       if (selectedLGA) {
         url += `&lga_id=${selectedLGA.id}`
       }
-
       const response = await fetch(url)
       const data: ApiResponse<Product> = await response.json()
-
       if (response.ok) {
         setProducts(data.data)
         if (data.meta) {
@@ -304,14 +295,6 @@ export default function CategoryPage() {
     return `₦${numPrice.toLocaleString()}`
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("auth_token")
-    setIsAuthenticated(false)
-    setUserProfile(null)
-    setUserStore(null)
-    router.push("/login")
-  }
-
   const handleStateChange = (stateId: string) => {
     const state = states.find((s) => s.id === stateId)
     setSelectedState(state || null)
@@ -324,7 +307,6 @@ export default function CategoryPage() {
 
   const handlePageChange = (url: string | null) => {
     if (!url || !params.id) return
-
     // Extract page number from URL
     const urlParams = new URLSearchParams(url.split("?")[1])
     const page = urlParams.get("page")
@@ -339,11 +321,6 @@ export default function CategoryPage() {
     setShowFilterDialog(false)
   }
 
-  const getUserInitials = () => {
-    if (!userProfile || !userProfile.first_name || !userProfile.last_name) return "U"
-    return `${userProfile.first_name[0]}${userProfile.last_name[0]}`
-  }
-
   const clearFilters = () => {
     setFilterState("")
     setFilterLGA("")
@@ -351,6 +328,12 @@ export default function CategoryPage() {
     setMaxAmount("")
     setSelectedState(null)
     setSelectedLGA(null)
+  }
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      console.log("Searching for:", searchQuery)
+    }
   }
 
   if (loading && products.length === 0) {
@@ -363,190 +346,17 @@ export default function CategoryPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-
-            {/* Mobile Menu */}
-            <div className="md:hidden">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-xl">
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 bg-white overflow-y-auto">
-                  <div className="py-6 h-full flex">
-                    {/* User Profile Section */}
-
-                    {userProfile && (
-                      <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200 flex-shrink-0">
-                        <Avatar className="h-14 w-14 ring-2 ring-[#CB0207]/20">
-                          <AvatarImage
-                            src={userProfile.profile_picture || ""}
-                            alt={`${userProfile.first_name} ${userProfile.last_name}`}
-                          />
-                          <AvatarFallback className="bg-[#CB0207] text-white font-bold">
-                            {getUserInitials()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-bold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</h3>
-                          <p className="text-sm text-gray-500">{userProfile.email}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
-                    <div className="space-y-1 mb-8">
-                      {categories.map((category) => (
-                        <Link
-                          key={category.id}
-                          href={`/category/${category.id}`}
-                          className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
-                        >
-                          <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
-                            {category.name}
-                          </span>
-                          <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
-                        </Link>
-                      ))}
-                    </div>
-
-                    <div className="space-y-3 mb-8">
-                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
-                        🔔 Notifications
-                      </div>
-                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
-                        💬 Message Support
-                      </div>
-                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 flex items-center font-medium">
-                        <User className="h-4 w-4 mr-2" />
-                        Settings
-                      </div>
-                    </div>
-
-                    <Button
-                      className={`w-full ${
-                        userStore ? "bg-green-600 hover:bg-green-700" : "bg-[#CB0207] hover:bg-[#A50206]"
-                      } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300`}
-                    >
-                      {userStore ? "View My Store" : "Become a Merchant"}
-                    </Button>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-
-            {/* Logo */}
-            <div className="hidden md:flex items-center">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
-                    <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
-                  </div>
-                  <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
-                </div>
-            </div>
-
-            {/* Search Bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-              <div className="relative w-full">
-                <Input
-                  type="text"
-                  placeholder="What are you looking for?"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300 h-12"
-                />
-                <Button
-                  size="icon"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
-                  variant="ghost"
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Desktop User Actions */}
-            <div className="hidden md:flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-xl">
-                <Heart className="h-5 w-5" />
-              </Button>
-
-              {userProfile && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 h-14"
-                    >
-                      <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
-                        <AvatarImage src={userProfile.profile_picture || ""} />
-                        <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
-                          {getUserInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</p>
-                        <p className="text-xs text-gray-500">{userProfile.email}</p>
-                      </div>
-                      <ChevronDown className="h-4 w-4 text-gray-400" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-0">
-                    <DropdownMenuItem className="rounded-lg">
-                      <User className="h-4 w-4 mr-2" />
-                      My Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <span className="h-4 w-4 mr-2">S</span>
-                      {userStore ? "View My Store" : "Become a Merchant"}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-red-600">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Log Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-
-            {/* Mobile User Avatar */}
-            <div className="md:hidden">
-              {userProfile && (
-                <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
-                  <AvatarImage src={userProfile.profile_picture  || ""} />
-                  <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-            </div>
-          </div>
-
-          {/* Mobile Search Bar */}
-          <div className="md:hidden pb-4">
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="What are you looking for?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300"
-              />
-              <Button
-                size="icon"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSearch={handleSearch}
+        showStateSelectors={false}
+        selectedState={selectedState}
+        selectedLGA={selectedLGA}
+        onStateChange={handleStateChange}
+        onLGAChange={handleLGAChange}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -577,79 +387,76 @@ export default function CategoryPage() {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Main Menu
             </Link>
-              <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-[url('/strapre-hero.png')] bg-cover bg-center">
-                {/* Black overlay */}
-                <div className="absolute inset-0 bg-black/10 z-0"></div>
 
-                {/* Content */}
-                <div className="relative z-10">
-                  <h1 className="text-white text-xl md:text-4xl font-bold mb-2">New iPhone 14 Pro Max</h1>
-                  <p className="text-white/90 text-[5px] md:text-base mb-4 max-w-[257px] md:max-w-2xl">
-                    Apple's top-tier phone with a 6.7" OLED display, A16 Bionic chip, and Dynamic Island. It features a
-                    48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless steel.
-                  </p>
-                  <div className="inline-block bg-white text-[8px] md:text-[12px] text-black font-bold hover:bg-gray-100 px-2 md:px-4 py-1 md:py-2 rounded cursor-pointer">
-                    VIEW INFO
-                  </div>
-                </div>
-
-                {/* Slide Indicators (centered horizontally) */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
-                  {[0, 1, 2, 3, 4].map((index) => (
-                    <button
-                      key={index}
-                      className={`w-3 h-3 rounded-full ${currentSlide === index ? "bg-white" : "bg-white/50"}`}
-                      onClick={() => setCurrentSlide(index)}
-                    />
-                  ))}
+            <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-[url('/strapre-hero.png')] bg-cover bg-center">
+              {/* Black overlay */}
+              <div className="absolute inset-0 bg-black/10 z-0"></div>
+              {/* Content */}
+              <div className="relative z-10">
+                <h1 className="text-white text-xl md:text-4xl font-bold mb-2">New iPhone 14 Pro Max</h1>
+                <p className="text-white/90 text-[5px] md:text-base mb-4 max-w-[257px] md:max-w-2xl">
+                  Apple's top-tier phone with a 6.7" OLED display, A16 Bionic chip, and Dynamic Island. It features a
+                  48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless steel.
+                </p>
+                <div className="inline-block bg-white text-[8px] md:text-[12px] text-black font-bold hover:bg-gray-100 px-2 md:px-4 py-1 md:py-2 rounded cursor-pointer">
+                  VIEW INFO
                 </div>
               </div>
+              {/* Slide Indicators (centered horizontally) */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
+                {[0, 1, 2, 3, 4].map((index) => (
+                  <button
+                    key={index}
+                    className={`w-3 h-3 rounded-full ${currentSlide === index ? "bg-white" : "bg-white/50"}`}
+                    onClick={() => setCurrentSlide(index)}
+                  />
+                ))}
+              </div>
+            </div>
 
             {/* Category Header */}
-            <div className="flex flex-col  justify-between mb-6">
+            <div className="flex flex-col justify-between mb-6">
               <div className="flex items-center space-x-4 justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-semibold">Category ({category?.name || "Loading..."})</h2>
-
-                {/* Desktop State/LGA Filters */}
-                <div className="hidden md:flex items-center space-x-3">
-                  <Select onValueChange={handleStateChange} value={selectedState?.id || "all"}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="State" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All States</SelectItem>
-                      {states.map((state) => (
-                        <SelectItem key={state.id} value={state.id}>
-                          {state.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select onValueChange={handleLGAChange} value={selectedLGA?.id || "all"} disabled={!selectedState}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="LGA" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All LGAs</SelectItem>
-                      {lgas.map((lga) => (
-                        <SelectItem key={lga.id} value={lga.id}>
-                          {lga.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {/* Desktop State/LGA Filters */}
+                  <div className="hidden md:flex items-center space-x-3">
+                    <Select onValueChange={handleStateChange} value={selectedState?.id || "all"}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue placeholder="State" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All States</SelectItem>
+                        {states.map((state) => (
+                          <SelectItem key={state.id} value={state.id}>
+                            {state.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select onValueChange={handleLGAChange} value={selectedLGA?.id || "all"} disabled={!selectedState}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue placeholder="LGA" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All LGAs</SelectItem>
+                        {lgas.map((lga) => (
+                          <SelectItem key={lga.id} value={lga.id}>
+                            {lga.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                </div>
-
-              <Button
-                    variant="outline"
-                    className="flex items-center gap-2 border-[2] border-gray-60 text-black hover:bg-[#CB0207] hover:text-white rounded-xl px-3 py-2 font-medium transition-all duration-300 bg-transparent"
-                    onClick={() => setShowFilterDialog(true)}
-                  >
-                    <Filter className="h-2 w-4" />
-                  </Button>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 border-[2] border-gray-60 text-black hover:bg-[#CB0207] hover:text-white rounded-xl px-3 py-2 font-medium transition-all duration-300 bg-transparent"
+                  onClick={() => setShowFilterDialog(true)}
+                >
+                  <Filter className="h-2 w-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Loading State */}
@@ -661,112 +468,108 @@ export default function CategoryPage() {
 
             {/* Products Grid */}
             {!loading && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 pb-2">
-                  {products.map((product) => (
-                    <Link key={product.id} href={`/product/${product.slug}`}>
-                      <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border-0 shadow-lg card-hover rounded-xl">
-                          <div className="bg-gradient-to-br from-gray-50 to-gray-100 h-32 md:h-48 relative">
-                          {product.images.length > 0 ? (
-                            <Image
-                              src={product.images[0].url || "/placeholder.svg"}
-                              alt={product.name}
-                              fill
-                              className="object-cover"
-                              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement
-                                target.src = "/placeholder.svg?height=200&width=200"
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                              <span className="text-gray-400 text-xs">No Image</span>
-                            </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 pb-2">
+                {products.map((product) => (
+                  <Link key={product.id} href={`/product/${product.slug}`}>
+                    <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border-0 shadow-lg card-hover rounded-xl">
+                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 h-32 md:h-48 relative">
+                        {product.images.length > 0 ? (
+                          <Image
+                            src={product.images[0].url || "/placeholder.svg"}
+                            alt={product.name}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = "/placeholder.svg?height=200&width=200"
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                            <span className="text-gray-400 text-xs">No Image</span>
+                          </div>
+                        )}
+                      </div>
+                      <CardContent className="p-2">
+                        <h3 className="font-semibold text-xs md:text-sm mb-1 md:mb-3 line-clamp-2 text-gray-800">
+                          {product.name}
+                        </h3>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="font-bold text-sm md:text-lg text-[#CB0207]">
+                            {formatPrice(product.price)}
+                          </span>
+                          {isAuthenticated && (
+                            <span className="bg-[#CB0207] text-white text-xs px-2 py-1 rounded-lg font-medium">Ad</span>
                           )}
                         </div>
-                        <CardContent className="p-2">
-                            <h3 className="font-semibold text-xs md:text-sm mb-1 md:mb-3 line-clamp-2 text-gray-800">
-                              {product.name}
-                            </h3>
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="font-bold text-sm md:text-lg text-[#CB0207]">
-                                {formatPrice(product.price)}
-                              </span>
-                              {isAuthenticated && (
-                                <span className="bg-[#CB0207] text-white text-xs px-2 py-1 rounded-lg font-medium">
-                                  Ad
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-gray-500 text-xs flex items-center">
-                              <MapPin className="h-3 w-3 mr-1" />
-                              {product.store.store_lga || "N/A"}, {product.store.store_state || "N/A"}
-                            </p>
-                          </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              )}
+                        <p className="text-gray-500 text-xs flex items-center">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {product.store.store_lga || "N/A"}, {product.store.store_state || "N/A"}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center items-center space-x-2 mt-12">
-                  {paginationLinks.map((link, index) => {
-                    if (link.label.includes("Previous")) {
-                      return (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          disabled={!link.url}
-                          onClick={() => handlePageChange(link.url)}
-                          className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                        >
-                          Previous
-                        </Button>
-                      )
-                    } else if (link.label.includes("Next")) {
-                      return (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          disabled={!link.url}
-                          onClick={() => handlePageChange(link.url)}
-                          className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                        >
-                          Next
-                        </Button>
-                      )
-                    } else if (!isNaN(Number.parseInt(link.label))) {
-                      return (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePageChange(link.url)}
-                          className={`rounded-xl border-2 font-medium ${
-                            link.active ? "bg-[#CB0207] text-white border-[#CB0207]" : "border-gray-200 bg-transparent"
-                          }`}
-                        >
-                          {link.label}
-                        </Button>
-                      )
-                    }
-                    return null
-                  })}
-                </div>
-              )}
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center space-x-2 mt-12">
+                {paginationLinks.map((link, index) => {
+                  if (link.label.includes("Previous")) {
+                    return (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        disabled={!link.url}
+                        onClick={() => handlePageChange(link.url)}
+                        className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
+                      >
+                        Previous
+                      </Button>
+                    )
+                  } else if (link.label.includes("Next")) {
+                    return (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        disabled={!link.url}
+                        onClick={() => handlePageChange(link.url)}
+                        className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
+                      >
+                        Next
+                      </Button>
+                    )
+                  } else if (!isNaN(Number.parseInt(link.label))) {
+                    return (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(link.url)}
+                        className={`rounded-xl border-2 font-medium ${
+                          link.active ? "bg-[#CB0207] text-white border-[#CB0207]" : "border-gray-200 bg-transparent"
+                        }`}
+                      >
+                        {link.label}
+                      </Button>
+                    )
+                  }
+                  return null
+                })}
+              </div>
+            )}
 
-
-              {/* No Products Message */}
-              {!loading && products.length === 0 && (
-                <div className="text-center py-16">
-                  <p className="text-gray-500 text-lg">No products found</p>
-                </div>
-              )}
-            </div>
+            {/* No Products Message */}
+            {!loading && products.length === 0 && (
+              <div className="text-center py-16">
+                <p className="text-gray-500 text-lg">No products found</p>
+              </div>
+            )}
           </main>
         </div>
       </div>
@@ -807,7 +610,6 @@ export default function CategoryPage() {
                 </Select>
               </div>
             </div>
-
             <div>
               <h3 className="font-medium mb-3">Amount:</h3>
               <div className="flex items-center space-x-3">
@@ -826,7 +628,6 @@ export default function CategoryPage() {
                 />
               </div>
             </div>
-
             <div className="flex space-x-3">
               <Button onClick={applyFilters} className="flex-1 bg-red-600 hover:bg-red-700 text-white">
                 Apply Filter

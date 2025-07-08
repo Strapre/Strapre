@@ -3,30 +3,14 @@
 import type React from "react"
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import {
-  ArrowLeft,
-  Camera,
-  Upload,
-  Search,
-  Heart,
-  User,
-  Menu,
-  ChevronDown,
-  ChevronRight,
-  LogOut,
-  Store,
-  MapPin,
-} from "lucide-react"
+import { ArrowLeft, Camera, Upload, Store, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import Link from "next/link"
+import Header from "@/components/header"
 
 interface UserProfile {
   id: string
@@ -226,11 +210,6 @@ export default function CreateStorePage() {
     }
   }
 
-  const getUserInitials = () => {
-    if (!userProfile) return "U"
-    return `${userProfile.first_name?.[0] || ""}${userProfile.last_name?.[0] || ""}.toUpperCase()`
-  }
-
   const getCurrentStateName = () => {
     if (!selectedState || states.length === 0) return ""
     const state = states.find((s) => s.id === selectedState)
@@ -243,10 +222,26 @@ export default function CreateStorePage() {
     return lga?.name || ""
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("auth_token")
-    localStorage.removeItem("userDetails")
-    router.push("/login")
+  const handleStateChange = (stateId: string) => {
+    if (stateId === "defaultState") {
+      setSelectedState("")
+      setSelectedLGA("")
+      setLgas([])
+      return
+    }
+    setSelectedState(stateId)
+    const state = states.find((s) => s.id === stateId)
+    if (state) {
+      fetchLGAs(state.slug)
+    }
+  }
+
+  const handleLGAChange = (lgaId: string) => {
+    if (lgaId === "defaultLGA") {
+      setSelectedLGA("")
+      return
+    }
+    setSelectedLGA(lgaId)
   }
 
   const formatFileSize = (bytes: number) => {
@@ -254,7 +249,7 @@ export default function CreateStorePage() {
     const k = 1024
     const sizes = ["Bytes", "KB", "MB"]
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
   }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -281,7 +276,6 @@ export default function CreateStorePage() {
 
       // Clear any previous errors
       setError("")
-
       setStoreImage(file)
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -302,6 +296,12 @@ export default function CreateStorePage() {
     if (fileInputRef.current) {
       fileInputRef.current.removeAttribute("capture")
       fileInputRef.current.click()
+    }
+  }
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      console.log("Searching for:", searchQuery)
     }
   }
 
@@ -424,10 +424,8 @@ export default function CreateStorePage() {
 
       if (response.ok) {
         setSuccess("Store created successfully!")
-
         // Store the response as userStore in localStorage
         localStorage.setItem("userStore", JSON.stringify((data as StoreSuccess).data))
-
         // Redirect after success
         setTimeout(() => {
           router.push("/")
@@ -435,7 +433,6 @@ export default function CreateStorePage() {
       } else {
         const errorData = data as StoreError
         setError(errorData.message || "Failed to create store")
-
       }
     } catch (error) {
       console.error("Network error:", error)
@@ -449,180 +446,23 @@ export default function CreateStorePage() {
     router.back()
   }
 
+  // Convert selectedState and selectedLGA to State and LGA objects for Header component
+  const selectedStateObj = selectedState ? states.find((s) => s.id === selectedState) || null : null
+  const selectedLGAObj = selectedLGA ? lgas.find((l) => l.id === selectedLGA) || null : null
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Mobile Menu */}
-            <div className="md:hidden">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-xl">
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 bg-white overflow-y-auto">
-                  <div className="py-6 h-full flex flex-col">
-                    {/* User Profile Section */}
-                    {userProfile && (
-                      <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200 flex-shrink-0">
-                        <Avatar className="h-14 w-14 ring-2 ring-[#CB0207]/20">
-                          <AvatarImage
-                            src={userProfile.profile_picture || ""}
-                            alt={`${userProfile.first_name} ${userProfile.last_name}`}
-                          />
-                          <AvatarFallback className="bg-[#CB0207] text-white font-bold">
-                            {getUserInitials()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-bold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</h3>
-                          <p className="text-sm text-gray-500">{userProfile.email}</p>
-                        </div>
-                      </div>
-                    )}
-                    <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
-                    <div className="space-y-1 mb-8">
-                      {categories.map((category) => (
-                        <Link
-                          key={category.id}
-                          href={`/category/${category.id}`}
-                          className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
-                        >
-                          <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
-                            {category.name}
-                          </span>
-                          <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
-                        </Link>
-                      ))}
-                    </div>
-                    <div className="space-y-3 mb-8">
-                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
-                        🔔 Notifications
-                      </div>
-                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium">
-                        💬 Message Support
-                      </div>
-                      <div className="py-3 px-4 text-sm cursor-pointer hover:bg-gray-50 rounded-xl transition-all duration-200 flex items-center font-medium">
-                        <User className="h-4 w-4 mr-2" />
-                        Settings
-                      </div>
-                    </div>
-                    <Button
-                      className={`w-full ${
-                        userStore ? "bg-green-600 hover:bg-green-700" : "bg-[#CB0207] hover:bg-[#A50206]"
-                      } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300`}
-                    >
-                      {userStore ? "View My Store" : "Become a Merchant"}
-                    </Button>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-            {/* Logo */}
-            <div className="hidden md:flex items-center">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
-                  <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
-                </div>
-                <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
-              </div>
-            </div>
-            {/* Search Bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-              <div className="relative w-full">
-                <Input
-                  type="text"
-                  placeholder="What are you looking for?"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300 h-12"
-                />
-                <Button
-                  size="icon"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
-                  variant="ghost"
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            {/* Desktop User Actions */}
-            <div className="hidden md:flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-xl">
-                <Heart className="h-5 w-5" />
-              </Button>
-              {userProfile && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 py-2"
-                    >
-                      <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
-                        <AvatarImage src={userProfile.profile_picture || ""} />
-                        <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
-                          {getUserInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold text-gray-800">{`${userProfile.first_name} ${userProfile.last_name}`}</p>
-                        <p className="text-xs text-gray-500">{userProfile.email}</p>
-                      </div>
-                      <ChevronDown className="h-4 w-4 text-gray-400" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-0">
-                    <DropdownMenuItem className="rounded-lg">
-                      <User className="h-4 w-4 mr-2" />
-                      My Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <span className="h-4 w-4 mr-2">S</span>
-                      {userStore ? "View My Store" : "Become a Merchant"}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-red-600">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Log Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-            {/* Mobile User Avatar */}
-            <div className="md:hidden">
-              {userProfile && (
-                <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
-                  <AvatarImage src={userProfile.profile_picture || ""} />
-                  <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-            </div>
-          </div>
-          {/* Mobile Search Bar */}
-          <div className="md:hidden pb-4">
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="What are you looking for?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-12 rounded-2xl border-2 border-gray-200 focus:border-[#CB0207] focus:ring-2 focus:ring-[#CB0207]/20 transition-all duration-300"
-              />
-              <Button
-                size="icon"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-xl bg-[#CB0207] hover:bg-[#A50206] text-white h-8 w-8"
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSearch={handleSearch}
+        showStateSelectors={false}
+        selectedState={selectedStateObj}
+        selectedLGA={selectedLGAObj}
+        onStateChange={handleStateChange}
+        onLGAChange={handleLGAChange}
+      />
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -724,7 +564,6 @@ export default function CreateStorePage() {
               {/* Store Information */}
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold text-gray-900">Store Information</h3>
-
                 <div>
                   <Label htmlFor="storeName" className="text-sm font-medium text-gray-700 mb-2 block">
                     Store Name *
@@ -785,7 +624,6 @@ export default function CreateStorePage() {
                     />
                     <p className="text-xs text-gray-500 mt-1">Must start with 0 (e.g., 08012345678)</p>
                   </div>
-
                   <div>
                     <Label htmlFor="email" className="text-sm font-medium text-gray-700 mb-2 block">
                       Email Address *
@@ -822,7 +660,6 @@ export default function CreateStorePage() {
                         </SelectContent>
                       </Select>
                     </div>
-
                     <div>
                       <Label htmlFor="lga" className="text-sm font-medium text-gray-700 mb-2 block">
                         LGA *
@@ -895,9 +732,7 @@ export default function CreateStorePage() {
               {/* Form validation indicator */}
               {!isFormValid && (
                 <div className="text-center">
-                  <p className="text-sm text-gray-500">
-                    Please fill in all required fields to create your store
-                  </p>
+                  <p className="text-sm text-gray-500">Please fill in all required fields to create your store</p>
                 </div>
               )}
             </form>
@@ -951,7 +786,7 @@ export default function CreateStorePage() {
             </div>
             <div>
               <h3 className="font-semibold text-lg mb-4">Logistics</h3>
-              <ul className="space-y-2 text-Sm">
+              <ul className="space-y-2 text-sm">
                 <li>
                   <a href="#" className="hover:underline">
                     Local
