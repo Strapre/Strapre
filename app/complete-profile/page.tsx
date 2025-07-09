@@ -247,7 +247,7 @@ export default function CompleteProfilePage() {
           </div>
         </div>
       </header>
-
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6  ">
         <div className="flex gap-8 justify-center">
           {/* Main Content */}
@@ -258,6 +258,7 @@ export default function CompleteProfilePage() {
                 <h1 className="text-3xl font-bold text-red-600 mb-2">Complete Profile</h1>
                 <p className="text-gray-600">COMPLETE YOUR PROFILE TODAY</p>
               </div>
+
 
               {error && (
                 <Alert className="border-red-200 bg-red-50 mb-6">

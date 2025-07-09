@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, Heart, Phone, MessageCircle } from "lucide-react"
+import { ArrowLeft, Heart, Phone, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -107,6 +107,18 @@ export default function ProductPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedState, setSelectedState] = useState<State | null>(null)
   const [selectedLGA, setSelectedLGA] = useState<LGA | null>(null)
+  
+  // Touch/swipe related states
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const imageContainerRef = useRef<HTMLDivElement>(null)
+  
+  // Wishlist states
+  const [wishlistItems, setWishlistItems] = useState<string[]>([])
+  const [wishlistLoading, setWishlistLoading] = useState<string[]>([])
+
+  // Minimum swipe distance (in px)
+  const minSwipeDistance = 50
 
   // Check authentication and fetch initial data
   useEffect(() => {
@@ -125,6 +137,7 @@ export default function ProductPage() {
     if (token) {
       fetchUserProfile(token)
       fetchUserStore(token)
+      fetchWishlist(token)
     }
 
     // Fetch product data
@@ -239,6 +252,84 @@ export default function ProductPage() {
     }
   }
 
+  const fetchWishlist = async (token: string) => {
+    try {
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        // Assuming the API returns an array of wishlist items with product_id
+        const productIds = data.data?.map((item: any) => item.product_id) || []
+        setWishlistItems(productIds)
+      }
+    } catch (error) {
+      console.error("Error fetching wishlist:", error)
+    }
+  }
+
+  const addToWishlist = async (productId: string) => {
+    const token = localStorage.getItem("auth_token")
+    if (!token) {
+      setShowLoginDialog(true)
+      return
+    }
+
+    setWishlistLoading((prev) => [...prev, productId])
+    try {
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ product_id: productId }),
+      })
+      if (response.ok) {
+        setWishlistItems((prev) => [...prev, productId])
+      }
+    } catch (error) {
+      console.error("Error adding to wishlist:", error)
+    } finally {
+      setWishlistLoading((prev) => prev.filter((id) => id !== productId))
+    }
+  }
+
+  const removeFromWishlist = async (productId: string) => {
+    const token = localStorage.getItem("auth_token")
+    if (!token) return
+
+    setWishlistLoading((prev) => [...prev, productId])
+    try {
+      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/wishlist/${productId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.ok) {
+        setWishlistItems((prev) => prev.filter((id) => id !== productId))
+      }
+    } catch (error) {
+      console.error("Error removing from wishlist:", error)
+    } finally {
+      setWishlistLoading((prev) => prev.filter((id) => id !== productId))
+    }
+  }
+
+  const toggleWishlist = () => {
+    if (!product) return
+    
+    const isInWishlist = wishlistItems.includes(product.id)
+    if (isInWishlist) {
+      removeFromWishlist(product.id)
+    } else {
+      addToWishlist(product.id)
+    }
+  }
+
   const handleStateChange = (stateId: string) => {
     if (stateId === "defaultState") {
       setSelectedState(null)
@@ -303,6 +394,89 @@ export default function ProductPage() {
     }
   }
 
+  // Image navigation functions
+  const goToPreviousImage = () => {
+    if (!product || product.images.length <= 1) return
+    setSelectedImageIndex((prev) => (prev === 0 ? product.images.length - 1 : prev - 1))
+  }
+
+  const goToNextImage = () => {
+    if (!product || product.images.length <= 1) return
+    setSelectedImageIndex((prev) => (prev === product.images.length - 1 ? 0 : prev + 1))
+  }
+
+  // Touch event handlers
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    if (isLeftSwipe) {
+      goToNextImage()
+    } else if (isRightSwipe) {
+      goToPreviousImage()
+    }
+  }
+
+  // Mouse event handlers for desktop dragging
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState<number | null>(null)
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    setDragStart(e.clientX)
+  }
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !dragStart) return
+    
+    const distance = dragStart - e.clientX
+    if (Math.abs(distance) > minSwipeDistance) {
+      if (distance > 0) {
+        goToNextImage()
+      } else {
+        goToPreviousImage()
+      }
+      setIsDragging(false)
+      setDragStart(null)
+    }
+  }
+
+  const onMouseUp = () => {
+    setIsDragging(false)
+    setDragStart(null)
+  }
+
+  const onMouseLeave = () => {
+    setIsDragging(false)
+    setDragStart(null)
+  }
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        goToPreviousImage()
+      } else if (e.key === "ArrowRight") {
+        goToNextImage()
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [product])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -349,22 +523,99 @@ export default function ProductPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Product Images */}
           <div className="space-y-4">
-            {/* Main Image */}
-            <div className="relative aspect-square bg-gradient-to-br from-pink-200 to-purple-200 rounded-lg overflow-hidden">
+            {/* Main Image with Slider */}
+            <div 
+              ref={imageContainerRef}
+              className="relative aspect-square bg-gradient-to-br from-pink-200 to-purple-200 rounded-lg overflow-hidden group cursor-grab active:cursor-grabbing"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              onMouseDown={onMouseDown}
+              onMouseMove={onMouseMove}
+              onMouseUp={onMouseUp}
+              onMouseLeave={onMouseLeave}
+            >
               <Image
                 src={product.images[selectedImageIndex]?.url || "/placeholder.svg"}
                 alt={product.name}
                 fill
-                className="object-cover"
+                className="object-cover transition-transform duration-300 ease-in-out select-none"
                 sizes="(max-width: 768px) 100vw, 50vw"
+                draggable={false}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
                   target.src = "/placeholder.svg?height=400&width=400"
                 }}
               />
-              <Button variant="ghost" size="icon" className="absolute top-4 right-4 bg-white/80 hover:bg-white">
-                <Heart className="h-5 w-5" />
+              
+              {/* Heart Button */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`absolute top-4 right-4 z-10 transition-all duration-200 ${
+                  product && wishlistItems.includes(product.id)
+                    ? "bg-red-100 hover:bg-red-200 text-red-600"
+                    : "bg-white/80 hover:bg-white text-gray-600"
+                }`}
+                onClick={toggleWishlist}
+                disabled={product && wishlistLoading.includes(product.id)}
+              >
+                {product && wishlistLoading.includes(product.id) ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
+                ) : (
+                  <Heart 
+                    className={`h-5 w-5 transition-all duration-200 ${
+                      product && wishlistItems.includes(product.id) ? "fill-current" : ""
+                    }`} 
+                  />
+                )}
               </Button>
+
+              {/* Navigation Arrows - Only show if more than 1 image */}
+              {product.images.length > 1 && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+                    onClick={goToPreviousImage}
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+                    onClick={goToNextImage}
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </Button>
+                </>
+              )}
+
+              {/* Image Counter */}
+              {product.images.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-sm z-10">
+                  {selectedImageIndex + 1} / {product.images.length}
+                </div>
+              )}
+
+              {/* Slide Indicator Dots */}
+              {product.images.length > 1 && (
+                <div className="absolute bottom-4 right-4 flex space-x-2 z-10">
+                  {product.images.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                        selectedImageIndex === index 
+                          ? "bg-white" 
+                          : "bg-white/50 hover:bg-white/75"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Thumbnail Images */}
@@ -374,8 +625,8 @@ export default function ProductPage() {
                   <button
                     key={image.id}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                      selectedImageIndex === index ? "border-red-600" : "border-gray-200"
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${
+                      selectedImageIndex === index ? "border-red-600 scale-105" : "border-gray-200"
                     }`}
                   >
                     <Image
@@ -392,6 +643,13 @@ export default function ProductPage() {
                   </button>
                 ))}
               </div>
+            )}
+
+            {/* Swipe Instruction */}
+            {product.images.length > 1 && (
+              <p className="text-sm text-gray-500 text-center">
+                Swipe, drag, or use arrow keys to navigate images
+              </p>
             )}
           </div>
 
@@ -419,7 +677,7 @@ export default function ProductPage() {
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Retail Price</p>
-                    <p className="text-4xl font-bold text-gray-900">{formatPrice(product.price)}</p>
+                    <p className="text-2xl md:text-4xl font-bold text-gray-900">{formatPrice(product.price)}</p>
                   </div>
                   {isMerchant && product.wholesale_price && (
                     <div className="pt-3 border-t border-gray-200">

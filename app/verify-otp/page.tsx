@@ -221,7 +221,7 @@ export default function VerifyOTPPage() {
 
             <form onSubmit={handleVerifyOTP} className="space-y-6">
               {/* OTP Input Fields */}
-              <div className="flex justify-center space-x-4">
+              <div className="flex justify-center space-x-2">
                 {otp.map((digit, index) => (
                   <Input
                     key={index}

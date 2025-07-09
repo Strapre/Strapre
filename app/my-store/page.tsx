@@ -346,7 +346,7 @@ export default function MyStorePage() {
             </div>
 
             {/* Enhanced Action Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
               {/* Create New Product */}
               <Link href="/my-store/products">
                 <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200">
@@ -366,6 +366,7 @@ export default function MyStorePage() {
               </Link>
 
               {/* Featured Products */}
+              <Link href="/feature-product">
               <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200">
                 <CardHeader className="pb-4">
                   <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
@@ -383,9 +384,10 @@ export default function MyStorePage() {
                   </Button>
                 </CardContent>
               </Card>
+              </Link>
 
               {/* Banner Request */}
-              <Link href="/banner-request">
+              {/* <Link href="/banner-request">
                 <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200">
                   <CardHeader className="pb-4">
                     <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
@@ -403,10 +405,10 @@ export default function MyStorePage() {
                     </Button>
                   </CardContent>
                 </Card>
-              </Link>
+              </Link> */}
 
               {/* Settings */}
-              <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200">
+              {/* <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200">
                 <CardHeader className="pb-4">
                   <div className="w-14 h-14 bg-gradient-to-br from-gray-600 to-gray-700 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
                     <Settings className="h-7 w-7 text-white" />
@@ -422,37 +424,11 @@ export default function MyStorePage() {
                     Manage Settings
                   </Button>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600">Store Views</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-2">
-                    <Eye className="h-5 w-5 text-blue-500" />
-                    <span className="text-2xl font-bold text-gray-900">1,234</span>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">Total views this month</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600">Products</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center space-x-2">
-                    <Store className="h-5 w-5 text-green-500" />
-                    <span className="text-2xl font-bold text-gray-900">45</span>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">Active products</p>
-                </CardContent>
-              </Card>
-
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-gray-600">Last Updated</CardTitle>
