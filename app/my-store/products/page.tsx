@@ -296,7 +296,10 @@ export default function MyProductsPage() {
                 {pagination ? `${pagination.total} products found` : "Loading products..."}
               </p>
             </div>
-            <Button className="mt-4 sm:mt-0 bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center space-x-2">
+            <Button
+              className="mt-4 sm:mt-0 bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center space-x-2"
+              onClick={() => router.push('/my-store/products/create')}
+            >
               <Plus className="h-4 w-4" />
               <span>Add Product</span>
             </Button>
@@ -461,10 +464,7 @@ export default function MyProductsPage() {
               <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 px-4">
                 Start by adding your first product to your store
               </p>
-              <Button className="bg-[#CB0207] hover:bg-[#A50206] text-white text-sm sm:text-base">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Product
-              </Button>
+
             </div>
           )
         )}

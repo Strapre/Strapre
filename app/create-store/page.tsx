@@ -47,17 +47,21 @@ interface ApiResponse<T> {
 type StoreSuccess = {
   data: {
     id: string
+    user_id: string
     store_name: string
+    slug: string
     store_description: string
     store_image: string
+    store_cac_image: string
+    store_id_image: string
     email: string
     phone: string
     address: string
     state_id: string
     lga_id: string
-    user_id: string
-    slug: string
-    subscription_expires_at: string | null
+    subscription_expires_at: string
+    is_active: boolean
+    status: string
     created_at: string
     updated_at: string
   }

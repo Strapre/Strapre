@@ -128,12 +128,6 @@ const handleRegister = async (e: React.FormEvent) => {
                 </div>
               </div>
 
-              
-            <Link href="#">
-                <Button className=" bg-[#CB0207] hover:bg-[#A50206] text-white text-[10px] md:text-[12px] px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300">
-                  LOGIN / REGISTER
-                </Button>
-              </Link>
           </div>
         </div>
       </header>

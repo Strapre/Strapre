@@ -2,20 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import {
-  ArrowLeft,
-  Store,
-  Plus,
-  Star,
-  ImageIcon,
-  Settings,
-  MapPin,
-  Phone,
-  Mail,
-  Calendar,
-  Eye,
-  Edit,
-} from "lucide-react"
+import { ArrowLeft, Store, Plus, Star, MapPin, Phone, Mail, Calendar, Edit, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -42,6 +29,8 @@ interface StoreResponse {
     slug: string
     store_description: string
     store_image: string
+    store_cac_image?: string
+    store_id_image?: string
     phone: string
     email: string
     state_id: string
@@ -49,6 +38,7 @@ interface StoreResponse {
     address: string
     subscription_expires_at: string | null
     is_active: number
+    status: string
     created_at: string
     updated_at: string
   }
@@ -82,7 +72,6 @@ export default function MyStorePage() {
       router.push("/login")
       return
     }
-
     // Load existing profile data from userDetails
     loadProfileData()
     // Fetch store data
@@ -104,7 +93,6 @@ export default function MyStorePage() {
   const fetchStoreData = async () => {
     setLoading(true)
     const token = localStorage.getItem("auth_token")
-
     try {
       console.log("=== FETCHING STORE DATA ===")
       console.log("Token:", token)
@@ -119,7 +107,6 @@ export default function MyStorePage() {
       })
 
       const responseData: StoreResponse = await response.json()
-
       console.log("=== STORE DATA RESPONSE ===")
       console.log("Status:", response.status)
       console.log("Response Data:", responseData)
@@ -156,6 +143,10 @@ export default function MyStorePage() {
     if (!storeData?.subscription_expires_at) return "No Subscription"
     const isActive = isSubscriptionActive()
     return isActive ? "Active" : "Expired"
+  }
+
+  const isStorePending = () => {
+    return storeData?.status === "pending"
   }
 
   const handleBackToHome = () => {
@@ -217,6 +208,17 @@ export default function MyStorePage() {
           </Button>
         </div>
 
+        {/* Store Under Review Alert - Only show if status is pending */}
+        {isStorePending() && (
+          <Alert className="border-orange-200 bg-orange-50 mb-6 rounded-lg">
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-800 font-medium">
+              Your store is currently under review. All store functions are temporarily disabled until the review
+              process is complete.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Error Alert */}
         {error && (
           <Alert className="border-red-200 bg-red-50 mb-6 rounded-lg">
@@ -254,7 +256,24 @@ export default function MyStorePage() {
                         </h1>
                         <p className="text-lg text-gray-600 leading-relaxed max-w-2xl">{storeData.store_description}</p>
                       </div>
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                      <div className="flex flex-row items-center space-x-3">
+                        {/* Show status badge based on store status */}
+                        {isStorePending() ? (
+                          <Badge
+                            variant="secondary"
+                            className="px-4 py-2 text-sm font-semibold bg-orange-100 text-orange-800 border-orange-200"
+                          >
+                            🔍 Under Review
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="default"
+                            className="px-4 py-2 text-sm font-semibold bg-green-100 text-green-800 border-green-200"
+                          >
+                            ✅ Approved
+                          </Badge>
+                        )}
+
                         <Badge
                           variant={storeData.is_active === 1 ? "default" : "secondary"}
                           className={`px-4 py-2 text-sm font-semibold ${
@@ -265,16 +284,6 @@ export default function MyStorePage() {
                         >
                           {storeData.is_active === 1 ? "🟢 Active" : "⚫ Inactive"}
                         </Badge>
-                        {/* <Badge
-                          variant={isSubscriptionActive() ? "default" : "destructive"}
-                          className={`px-4 py-2 text-sm font-semibold ${
-                            isSubscriptionActive()
-                              ? "bg-blue-100 text-blue-800 border-blue-200"
-                              : "bg-red-100 text-red-800 border-red-200"
-                          }`}
-                        >
-                          {isSubscriptionActive() ? "💎 Premium" : "⏰ Expired"}
-                        </Badge> */}
                       </div>
                     </div>
 
@@ -289,6 +298,7 @@ export default function MyStorePage() {
                           <p className="text-gray-900 font-medium">{storeData.address}</p>
                         </div>
                       </div>
+
                       <div className="flex items-center space-x-3 p-4 bg-white/60 rounded-xl border border-gray-100">
                         <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                           <Phone className="h-5 w-5 text-green-600" />
@@ -298,6 +308,7 @@ export default function MyStorePage() {
                           <p className="text-gray-900 font-medium">{storeData.phone}</p>
                         </div>
                       </div>
+
                       <div className="flex items-center space-x-3 p-4 bg-white/60 rounded-xl border border-gray-100">
                         <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                           <Mail className="h-5 w-5 text-purple-600" />
@@ -307,6 +318,7 @@ export default function MyStorePage() {
                           <p className="text-gray-900 font-medium">{storeData.email}</p>
                         </div>
                       </div>
+
                       <div className="flex items-center space-x-3 p-4 bg-white/60 rounded-xl border border-gray-100">
                         <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                           <Calendar className="h-5 w-5 text-orange-600" />
@@ -321,7 +333,7 @@ export default function MyStorePage() {
                     {/* Enhanced Subscription Info */}
                     {storeData.subscription_expires_at && (
                       <div
-                        className={`p-4 rounded-xl border ${
+                        className={`p-4 rounded-xl border hidden ${
                           isSubscriptionActive() ? "bg-blue-50 border-blue-200" : "bg-red-50 border-red-200"
                         }`}
                       >
@@ -347,84 +359,87 @@ export default function MyStorePage() {
 
             {/* Enhanced Action Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
-              {/* Create New Product */}
-              <Link href="/my-store/products">
-                <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200">
+              {/* Manage Products Card */}
+              {isStorePending() ? (
+                <Card className="opacity-60 cursor-not-allowed border-0 bg-gradient-to-br from-red-50 to-red-100">
                   <CardHeader className="pb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#CB0207] to-[#A50206] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                    <div className="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center mb-4 shadow-lg">
                       <Plus className="h-7 w-7 text-white" />
                     </div>
                     <CardTitle className="text-xl font-bold text-gray-900">Manage Products</CardTitle>
                     <CardDescription className="text-gray-600">View and manage all your store products</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button className="w-full bg-gradient-to-r from-[#CB0207] to-[#A50206] hover:from-[#A50206] hover:to-[#8B0105] text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all">
-                      View Products
+                    <Button
+                      disabled
+                      className="w-full bg-gray-400 text-white font-semibold py-3 rounded-xl shadow-lg cursor-not-allowed"
+                    >
+                      Store Under Review
                     </Button>
                   </CardContent>
                 </Card>
-              </Link>
+              ) : (
+                <Link href="/my-store/products">
+                  <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200">
+                    <CardHeader className="pb-4">
+                      <div className="w-14 h-14 bg-gradient-to-br from-[#CB0207] to-[#A50206] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                        <Plus className="h-7 w-7 text-white" />
+                      </div>
+                      <CardTitle className="text-xl font-bold text-gray-900">Manage Products</CardTitle>
+                      <CardDescription className="text-gray-600">
+                        View and manage all your store products
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button className="w-full bg-gradient-to-r from-[#CB0207] to-[#A50206] hover:from-[#A50206] hover:to-[#8B0105] text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                        View Products
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Link>
+              )}
 
-              {/* Featured Products */}
-              <Link href="/feature-product">
-              <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200">
-                <CardHeader className="pb-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <Star className="h-7 w-7 text-white" />
-                  </div>
-                  <CardTitle className="text-xl font-bold text-gray-900">Featured Products</CardTitle>
-                  <CardDescription className="text-gray-600">Manage and promote your best items</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    variant="outline"
-                    className="w-full border-2 border-yellow-500 text-yellow-700 hover:bg-yellow-500 hover:text-white font-semibold py-3 rounded-xl transition-all bg-transparent"
-                  >
-                    View Featured
-                  </Button>
-                </CardContent>
-              </Card>
-              </Link>
-
-              {/* Banner Request */}
-              {/* <Link href="/banner-request">
-                <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200">
+              {/* Featured Products Card */}
+              {isStorePending() ? (
+                <Card className="opacity-60 cursor-not-allowed border-0 bg-gradient-to-br from-yellow-50 to-yellow-100">
                   <CardHeader className="pb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                      <ImageIcon className="h-7 w-7 text-white" />
+                    <div className="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center mb-4 shadow-lg">
+                      <Star className="h-7 w-7 text-white" />
                     </div>
-                    <CardTitle className="text-xl font-bold text-gray-900">Banner Request</CardTitle>
-                    <CardDescription className="text-gray-600">Request promotional banners and ads</CardDescription>
+                    <CardTitle className="text-xl font-bold text-gray-900">Featured Products</CardTitle>
+                    <CardDescription className="text-gray-600">Manage and promote your best items</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Button
+                      disabled
                       variant="outline"
-                      className="w-full border-2 border-purple-500 text-purple-700 hover:bg-purple-500 hover:text-white font-semibold py-3 rounded-xl transition-all bg-transparent"
+                      className="w-full border-2 border-gray-400 text-gray-500 font-semibold py-3 rounded-xl bg-transparent cursor-not-allowed"
                     >
-                      Request Banner
+                      Store Under Review
                     </Button>
                   </CardContent>
                 </Card>
-              </Link> */}
-
-              {/* Settings */}
-              {/* <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200">
-                <CardHeader className="pb-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-gray-600 to-gray-700 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <Settings className="h-7 w-7 text-white" />
-                  </div>
-                  <CardTitle className="text-xl font-bold text-gray-900">Store Settings</CardTitle>
-                  <CardDescription className="text-gray-600">Configure and customize your store</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    variant="outline"
-                    className="w-full border-2 border-gray-500 text-gray-700 hover:bg-gray-600 hover:text-white font-semibold py-3 rounded-xl transition-all bg-transparent"
-                  >
-                    Manage Settings
-                  </Button>
-                </CardContent>
-              </Card> */}
+              ) : (
+                <Link href="/feature-product">
+                  <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200">
+                    <CardHeader className="pb-4">
+                      <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                        <Star className="h-7 w-7 text-white" />
+                      </div>
+                      <CardTitle className="text-xl font-bold text-gray-900">Featured Products</CardTitle>
+                      <CardDescription className="text-gray-600">Manage and promote your best items</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        variant="outline"
+                        className="w-full border-2 border-yellow-500 text-yellow-700 hover:bg-yellow-500 hover:text-white font-semibold py-3 rounded-xl transition-all bg-transparent"
+                      >
+                        View Featured
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Link>
+              )}
             </div>
 
             {/* Quick Stats */}
