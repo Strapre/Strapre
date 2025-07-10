@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Camera, Upload, Store, MapPin } from "lucide-react"
+import { ArrowLeft, Camera, Upload, Store, MapPin, FileText, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -79,6 +79,10 @@ export default function CreateStorePage() {
   const [selectedLGA, setSelectedLGA] = useState("")
   const [storeImage, setStoreImage] = useState<File | null>(null)
   const [storeImagePreview, setStoreImagePreview] = useState<string>("")
+  const [storeCacImage, setStoreCacImage] = useState<File | null>(null)
+  const [storeCacImagePreview, setStoreCacImagePreview] = useState<string>("")
+  const [storeIdImage, setStoreIdImage] = useState<File | null>(null)
+  const [storeIdImagePreview, setStoreIdImagePreview] = useState<string>("")
   const [states, setStates] = useState<State[]>([])
   const [lgas, setLgas] = useState<LGA[]>([])
   const [loading, setLoading] = useState(false)
@@ -97,6 +101,8 @@ export default function CreateStorePage() {
   ])
   const [userStore] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cacFileInputRef = useRef<HTMLInputElement>(null)
+  const idFileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   // Constants
@@ -112,9 +118,22 @@ export default function CreateStorePage() {
       email.trim() !== "" &&
       selectedState !== "" &&
       selectedLGA !== "" &&
-      storeImage !== null
+      storeImage !== null &&
+      storeCacImage !== null &&
+      storeIdImage !== null
     )
-  }, [storeName, storeDescription, address, phone, email, selectedState, selectedLGA, storeImage])
+  }, [
+    storeName,
+    storeDescription,
+    address,
+    phone,
+    email,
+    selectedState,
+    selectedLGA,
+    storeImage,
+    storeCacImage,
+    storeIdImage,
+  ])
 
   useEffect(() => {
     // Check if user has auth token
@@ -252,15 +271,16 @@ export default function CreateStorePage() {
     return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
   }
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, type: "store" | "cac" | "id") => {
     const file = event.target.files?.[0]
     if (file) {
       // Check file size (2MB = 2 * 1024 * 1024 bytes)
       if (file.size > MAX_IMAGE_SIZE) {
         setError(`Image size must be less than 2MB. Selected file is ${formatFileSize(file.size)}.`)
         // Clear the file input
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ""
+        const inputRef = type === "store" ? fileInputRef : type === "cac" ? cacFileInputRef : idFileInputRef
+        if (inputRef.current) {
+          inputRef.current.value = ""
         }
         return
       }
@@ -268,34 +288,54 @@ export default function CreateStorePage() {
       // Check file type
       if (!file.type.startsWith("image/")) {
         setError("Please select a valid image file.")
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ""
+        const inputRef = type === "store" ? fileInputRef : type === "cac" ? cacFileInputRef : idFileInputRef
+        if (inputRef.current) {
+          inputRef.current.value = ""
         }
         return
       }
 
       // Clear any previous errors
       setError("")
-      setStoreImage(file)
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setStoreImagePreview(e.target?.result as string)
+
+      if (type === "store") {
+        setStoreImage(file)
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setStoreImagePreview(e.target?.result as string)
+        }
+        reader.readAsDataURL(file)
+      } else if (type === "cac") {
+        setStoreCacImage(file)
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setStoreCacImagePreview(e.target?.result as string)
+        }
+        reader.readAsDataURL(file)
+      } else if (type === "id") {
+        setStoreIdImage(file)
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setStoreIdImagePreview(e.target?.result as string)
+        }
+        reader.readAsDataURL(file)
       }
-      reader.readAsDataURL(file)
     }
   }
 
-  const handleTakePhoto = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.setAttribute("capture", "camera")
-      fileInputRef.current.click()
+  const handleTakePhoto = (type: "store" | "cac" | "id") => {
+    const inputRef = type === "store" ? fileInputRef : type === "cac" ? cacFileInputRef : idFileInputRef
+    if (inputRef.current) {
+      inputRef.current.setAttribute("capture", "camera")
+      inputRef.current.click()
     }
   }
 
-  const handleUploadFromGallery = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.removeAttribute("capture")
-      fileInputRef.current.click()
+  const handleUploadFromGallery = (type: "store" | "cac" | "id") => {
+    const inputRef = type === "store" ? fileInputRef : type === "cac" ? cacFileInputRef : idFileInputRef
+    if (inputRef.current) {
+      inputRef.current.removeAttribute("capture")
+      inputRef.current.click()
     }
   }
 
@@ -373,8 +413,32 @@ export default function CreateStorePage() {
       return
     }
 
+    if (!storeCacImage) {
+      setError("CAC image is required.")
+      setLoading(false)
+      return
+    }
+
+    if (!storeIdImage) {
+      setError("ID image is required.")
+      setLoading(false)
+      return
+    }
+
     if (storeImage.size > MAX_IMAGE_SIZE) {
-      setError(`Image size must be less than 2MB. Selected file is ${formatFileSize(storeImage.size)}.`)
+      setError(`Store image size must be less than 2MB. Selected file is ${formatFileSize(storeImage.size)}.`)
+      setLoading(false)
+      return
+    }
+
+    if (storeCacImage.size > MAX_IMAGE_SIZE) {
+      setError(`CAC image size must be less than 2MB. Selected file is ${formatFileSize(storeCacImage.size)}.`)
+      setLoading(false)
+      return
+    }
+
+    if (storeIdImage.size > MAX_IMAGE_SIZE) {
+      setError(`ID image size must be less than 2MB. Selected file is ${formatFileSize(storeIdImage.size)}.`)
       setLoading(false)
       return
     }
@@ -389,6 +453,8 @@ export default function CreateStorePage() {
       formData.append("state_id", selectedState)
       formData.append("lga_id", selectedLGA)
       formData.append("store_image", storeImage)
+      formData.append("store_cac_image", storeCacImage)
+      formData.append("store_id_image", storeIdImage)
 
       // Console log for debugging
       console.log("=== CREATING STORE ===")
@@ -535,7 +601,7 @@ export default function CreateStorePage() {
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Button
                         type="button"
-                        onClick={handleTakePhoto}
+                        onClick={() => handleTakePhoto("store")}
                         className="bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center justify-center space-x-2"
                       >
                         <Camera className="h-4 w-4" />
@@ -543,7 +609,7 @@ export default function CreateStorePage() {
                       </Button>
                       <Button
                         type="button"
-                        onClick={handleUploadFromGallery}
+                        onClick={() => handleUploadFromGallery("store")}
                         variant="outline"
                         className="border-gray-300 hover:border-[#CB0207] hover:text-[#CB0207] flex items-center justify-center space-x-2 bg-transparent"
                       >
@@ -558,8 +624,16 @@ export default function CreateStorePage() {
                     )}
                   </div>
                 </div>
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileSelect(e, "store")}
+                  className="hidden"
+                />
               </div>
+
+              
 
               {/* Store Information */}
               <div className="space-y-6">
@@ -710,8 +784,127 @@ export default function CreateStorePage() {
                 </div>
               </div>
 
+              {/* CAC Image Section */}
+              <div className="border-b border-gray-200 pb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">CAC Image</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-8">
+                  <div className="mb-6 sm:mb-0">
+                    <div className="h-24 w-24 mx-auto sm:mx-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+                      {storeCacImagePreview ? (
+                        <img
+                          src={storeCacImagePreview || "/placeholder.svg"}
+                          alt="CAC preview"
+                          className="h-full w-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <FileText className="h-8 w-8 text-gray-400" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 mb-2 text-center sm:text-left">
+                      Upload your CAC (Corporate Affairs Commission) document
+                    </p>
+                    {/* <p className="text-xs text-gray-500 mb-4 text-center sm:text-left">
+                      Maximum file size: 2MB. Supported formats: JPG, PNG, GIF
+                    </p> */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button
+                        type="button"
+                        onClick={() => handleTakePhoto("cac")}
+                        className="bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center justify-center space-x-2"
+                      >
+                        <Camera className="h-4 w-4" />
+                        <span>Take Photo</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => handleUploadFromGallery("cac")}
+                        variant="outline"
+                        className="border-gray-300 hover:border-[#CB0207] hover:text-[#CB0207] flex items-center justify-center space-x-2 bg-transparent"
+                      >
+                        <Upload className="h-4 w-4" />
+                        <span>Upload Image</span>
+                      </Button>
+                    </div>
+                    {storeCacImage && (
+                      <p className="text-xs text-green-600 mt-2 text-center sm:text-left">
+                        ✓ Selected: {storeCacImage.name} ({formatFileSize(storeCacImage.size)})
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <input
+                  ref={cacFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileSelect(e, "cac")}
+                  className="hidden"
+                />
+              </div>
+
+              {/* ID Image Section */}
+              <div className="">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">ID Image</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-8">
+                  <div className="mb-6 sm:mb-0">
+                    <div className="h-24 w-24 mx-auto sm:mx-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+                      {storeIdImagePreview ? (
+                        <img
+                          src={storeIdImagePreview || "/placeholder.svg"}
+                          alt="ID preview"
+                          className="h-full w-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <CreditCard className="h-8 w-8 text-gray-400" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 mb-2 text-center sm:text-left">Upload your ID document</p>
+                    <p className="text-xs text-gray-500 mb-2 text-center sm:text-left">
+                      Submit either NIN, International Passport, or Voters Card image
+                    </p>
+                    {/* <p className="text-xs text-gray-500 mb-4 text-center sm:text-left">
+                      Maximum file size: 2MB. Supported formats: JPG, PNG, GIF
+                    </p> */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button
+                        type="button"
+                        onClick={() => handleTakePhoto("id")}
+                        className="bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center justify-center space-x-2"
+                      >
+                        <Camera className="h-4 w-4" />
+                        <span>Take Photo</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => handleUploadFromGallery("id")}
+                        variant="outline"
+                        className="border-gray-300 hover:border-[#CB0207] hover:text-[#CB0207] flex items-center justify-center space-x-2 bg-transparent"
+                      >
+                        <Upload className="h-4 w-4" />
+                        <span>Upload Image</span>
+                      </Button>
+                    </div>
+                    {storeIdImage && (
+                      <p className="text-xs text-green-600 mt-2 text-center sm:text-left">
+                        ✓ Selected: {storeIdImage.name} ({formatFileSize(storeIdImage.size)})
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <input
+                  ref={idFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileSelect(e, "id")}
+                  className="hidden"
+                />
+              </div>
+
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+              <div className="flex flex-col-reverse sm:flex-row gap-4 pt-6 border-t border-gray-200">
                 <Button
                   type="button"
                   onClick={handleCancel}

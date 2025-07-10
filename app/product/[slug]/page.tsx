@@ -1,13 +1,27 @@
 "use client"
-
 import { useState, useEffect, useRef } from "react"
+import type React from "react"
+
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, Heart, Phone, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  ArrowLeft,
+  Heart,
+  Phone,
+  MessageCircle,
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  Shield,
+  AlertTriangle,
+  Send,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Header from "@/components/header"
 
 interface ProductImage {
@@ -40,7 +54,18 @@ interface ProductStore {
   slug: string
   store_lga: string
   store_state: string
+  store_image?: string
   phone_number: string
+}
+
+interface Review {
+  id: string
+  rating: number
+  comment: string
+  user: {
+    name: string
+  }
+  created_at: string
 }
 
 interface Product {
@@ -55,6 +80,8 @@ interface Product {
   wholesale_price: string
   images: ProductImage[]
   store: ProductStore
+  average_rating?: number
+  reviews?: Review[]
   created_at: string
 }
 
@@ -107,15 +134,22 @@ export default function ProductPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedState, setSelectedState] = useState<State | null>(null)
   const [selectedLGA, setSelectedLGA] = useState<LGA | null>(null)
-  
+
   // Touch/swipe related states
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const imageContainerRef = useRef<HTMLDivElement>(null)
-  
+
   // Wishlist states
   const [wishlistItems, setWishlistItems] = useState<string[]>([])
   const [wishlistLoading, setWishlistLoading] = useState<string[]>([])
+
+  // Review states
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviewRating, setReviewRating] = useState(0)
+  const [reviewComment, setReviewComment] = useState("")
+  const [reviewLoading, setReviewLoading] = useState(false)
+  const [reviews, setReviews] = useState<Review[]>([])
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50
@@ -125,7 +159,6 @@ export default function ProductPage() {
     // Check authentication
     const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null
     const userStoreData = typeof window !== "undefined" ? localStorage.getItem("userStore") : null
-
     setIsAuthenticated(!!token)
     setIsMerchant(!!userStoreData)
 
@@ -169,7 +202,6 @@ export default function ProductPage() {
         const data = await response.json()
         setUserStore(data)
         setIsMerchant(true)
-
         // Store in localStorage
         if (typeof window !== "undefined") {
           localStorage.setItem("userStore", JSON.stringify(data))
@@ -190,12 +222,10 @@ export default function ProductPage() {
       const data = await response.json()
       if (response.ok) {
         setUserProfile(data.data)
-
         // Store in localStorage
         if (typeof window !== "undefined") {
           localStorage.setItem("userDetails", JSON.stringify(data.data))
         }
-
         // Check if profile is incomplete (first_name is null)
         if (!data.data.first_name) {
           router.push("/complete-profile")
@@ -242,6 +272,10 @@ export default function ProductPage() {
       if (response.ok) {
         const data: ApiResponse<Product> = await response.json()
         setProduct(data.data)
+        // Set reviews if available
+        if (data.data.reviews) {
+          setReviews(data.data.reviews)
+        }
       } else {
         setError("Product not found")
       }
@@ -319,9 +353,60 @@ export default function ProductPage() {
     }
   }
 
+  const submitReview = async () => {
+    const token = localStorage.getItem("auth_token")
+    if (!token) {
+      setShowLoginDialog(true)
+      return
+    }
+
+    if (!product || reviewRating === 0 || !reviewComment.trim()) {
+      return
+    }
+
+    setReviewLoading(true)
+    try {
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/reviews", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: product.id,
+          rating: reviewRating,
+          comment: reviewComment.trim(),
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Add the new review to the beginning of the reviews array
+        setReviews((prev) => [data.data, ...prev])
+        // Reset form
+        setReviewRating(0)
+        setReviewComment("")
+        setShowReviewForm(false)
+        // Update product average rating if needed
+        if (product) {
+          const newTotalRating = (product.average_rating || 0) * reviews.length + reviewRating
+          const newAverageRating = newTotalRating / (reviews.length + 1)
+          setProduct({
+            ...product,
+            average_rating: newAverageRating,
+          })
+        }
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error)
+    } finally {
+      setReviewLoading(false)
+    }
+  }
+
   const toggleWishlist = () => {
     if (!product) return
-    
+
     const isInWishlist = wishlistItems.includes(product.id)
     if (isInWishlist) {
       removeFromWishlist(product.id)
@@ -337,7 +422,6 @@ export default function ProductPage() {
       setLgas([])
       return
     }
-
     const state = states.find((s) => s.id === stateId)
     if (state) {
       setSelectedState(state)
@@ -351,7 +435,6 @@ export default function ProductPage() {
       setSelectedLGA(null)
       return
     }
-
     const lga = lgas.find((l) => l.id === lgaId)
     setSelectedLGA(lga || null)
   }
@@ -366,7 +449,6 @@ export default function ProductPage() {
       setShowLoginDialog(true)
       return
     }
-
     if (!product) return
 
     if (action === "whatsapp") {
@@ -417,7 +499,7 @@ export default function ProductPage() {
 
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return
-    
+
     const distance = touchStart - touchEnd
     const isLeftSwipe = distance > minSwipeDistance
     const isRightSwipe = distance < -minSwipeDistance
@@ -440,7 +522,7 @@ export default function ProductPage() {
 
   const onMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !dragStart) return
-    
+
     const distance = dragStart - e.clientX
     if (Math.abs(distance) > minSwipeDistance) {
       if (distance > 0) {
@@ -476,6 +558,33 @@ export default function ProductPage() {
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [product])
+
+  // Star Rating Component
+  const StarRating = ({
+    rating,
+    onRatingChange,
+    interactive = false,
+  }: { rating: number; onRatingChange?: (rating: number) => void; interactive?: boolean }) => {
+    return (
+      <div className="flex items-center space-x-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => interactive && onRatingChange?.(star)}
+            className={`${interactive ? "cursor-pointer hover:scale-110" : "cursor-default"} transition-transform duration-150`}
+            disabled={!interactive}
+          >
+            <Star
+              className={`h-5 w-5 ${
+                star <= rating ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200"
+              }`}
+            />
+          </button>
+        ))}
+      </div>
+    )
+  }
 
   if (loading) {
     return (
@@ -524,7 +633,7 @@ export default function ProductPage() {
           {/* Product Images */}
           <div className="space-y-4">
             {/* Main Image with Slider */}
-            <div 
+            <div
               ref={imageContainerRef}
               className="relative aspect-square bg-gradient-to-br from-pink-200 to-purple-200 rounded-lg overflow-hidden group cursor-grab active:cursor-grabbing"
               onTouchStart={onTouchStart}
@@ -547,11 +656,11 @@ export default function ProductPage() {
                   target.src = "/placeholder.svg?height=400&width=400"
                 }}
               />
-              
+
               {/* Heart Button */}
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className={`absolute top-4 right-4 z-10 transition-all duration-200 ${
                   product && wishlistItems.includes(product.id)
                     ? "bg-red-100 hover:bg-red-200 text-red-600"
@@ -563,10 +672,10 @@ export default function ProductPage() {
                 {product && wishlistLoading.includes(product.id) ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
                 ) : (
-                  <Heart 
+                  <Heart
                     className={`h-5 w-5 transition-all duration-200 ${
                       product && wishlistItems.includes(product.id) ? "fill-current" : ""
-                    }`} 
+                    }`}
                   />
                 )}
               </Button>
@@ -608,9 +717,7 @@ export default function ProductPage() {
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
                       className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                        selectedImageIndex === index 
-                          ? "bg-white" 
-                          : "bg-white/50 hover:bg-white/75"
+                        selectedImageIndex === index ? "bg-white" : "bg-white/50 hover:bg-white/75"
                       }`}
                     />
                   ))}
@@ -647,9 +754,7 @@ export default function ProductPage() {
 
             {/* Swipe Instruction */}
             {product.images.length > 1 && (
-              <p className="text-sm text-gray-500 text-center">
-                Swipe, drag, or use arrow keys to navigate images
-              </p>
+              <p className="text-sm text-gray-500 text-center">Swipe, drag, or use arrow keys to navigate images</p>
             )}
           </div>
 
@@ -670,6 +775,16 @@ export default function ProductPage() {
                     {product.store.store_lga}, {product.store.store_state}
                   </span>
                 </div>
+
+                {/* Rating Display */}
+                {product.average_rating && (
+                  <div className="flex items-center space-x-3">
+                    <StarRating rating={product.average_rating} />
+                    <span className="text-sm text-gray-600">
+                      {product.average_rating.toFixed(1)} ({reviews.length} review{reviews.length !== 1 ? "s" : ""})
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Pricing Section */}
@@ -694,9 +809,19 @@ export default function ProductPage() {
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
               <div className="flex items-start space-x-4">
                 <Avatar className="h-14 w-14 ring-2 ring-gray-100">
-                  <AvatarFallback className="bg-red-100 text-red-600 text-lg font-semibold">
-                    {product.store.name.charAt(0)}
-                  </AvatarFallback>
+                  {product.store.store_image ? (
+                    <Image
+                      src={product.store.store_image || "/placeholder.svg"}
+                      alt={product.store.name}
+                      width={56}
+                      height={56}
+                      className="object-cover"
+                    />
+                  ) : (
+                    <AvatarFallback className="bg-red-100 text-red-600 text-lg font-semibold">
+                      {product.store.name.charAt(0)}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
@@ -709,6 +834,32 @@ export default function ProductPage() {
                 </div>
               </div>
             </div>
+
+            {/* Safety Tips */}
+            <Card className="border-orange-200 bg-orange-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center space-x-2 text-orange-800">
+                  <Shield className="h-5 w-5" />
+                  <span>Safety Tips</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-start space-x-2">
+                  <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-orange-700">
+                    Always inspect the product thoroughly before making any payment
+                  </p>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-orange-700">Meet in a safe, public location when possible</p>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-orange-700">Verify seller credentials and product authenticity</p>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Action Buttons */}
             <div className="space-y-3">
@@ -736,10 +887,124 @@ export default function ProductPage() {
                 <span>Product Details</span>
               </h3>
               <div className="prose prose-gray max-w-none">
-                <p className="text-gray-700 leading-relaxed text-base">{product.description}</p>
+                <p className="text-gray-700 leading-relaxed text-base whitespace-pre-line">{product.description}</p>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-12 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-900">Customer Reviews</h2>
+            {isAuthenticated && (
+              <Button
+                onClick={() => setShowReviewForm(!showReviewForm)}
+                variant="outline"
+                className="border-red-600 text-red-600 hover:bg-red-50"
+              >
+                Write a Review
+              </Button>
+            )}
+          </div>
+
+          {/* Review Form */}
+          {showReviewForm && (
+            <Card className="border-red-200">
+              <CardHeader>
+                <CardTitle>Write Your Review</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                  <StarRating rating={reviewRating} onRatingChange={setReviewRating} interactive={true} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Comment</label>
+                  <Textarea
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder="Share your experience with this product..."
+                    rows={4}
+                    className="resize-none"
+                  />
+                </div>
+                <div className="flex space-x-3">
+                  <Button
+                    onClick={submitReview}
+                    disabled={reviewLoading || reviewRating === 0 || !reviewComment.trim()}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {reviewLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    ) : (
+                      <Send className="h-4 w-4 mr-2" />
+                    )}
+                    Submit Review
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowReviewForm(false)
+                      setReviewRating(0)
+                      setReviewComment("")
+                    }}
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Reviews List */}
+          {reviews.length > 0 ? (
+            <div className="space-y-4">
+              {reviews.map((review) => (
+                <Card key={review.id} className="border-gray-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-start space-x-4">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-gray-100 text-gray-600">
+                          {review.user.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold text-gray-900">{review.user.name}</h4>
+                            <p className="text-sm text-gray-500">{review.created_at}</p>
+                          </div>
+                          <StarRating rating={review.rating} />
+                        </div>
+                        <p className="text-gray-700">{review.comment}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="border-gray-200">
+              <CardContent className="p-8 text-center">
+                <div className="space-y-3">
+                  <div className="text-gray-400">
+                    <Star className="h-12 w-12 mx-auto" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900">No reviews yet</h3>
+                  <p className="text-gray-500">Be the first to review this product!</p>
+                  {!isAuthenticated && (
+                    <Button
+                      onClick={() => setShowLoginDialog(true)}
+                      className="mt-4 bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Login to Write a Review
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
@@ -751,7 +1016,8 @@ export default function ProductPage() {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-gray-600">
-              You need to be logged in to contact the seller. Please login or create an account to continue.
+              You need to be logged in to contact the seller or write a review. Please login or create an account to
+              continue.
             </p>
             <div className="flex space-x-3">
               <Button onClick={handleLoginRedirect} className="flex-1 bg-red-600 hover:bg-red-700 text-white">

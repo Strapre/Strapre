@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Filter, ChevronRight, Heart, X, MapPin, DollarSign } from "lucide-react"
+import { Filter, ChevronRight, Heart, X, MapPin, DollarSign, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -59,6 +59,7 @@ interface Product {
   store: ProductStore
   created_at: string
   is_featured: number
+  average_rating:number
 }
 
 interface UserProfile {
@@ -622,7 +623,7 @@ function HomePage() {
                               {product.name}
                             </h3>
                             <div className="flex items-center justify-between mb-3">
-                              <span className="font-bold text-sm md:text-lg text-[#CB0207]">
+                              <span className="font-bold text-[12px] md:text-lg text-[#CB0207]">
                                 {formatPrice(product.price)}
                               </span>
                               {product.is_featured === 1 && (
@@ -635,6 +636,30 @@ function HomePage() {
                               <MapPin className="h-3 w-3 mr-1" />
                               {product.store.store_lga || "N/A"}, {product.store.store_state || "N/A"}
                             </p>
+                            <div className="flex items-center gap-0 mt-2">
+                              {Array.from({ length: 5 }, (_, i) => {
+                                const rating = product.average_rating || 0
+                                const fullStar = i < Math.floor(rating)
+                                const halfStar = i < rating && i >= Math.floor(rating)
+                                return (
+                                  <span key={i} className="text-yellow-400">
+                                    {fullStar ? (
+                                      <Star className="w-3 h-3 fill-yellow-400 stroke-yellow-400" />
+                                    ) : halfStar ? (
+                                      <Star className="w-3 h-3 fill-yellow-400 stroke-yellow-400 opacity-50" />
+                                    ) : (
+                                      <Star className="w-3 h-3 stroke-gray-300" />
+                                    )}
+                                  </span>
+                                )
+                              })}
+                              <span className="text-xs text-gray-600 ml-1">({product.average_rating || 0})</span>
+                            </div>
+                            <p className="text-gray-500 text-xs flex items-center mt-2 space-x-1">
+                              <span>Store:</span>
+                              <span>{product.store.name || "N/A"}</span>
+                            </p>
+
                           </CardContent>
                         </Card>
                       </Link>
