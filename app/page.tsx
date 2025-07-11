@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Header from "@/components/header"
+import Footer from '@/components/footer'
 import RegisterSW from "./register-sw"
 import InstallPrompt from "./install-prompt"
 import Link from "next/link"
@@ -926,102 +927,7 @@ const fetchUserProfile = async (token: string) => {
       </Dialog>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-[#CB0207] to-[#A50206] text-white mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="font-bold text-xl mb-6">Buy</h3>
-              <ul className="space-y-3 text-sm">
-                <li>
-                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
-                    Create account
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
-                    Bid
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
-                    Gift cards
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold text-xl mb-6">Sell</h3>
-              <ul className="space-y-3 text-sm">
-                <li>
-                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
-                    Become a seller
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
-                    Auction
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
-                    Store
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold text-xl mb-6">Logistics</h3>
-              <ul className="space-y-3 text-sm">
-                <li>
-                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
-                    Local
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
-                    Cross border
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold text-xl mb-6">Customer Support</h3>
-              <ul className="space-y-3 text-sm">
-                <li>
-                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
-                    Contact us
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-gray-200 transition-colors duration-200">
-                    Email
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-white/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <div className="flex space-x-4 mb-4 md:mb-0">
-              <a href="#" className="text-white hover:text-gray-200 transition-colors duration-200">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-all duration-200">
-                  <span className="text-white font-bold">f</span>
-                </div>
-              </a>
-              <a href="#" className="text-white hover:text-gray-200 transition-colors duration-200">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-all duration-200">
-                  <span className="text-white font-bold">in</span>
-                </div>
-              </a>
-              <a href="#" className="text-white hover:text-gray-200 transition-colors duration-200">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center hover:bg-white/30 transition-all duration-200">
-                  <span className="text-white font-bold">@</span>
-                </div>
-              </a>
-            </div>
-            <p className="text-sm text-white/80">© 2025 Strapre. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

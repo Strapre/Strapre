@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Header from "@/components/header"
+import Footer from '@/components/footer'
 import Link from "next/link"
 import {
   AlertDialog,
@@ -493,85 +494,7 @@ export default function MyProductsPage() {
       </AlertDialog>
 
       {/* Footer */}
-      <footer className="bg-red-900 text-white mt-16 hidden lg:block w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Buy</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="hover:underline">
-                    Create account
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Bid
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Gift cards
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Sell</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="hover:underline">
-                    Become a seller
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Auction
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Store
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Logistics</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="hover:underline">
-                    Local
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Cross boarder
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Customer Support</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="hover:underline">
-                    Contact us
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Email
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-red-800 mt-8 pt-8 text-center">
-            <p className="text-sm text-gray-300">© 2025 Strapre. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
