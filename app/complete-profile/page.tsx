@@ -1,11 +1,8 @@
 "use client"
-
 import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft, Camera, Upload } from "lucide-react"
+import { Camera, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -41,12 +38,12 @@ export default function CompleteProfilePage() {
   const [lgas, setLgas] = useState<LGA[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   useEffect(() => {
     fetchStates()
-
     // Check if user has auth token
     const token = localStorage.getItem("auth_token")
     if (!token) {
@@ -112,20 +109,21 @@ export default function CompleteProfilePage() {
         setError(`Image size must be less than 2MB. Selected file is ${(file.size / (1024 * 1024)).toFixed(2)}MB.`)
         // Clear the file input
         if (event.target) {
-          event.target.value = ''
+          event.target.value = ""
         }
         return
       }
-      
+
       // Clear any previous error
       setError("")
-      
+
       setProfilePicture(file)
       const reader = new FileReader()
       reader.onload = (e) => {
         setProfilePicturePreview(e.target?.result as string)
       }
       reader.readAsDataURL(file)
+      setShowPhotoOptions(false)
     }
   }
 
@@ -143,9 +141,13 @@ export default function CompleteProfilePage() {
     }
   }
 
+  const handleAvatarClick = () => {
+    setShowPhotoOptions(!showPhotoOptions)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Validate form before submission
     if (!isFormValid()) {
       setError("Please fill in all required fields including uploading a profile picture.")
@@ -169,50 +171,20 @@ export default function CompleteProfilePage() {
       formData.append("phone", phone)
       formData.append("state_id", selectedState)
       formData.append("lga_id", selectedLGA)
-
       if (profilePicture) {
         formData.append("profile_picture", profilePicture)
       }
-
-      // Console log all form data being sent
-      console.log("=== FORM DATA BEING SENT TO BACKEND ===")
-      console.log("Token:", token)
-      console.log("Endpoint:", "https://ga.vplaza.com.ng/api/v1/auth/complete-profile")
-      console.log("Method:", "POST")
-      console.log("Headers:", {
-        Authorization: `Bearer ${token}`,
-      })
-
-      console.log("Form Data Contents:")
-      for (const [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          console.log(`${key}:`, {
-            name: value.name,
-            size: value.size,
-            type: value.type,
-            lastModified: value.lastModified,
-          })
-        } else {
-          console.log(`${key}:`, value)
-        }
-      }
-      console.log("=== END FORM DATA ===")
 
       const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/complete-profile", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          Accept: "application/json", 
+          Accept: "application/json",
         },
         body: formData,
       })
 
       const data = await response.json()
-
-      console.log("=== BACKEND RESPONSE ===")
-      console.log("Status:", response.status)
-      console.log("Response Data:", data)
-      console.log("=== END RESPONSE ===")
 
       if (response.ok) {
         console.log("✅ Profile completed successfully!")
@@ -237,28 +209,26 @@ export default function CompleteProfilePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className=" items-center">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
-                    <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
-                  </div>
-                  <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
+                  <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
                 </div>
+                <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
               </div>
+            </div>
           </div>
         </div>
       </header>
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6  ">
+
+      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8  ">
         <div className="flex gap-8 justify-center">
           {/* Main Content */}
           <div className="flex-1 max-w-2xl">
-
             <div className="bg-white rounded-lg shadow-sm p-8">
-              <div className="mb-8">
+              <div className="mb-8 flex flex-col items-center justify-center">
                 <h1 className="text-3xl font-bold text-red-600 mb-2">Complete Profile</h1>
-                <p className="text-gray-600">COMPLETE YOUR PROFILE TODAY</p>
+                <p className="text-gray-600 text-[12px]">COMPLETE YOUR PROFILE TODAY</p>
               </div>
-
 
               {error && (
                 <Alert className="border-red-200 bg-red-50 mb-6">
@@ -267,13 +237,16 @@ export default function CompleteProfilePage() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Profile Picture Section */}
-                <div className="flex items-center space-x-6 mb-8">
-                  <div className="relative flex-shrink-0">
-                    <Avatar className="h-24 w-24">
+                {/* Profile Picture Section - Centered */}
+                <div className="flex flex-col items-center justify-center mb-8 relative">
+                  <div className="relative">
+                    <Avatar
+                      className="h-32 w-32 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={handleAvatarClick}
+                    >
                       <AvatarImage src={profilePicturePreview || "/placeholder.svg"} />
                       <AvatarFallback className="bg-gray-100 text-gray-400 text-lg">
-                        <Camera className="h-8 w-8" />
+                        <Camera className="h-12 w-12" />
                       </AvatarFallback>
                     </Avatar>
                     {!profilePicture && (
@@ -282,16 +255,18 @@ export default function CompleteProfilePage() {
                       </div>
                     )}
                   </div>
+                  <p className="text-sm text-gray-600 mt-3 text-center">
+                    Profile picture <span className="text-red-500">*</span>
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1 text-center">Click to add photo</p>
 
-                  <div className="flex-1 space-y-2 min-w-0">
-                    <p className="text-[10px] md:text-sm text-gray-600 mb-3">
-                      Let's start with your profile picture <span className="text-red-500">*</span>
-                    </p>
-                    <div className="space-y-2">
+                  {/* Photo Options Dropdown */}
+                  {showPhotoOptions && (
+                    <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10">
                       <Button
                         type="button"
                         onClick={handleTakePhoto}
-                        className="w-auto bg-red-600 hover:bg-red-700 text-white text-[10px] md:text-sm px-4 py-2 flex items-center space-x-2 whitespace-nowrap"
+                        className="w-full mb-2 bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 flex items-center space-x-2"
                       >
                         <Camera className="h-4 w-4" />
                         <span>Take new photo</span>
@@ -300,13 +275,13 @@ export default function CompleteProfilePage() {
                         type="button"
                         onClick={handleUploadFromGallery}
                         variant="outline"
-                        className="w-auto text-[10px] md:text-sm px-4 py-2 flex items-center space-x-2 bg-transparent whitespace-nowrap"
+                        className="w-full text-sm px-4 py-2 flex items-center space-x-2 bg-transparent"
                       >
                         <Upload className="h-4 w-4" />
                         <span>Upload from gallery</span>
                       </Button>
                     </div>
-                  </div>
+                  )}
 
                   <input
                     ref={fileInputRef}
@@ -358,9 +333,11 @@ export default function CompleteProfilePage() {
                       State <span className="text-red-500">*</span>
                     </Label>
                     <Select value={selectedState} onValueChange={setSelectedState} required>
-                      <SelectTrigger className={`mt-1 w-full px-4 py-3 border rounded-lg ${
-                        selectedState === "" ? "border-red-300" : "border-gray-300"
-                      }`}>
+                      <SelectTrigger
+                        className={`mt-1 w-full px-4 py-3 border rounded-lg ${
+                          selectedState === "" ? "border-red-300" : "border-gray-300"
+                        }`}
+                      >
                         <SelectValue placeholder="Select State" />
                       </SelectTrigger>
                       <SelectContent>
@@ -378,9 +355,11 @@ export default function CompleteProfilePage() {
                       LGA <span className="text-red-500">*</span>
                     </Label>
                     <Select value={selectedLGA} onValueChange={setSelectedLGA} disabled={!selectedState} required>
-                      <SelectTrigger className={`mt-1 w-full px-4 py-3 border rounded-lg ${
-                        selectedLGA === "" ? "border-red-300" : "border-gray-300"
-                      }`}>
+                      <SelectTrigger
+                        className={`mt-1 w-full px-4 py-3 border rounded-lg ${
+                          selectedLGA === "" ? "border-red-300" : "border-gray-300"
+                        }`}
+                      >
                         <SelectValue placeholder="Select LGA" />
                       </SelectTrigger>
                       <SelectContent>
@@ -415,14 +394,14 @@ export default function CompleteProfilePage() {
                   type="submit"
                   disabled={loading || !isFormValid()}
                   className={`w-full py-3 rounded-lg font-medium text-lg transition-all duration-300 ${
-                    isFormValid() 
-                      ? "bg-red-600 hover:bg-red-700 text-white" 
+                    isFormValid()
+                      ? "bg-red-600 hover:bg-red-700 text-white"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
                   {loading ? "SUBMITTING..." : "SUBMIT"}
                 </Button>
-                
+
                 {!isFormValid() && (
                   <p className="text-sm text-red-500 text-center mt-2">
                     Please fill in all required fields to continue
@@ -434,16 +413,12 @@ export default function CompleteProfilePage() {
 
           {/* Right Side Illustration - Desktop Only */}
           <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-50">
-          <div className="relative">
-            <div className="relative w-full max-w-sm mx-auto">
-              <img
-                src="/strapre-profile.png"
-                alt="Strapre Sign-in mockup"
-                className="w-full h-auto object-contain"
-              />
+            <div className="relative">
+              <div className="relative w-full max-w-sm mx-auto">
+                <img src="/strapre-profile.png" alt="Strapre Sign-in mockup" className="w-full h-auto object-contain" />
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
 

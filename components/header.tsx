@@ -42,21 +42,24 @@ interface UserProfile {
 }
 
 interface UserStore {
-  id: string
-  user_id: string
-  store_name: string
-  slug: string
-  store_description: string
-  store_image: string
-  phone: string
-  email: string
-  state_id: string
-  lga_id: string
-  address: string
-  subscription_expires_at: string
-  is_active: number
-  created_at: string
-  updated_at: string
+    id: string
+    user_id: string
+    store_name: string
+    slug: string
+    store_description: string
+    store_image: string
+    store_cac_image: string
+    store_id_image: string
+    email: string
+    phone: string
+    address: string
+    state_id: string
+    lga_id: string
+    subscription_expires_at: string
+    is_active: boolean
+    status: string
+    created_at: string
+    updated_at: string
 }
 
 interface ApiResponse<T> {
@@ -164,8 +167,15 @@ export default function Header({
       const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
+
+      if (response.status === 401) {
+        router.push('/login')
+        return
+      }
+
       if (response.ok) {
         const data = await response.json()
         const productIds = data.data?.map((item: any) => item.product_id) || []
@@ -305,20 +315,25 @@ export default function Header({
                   </div>
                   {isAuthenticated && (
                     <Button
-                      onClick={() => {
-                        if (userStore) {
-                          router.push("/my-store")
+                        onClick={() => {
+                        if (userStore && Object.keys(userStore).length > 0) {
+                            router.push("/my-store");
                         } else {
-                          router.push("/create-store")
+                            router.push("/create-store");
                         }
-                      }}
-                      className={`w-full ${
-                        userStore ? "bg-green-600 hover:bg-green-700" : "bg-[#CB0207] hover:bg-[#A50206]"
-                      } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300`}
+                        }}
+                        className={`w-full ${
+                        userStore && Object.keys(userStore).length > 0
+                            ? "bg-green-600 hover:bg-green-700"
+                            : "bg-[#CB0207] hover:bg-[#A50206]"
+                        } text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300`}
                     >
-                      {userStore ? "View My Store" : "Become a Merchant"}
+                        {userStore && Object.keys(userStore).length > 0
+                        ? "View My Store"
+                        : "Become a Merchant"}
                     </Button>
-                  )}
+                    )}
+
                   {isAuthenticated && <div className="h-4 text-white">Fill up</div>}
                 </div>
               </SheetContent>
@@ -480,13 +495,19 @@ export default function Header({
                 )}
               </Button>
               {userProfile && (
-                <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
-                  <AvatarImage src={userProfile.profile_picture || ""} />
-                  <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
-                    {getUserInitials()}
-                  </AvatarFallback>
-                </Avatar>
-              )}
+                <div
+                    onClick={() => router.push("/profile")}
+                    className="cursor-pointer"
+                    title="View Profile"
+                >
+                    <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
+                    <AvatarImage src={userProfile.profile_picture || ""} />
+                    <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
+                        {getUserInitials()}
+                    </AvatarFallback>
+                    </Avatar>
+                </div>
+                )}
             </div>
           )}
         </div>

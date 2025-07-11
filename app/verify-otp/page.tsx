@@ -96,9 +96,6 @@ export default function VerifyOTPPage() {
       const data = await response.json()
 
       if (response.ok) {
-        // Clear temporary storage
-        localStorage.removeItem("temp_token")
-        localStorage.removeItem("temp_email")
         // Store the token as auth token
         localStorage.setItem("auth_token", token)
         // Redirect to home page
@@ -116,7 +113,7 @@ export default function VerifyOTPPage() {
   const handleResendOTP = async () => {
     if (!canResend) return
 
-    const token = localStorage.getItem("temp_token")
+    const token = localStorage.getItem("auth_token")
     if (!token) {
       setError("Session expired. Please register again.")
       return

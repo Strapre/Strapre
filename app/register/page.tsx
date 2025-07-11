@@ -97,9 +97,9 @@ const handleRegister = async (e: React.FormEvent) => {
     console.log("📦 Response body:", data);
 
     if (response.ok) {
-      localStorage.setItem("temp_token", data.token);
+      localStorage.setItem("auth_token", data.token);
       localStorage.setItem("temp_email", email);
-      router.push("/verify-otp");
+      router.push("/complete-profile");
     } else {
       setError(data.message || "Registration failed");
     }

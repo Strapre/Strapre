@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Camera, Upload, Store, MapPin, FileText, CreditCard } from "lucide-react"
+import { ArrowLeft, Camera, Upload, Store, MapPin, FileText, CreditCard, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -84,9 +84,7 @@ export default function CreateStorePage() {
   const [storeImage, setStoreImage] = useState<File | null>(null)
   const [storeImagePreview, setStoreImagePreview] = useState<string>("")
   const [storeCacImage, setStoreCacImage] = useState<File | null>(null)
-  const [storeCacImagePreview, setStoreCacImagePreview] = useState<string>("")
   const [storeIdImage, setStoreIdImage] = useState<File | null>(null)
-  const [storeIdImagePreview, setStoreIdImagePreview] = useState<string>("")
   const [states, setStates] = useState<State[]>([])
   const [lgas, setLgas] = useState<LGA[]>([])
   const [loading, setLoading] = useState(false)
@@ -104,6 +102,8 @@ export default function CreateStorePage() {
     { id: "5", name: "Books" },
   ])
   const [userStore] = useState(false)
+  const [showStoreImageOptions, setShowStoreImageOptions] = useState(false)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cacFileInputRef = useRef<HTMLInputElement>(null)
   const idFileInputRef = useRef<HTMLInputElement>(null)
@@ -309,20 +309,11 @@ export default function CreateStorePage() {
           setStoreImagePreview(e.target?.result as string)
         }
         reader.readAsDataURL(file)
-      } else if (type === "cac") {
+        setShowStoreImageOptions(false)
+        } else if (type === "cac") {
         setStoreCacImage(file)
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          setStoreCacImagePreview(e.target?.result as string)
-        }
-        reader.readAsDataURL(file)
       } else if (type === "id") {
         setStoreIdImage(file)
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          setStoreIdImagePreview(e.target?.result as string)
-        }
-        reader.readAsDataURL(file)
       }
     }
   }
@@ -342,6 +333,7 @@ export default function CreateStorePage() {
       inputRef.current.click()
     }
   }
+
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -488,17 +480,13 @@ export default function CreateStorePage() {
 
       const data: StoreResponse = await response.json()
 
-      console.log("=== CREATE STORE RESPONSE ===")
-      console.log("Status:", response.status)
-      console.log("Response Data:", data)
-
       if (response.ok) {
         setSuccess("Store created successfully!")
         // Store the response as userStore in localStorage
         localStorage.setItem("userStore", JSON.stringify((data as StoreSuccess).data))
         // Redirect after success
         setTimeout(() => {
-          router.push("/")
+          router.push("/my-store")
         }, 2000)
       } else {
         const errorData = data as StoreError
@@ -582,45 +570,47 @@ export default function CreateStorePage() {
               <div className="border-b border-gray-200 pb-8">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">Store Image</h3>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-8">
-                  <div className="mb-6 sm:mb-0">
-                    <div className="h-24 w-24 mx-auto sm:mx-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+                  <div className="mb-6 sm:mb-0 relative">
+                    <div
+                      className="h-36 w-36 mx-auto sm:mx-0 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 cursor-pointer hover:border-[#CB0207] transition-colors"
+                      onClick={() => setShowStoreImageOptions(!showStoreImageOptions)}
+                    >
                       {storeImagePreview ? (
                         <img
                           src={storeImagePreview || "/placeholder.svg"}
                           alt="Store preview"
-                          className="h-full w-full object-cover rounded-lg"
+                          className="h-full w-full object-cover rounded-full"
                         />
                       ) : (
                         <Store className="h-8 w-8 text-gray-400" />
                       )}
                     </div>
+                    {showStoreImageOptions && (
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10 min-w-[200px]">
+                        <Button
+                          type="button"
+                          onClick={() => handleTakePhoto("store")}
+                          className="w-full mb-2 bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center justify-center space-x-2"
+                        >
+                          <Camera className="h-4 w-4" />
+                          <span>Take Photo</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => handleUploadFromGallery("store")}
+                          variant="outline"
+                          className="w-full border-gray-300 hover:border-[#CB0207] hover:text-[#CB0207] flex items-center justify-center space-x-2 bg-transparent"
+                        >
+                          <Upload className="h-4 w-4" />
+                          <span>Upload Image</span>
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-2 text-center sm:text-left">
-                      Upload your store logo or take a photo
+                      Click to add image
                     </p>
-                    <p className="text-xs text-gray-500 mb-4 text-center sm:text-left">
-                      Maximum file size: 2MB. Supported formats: JPG, PNG, GIF
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <Button
-                        type="button"
-                        onClick={() => handleTakePhoto("store")}
-                        className="bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center justify-center space-x-2"
-                      >
-                        <Camera className="h-4 w-4" />
-                        <span>Take Photo</span>
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => handleUploadFromGallery("store")}
-                        variant="outline"
-                        className="border-gray-300 hover:border-[#CB0207] hover:text-[#CB0207] flex items-center justify-center space-x-2 bg-transparent"
-                      >
-                        <Upload className="h-4 w-4" />
-                        <span>Upload Image</span>
-                      </Button>
-                    </div>
                     {storeImage && (
                       <p className="text-xs text-green-600 mt-2 text-center sm:text-left">
                         ✓ Selected: {storeImage.name} ({formatFileSize(storeImage.size)})
@@ -636,8 +626,6 @@ export default function CreateStorePage() {
                   className="hidden"
                 />
               </div>
-
-              
 
               {/* Store Information */}
               <div className="space-y-6">
@@ -656,7 +644,6 @@ export default function CreateStorePage() {
                     required
                   />
                 </div>
-
                 <div>
                   <Label htmlFor="storeDescription" className="text-sm font-medium text-gray-700 mb-2 block">
                     Store Description *
@@ -670,7 +657,6 @@ export default function CreateStorePage() {
                     required
                   />
                 </div>
-
                 <div>
                   <Label htmlFor="address" className="text-sm font-medium text-gray-700 mb-2 block">
                     Store Address *
@@ -685,7 +671,6 @@ export default function CreateStorePage() {
                     required
                   />
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="phone" className="text-sm font-medium text-gray-700 mb-2 block">
@@ -702,7 +687,7 @@ export default function CreateStorePage() {
                     />
                     <p className="text-xs text-gray-500 mt-1">Must start with 0 (e.g., 08012345678)</p>
                   </div>
-                  <div>
+                  <div className="hidden">
                     <Label htmlFor="email" className="text-sm font-medium text-gray-700 mb-2 block">
                       Email Address *
                     </Label>
@@ -710,9 +695,9 @@ export default function CreateStorePage() {
                       id="email"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      readOnly
                       placeholder="Enter your email address"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CB0207] focus:border-[#CB0207]"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
                       required
                     />
                   </div>
@@ -792,35 +777,11 @@ export default function CreateStorePage() {
               <div className="border-b border-gray-200 pb-8">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">CAC Image</h3>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-8">
-                  <div className="mb-6 sm:mb-0">
-                    <div className="h-24 w-24 mx-auto sm:mx-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
-                      {storeCacImagePreview ? (
-                        <img
-                          src={storeCacImagePreview || "/placeholder.svg"}
-                          alt="CAC preview"
-                          className="h-full w-full object-cover rounded-lg"
-                        />
-                      ) : (
-                        <FileText className="h-8 w-8 text-gray-400" />
-                      )}
-                    </div>
-                  </div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-2 text-center sm:text-left">
                       Upload your CAC (Corporate Affairs Commission) document
                     </p>
-                    {/* <p className="text-xs text-gray-500 mb-4 text-center sm:text-left">
-                      Maximum file size: 2MB. Supported formats: JPG, PNG, GIF
-                    </p> */}
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <Button
-                        type="button"
-                        onClick={() => handleTakePhoto("cac")}
-                        className="bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center justify-center space-x-2"
-                      >
-                        <Camera className="h-4 w-4" />
-                        <span>Take Photo</span>
-                      </Button>
                       <Button
                         type="button"
                         onClick={() => handleUploadFromGallery("cac")}
@@ -828,13 +789,15 @@ export default function CreateStorePage() {
                         className="border-gray-300 hover:border-[#CB0207] hover:text-[#CB0207] flex items-center justify-center space-x-2 bg-transparent"
                       >
                         <Upload className="h-4 w-4" />
-                        <span>Upload Image</span>
+                        <span>Click to add or replace image</span>
                       </Button>
                     </div>
                     {storeCacImage && (
-                      <p className="text-xs text-green-600 mt-2 text-center sm:text-left">
-                        ✓ Selected: {storeCacImage.name} ({formatFileSize(storeCacImage.size)})
-                      </p>
+                      <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3 mt-3">
+                        <p className="text-xs text-green-600">
+                          ✓ CAC image added: {storeCacImage.name} ({formatFileSize(storeCacImage.size)})
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -851,36 +814,12 @@ export default function CreateStorePage() {
               <div className="">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">ID Image</h3>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-8">
-                  <div className="mb-6 sm:mb-0">
-                    <div className="h-24 w-24 mx-auto sm:mx-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
-                      {storeIdImagePreview ? (
-                        <img
-                          src={storeIdImagePreview || "/placeholder.svg"}
-                          alt="ID preview"
-                          className="h-full w-full object-cover rounded-lg"
-                        />
-                      ) : (
-                        <CreditCard className="h-8 w-8 text-gray-400" />
-                      )}
-                    </div>
-                  </div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-2 text-center sm:text-left">Upload your ID document</p>
                     <p className="text-xs text-gray-500 mb-2 text-center sm:text-left">
                       Submit either NIN, International Passport, or Voters Card image
                     </p>
-                    {/* <p className="text-xs text-gray-500 mb-4 text-center sm:text-left">
-                      Maximum file size: 2MB. Supported formats: JPG, PNG, GIF
-                    </p> */}
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <Button
-                        type="button"
-                        onClick={() => handleTakePhoto("id")}
-                        className="bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center justify-center space-x-2"
-                      >
-                        <Camera className="h-4 w-4" />
-                        <span>Take Photo</span>
-                      </Button>
                       <Button
                         type="button"
                         onClick={() => handleUploadFromGallery("id")}
@@ -888,13 +827,16 @@ export default function CreateStorePage() {
                         className="border-gray-300 hover:border-[#CB0207] hover:text-[#CB0207] flex items-center justify-center space-x-2 bg-transparent"
                       >
                         <Upload className="h-4 w-4" />
-                        <span>Upload Image</span>
+                        <span>Click to add or replace image</span>
                       </Button>
                     </div>
                     {storeIdImage && (
-                      <p className="text-xs text-green-600 mt-2 text-center sm:text-left">
-                        ✓ Selected: {storeIdImage.name} ({formatFileSize(storeIdImage.size)})
-                      </p>
+                      <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3 mt-3">
+                        <p className="text-xs text-green-600">
+                          ✓ ID image added: {storeIdImage.name} ({formatFileSize(storeIdImage.size)})
+                        </p>
+                        
+                      </div>
                     )}
                   </div>
                 </div>

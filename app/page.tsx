@@ -189,26 +189,35 @@ function HomePage() {
     fetchProducts(1) // Reset to page 1 when filters change
   }, [selectedState, selectedLGA])
 
-  const fetchUserProfile = async (token: string) => {
-    try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/get-profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      const data = await response.json()
-      if (response.ok) {
-        setUserProfile(data.data)
-        localStorage.setItem("userDetails", JSON.stringify(data.data))
-        if (!data.data.first_name) {
-          router.push("/complete-profile")
-          return
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching user profile:", error)
+const fetchUserProfile = async (token: string) => {
+  try {
+    const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/get-profile", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    });
+
+    if (response.status === 401) {
+      router.push("/login");
+      return;
     }
+
+    const data = await response.json();
+
+    if (response.ok) {
+      setUserProfile(data.data);
+      localStorage.setItem("userDetails", JSON.stringify(data.data));
+
+      if (!data.data.first_name) {
+        router.push("/complete-profile");
+        return;
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
   }
+}
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -240,6 +249,7 @@ function HomePage() {
       const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       if (response.ok) {
