@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [passwordConfirmation, setPasswordConfirmation] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false)
@@ -68,6 +69,12 @@ const handleRegister = async (e: React.FormEvent) => {
 
   if (password !== passwordConfirmation) {
     setError("Passwords do not match");
+    setLoading(false);
+    return;
+  }
+
+  if (!agreedToTerms) {
+    setError("You must agree to the terms and conditions");
     setLoading(false);
     return;
   }
@@ -264,10 +271,42 @@ const handleRegister = async (e: React.FormEvent) => {
                 )}
               </div>
 
+              {/* Terms and Conditions Checkbox */}
+              <div className="flex flex-row items-start space-x-2">
+  <input
+    id="terms"
+    type="checkbox"
+    checked={agreedToTerms}
+    onChange={(e) => setAgreedToTerms(e.target.checked)}
+    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded mt-0.5"
+  />
+  <label htmlFor="terms" className="text-[12px] text-gray-700 leading-5">
+    I agree to the{" "}
+    <Link
+      href="/terms"
+      className="text-red-600 hover:text-red-700 underline font-medium"
+    >
+      Terms and Conditions
+    </Link>{" "}
+    and{" "}
+    <Link
+      href="/privacy-policy"
+      className="text-red-600 hover:text-red-700 underline font-medium"
+    >
+      Privacy Policy
+    </Link>
+  </label>
+</div>
+
+
               <Button
                 type="submit"
-                disabled={loading}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium"
+                disabled={loading || !agreedToTerms}
+                className={`w-full py-3 rounded-lg font-medium transition-colors ${
+                  loading || !agreedToTerms
+                    ? "bg-gray-400 cursor-not-allowed text-gray-600"
+                    : "bg-red-600 hover:bg-red-700 text-white"
+                }`}
               >
                 {loading ? "REGISTERING..." : "REGISTER"}
               </Button>
