@@ -73,6 +73,27 @@ function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+  // Helper function to get userStore data from localStorage
+  const getUserStoreData = () => {
+    const storedUserStore = localStorage.getItem("userStore")
+    if (!storedUserStore) return null
+    
+    try {
+      const parsedStore = JSON.parse(storedUserStore)
+      console.log("getUserStoreData:", parsedStore)
+      return parsedStore
+    } catch (error) {
+      console.error("Error parsing userStore from localStorage:", error)
+      return null
+    }
+  }
+
+  // Helper function to check if userStore has actual data from localStorage
+  const hasUserStoreData = () => {
+    const storeData = getUserStoreData()
+    return storeData && Object.keys(storeData).length > 0
+  }
+
   // Check authentication and fetch user data
   useEffect(() => {
     const token = localStorage.getItem("auth_token")
@@ -82,6 +103,17 @@ function ProfilePage() {
       fetchUserStore(token)
       fetchWishlist(token)
       fetchCategories()
+      
+      // Also check for existing userStore in localStorage
+      const storedUserStore = localStorage.getItem("userStore")
+      if (storedUserStore) {
+        try {
+          const parsedStore = JSON.parse(storedUserStore)
+          setUserStore(parsedStore)
+        } catch (error) {
+          console.error("Error parsing userStore from localStorage:", error)
+        }
+      }
     } else {
       router.push("/login")
     }
@@ -232,7 +264,7 @@ function ProfilePage() {
                       {userProfile?.first_name} {userProfile?.last_name}
                     </CardTitle>
                     <p className="text-white/90 text-lg">{userProfile?.email}</p>
-                    {userStore && (
+                    {hasUserStoreData() && (
                       <div className="mt-2">
                         <span className="bg-white/20 text-white text-sm px-3 py-1 rounded-full font-medium">
                           Store Owner
@@ -298,8 +330,8 @@ function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Store Information (if user has a store) */}
-                {userStore && (
+                {/* Store Information (if user has a store with data) */}
+                {hasUserStoreData() && (
                   <>
                     <Separator className="my-8" />
                     <div className="hidden md:block">
@@ -311,15 +343,15 @@ function ProfilePage() {
                               S
                             </div>
                             <div>
-                              <p className="text-sm text-gray-500">Store Name</p>
-                              <p className="font-semibold text-gray-800">{userStore.store_name}</p>
+                              <p className="text-sm text-gray-500">Store Name: </p>
+                              <p className="font-semibold text-gray-800">{getUserStoreData()?.data.store_name}</p>
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
                             <Mail className="h-5 w-5 text-[#CB0207]" />
                             <div>
                               <p className="text-sm text-gray-500">Store Email</p>
-                              <p className="font-semibold text-gray-800">{userStore.email}</p>
+                              <p className="font-semibold text-gray-800">{getUserStoreData()?.data.email}</p>
                             </div>
                           </div>
                         </div>
@@ -328,14 +360,14 @@ function ProfilePage() {
                             <Phone className="h-5 w-5 text-[#CB0207]" />
                             <div>
                               <p className="text-sm text-gray-500">Store Phone</p>
-                              <p className="font-semibold text-gray-800">{userStore.phone}</p>
+                              <p className="font-semibold text-gray-800">{getUserStoreData()?.data.phone}</p>
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
                             <MapPin className="h-5 w-5 text-[#CB0207]" />
                             <div>
                               <p className="text-sm text-gray-500">Store Address</p>
-                              <p className="font-semibold text-gray-800">{userStore.address}</p>
+                              <p className="font-semibold text-gray-800">{getUserStoreData()?.data.address}</p>
                             </div>
                           </div>
                         </div>
@@ -382,7 +414,7 @@ function ProfilePage() {
 
                 <Button
                   onClick={() => {
-                    if (userStore) {
+                    if (hasUserStoreData()) {
                       router.push("/my-store")
                     } else {
                       router.push("/create-store")
@@ -390,13 +422,13 @@ function ProfilePage() {
                   }}
                   variant="outline"
                   className={`w-full border-2 ${
-                    userStore ? "border-green-200 hover:bg-green-50" : "border-gray-200 hover:bg-gray-50"
+                    hasUserStoreData() ? "border-green-200 hover:bg-green-50" : "border-gray-200 hover:bg-gray-50"
                   } py-3 h-12 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 bg-transparent`}
                 >
                   <div className="w-5 h-5 bg-[#CB0207] rounded text-white flex items-center justify-center text-xs font-bold">
                     S
                   </div>
-                  <span>{userStore ? "View My Store" : "Become a Merchant"}</span>
+                  <span>{hasUserStoreData() ? "View My Store" : "Become a Merchant"}</span>
                 </Button>
 
                 <Separator className="my-4" />
@@ -432,7 +464,7 @@ function ProfilePage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Account Type</span>
-                  <span className="font-bold text-gray-800">{userStore ? "Merchant" : "Customer"}</span>
+                  <span className="font-bold text-gray-800">{hasUserStoreData() ? "Merchant" : "Customer"}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Member Since</span>
