@@ -458,7 +458,7 @@ export default function Header({
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
-                        if (userStore) {
+                        if (userStore && Object.keys(userStore).length > 0) {
                           router.push("/my-store")
                         } else {
                           router.push("/create-store")
@@ -466,7 +466,7 @@ export default function Header({
                       }}
                     >
                       <span className="h-4 w-4 mr-2">S</span>
-                      {userStore ? "View My Store" : "Become a Merchant"}
+                      {userStore && Object.keys(userStore).length > 0 ? "View My Store" : "Become a Merchant"}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-red-600">
                       <LogOut className="h-4 w-4 mr-2" />

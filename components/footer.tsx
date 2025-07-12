@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 
 const routes = {
   'create-account': '/register',
-  'bid': '/bid',
   'gift-cards': '/gift-cards',
   'become-seller': '/register',
   'auction': '/auction',
@@ -44,7 +43,6 @@ const Footer = () => {
             <h3 className="font-bold text-xl mb-6">Buy</h3>
             <ul className="space-y-3 text-sm">
               <li><button onClick={() => handleNavigation('create-account')} className="hover:text-gray-200 text-left">Create account</button></li>
-              <li><button onClick={() => handleNavigation('bid')} className="hover:text-gray-200 text-left">Bid</button></li>
               <li><button onClick={() => handleNavigation('gift-cards')} className="hover:text-gray-200 text-left">Gift cards</button></li>
             </ul>
           </div>
