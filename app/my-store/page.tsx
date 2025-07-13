@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Store, Plus, Star, MapPin, Phone, Mail, Calendar, Edit, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Store, Plus, Star, MapPin, Phone, Mail, Calendar, Edit, AlertTriangle, BarChart3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -359,7 +359,7 @@ export default function MyStorePage() {
             </div>
 
             {/* Enhanced Action Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {/* Manage Products Card */}
               {isStorePending() ? (
                 <Card className="opacity-60 cursor-not-allowed border-0 bg-gradient-to-br from-red-50 to-red-100">
@@ -436,6 +436,48 @@ export default function MyStorePage() {
                         className="w-full border-2 border-yellow-500 text-yellow-700 hover:bg-yellow-500 hover:text-white font-semibold py-3 rounded-xl transition-all bg-transparent"
                       >
                         View Featured
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Link>
+              )}
+
+              {/* Ad Insight Card */}
+              {isStorePending() ? (
+                <Card className="opacity-60 cursor-not-allowed border-0 bg-gradient-to-br from-blue-50 to-blue-100">
+                  <CardHeader className="pb-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center mb-4 shadow-lg">
+                      <BarChart3 className="h-7 w-7 text-white" />
+                    </div>
+                    <CardTitle className="text-xl font-bold text-gray-900">Ad Insight</CardTitle>
+                    <CardDescription className="text-gray-600">View insights and analytics for all your ads</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      disabled
+                      variant="outline"
+                      className="w-full border-2 border-gray-400 text-gray-500 font-semibold py-3 rounded-xl bg-transparent cursor-not-allowed"
+                    >
+                      Store Under Review
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Link href="/ad-insights">
+                  <Card className="hover:shadow-2xl transition-all duration-300 cursor-pointer group border-0 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200">
+                    <CardHeader className="pb-4">
+                      <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                        <BarChart3 className="h-7 w-7 text-white" />
+                      </div>
+                      <CardTitle className="text-xl font-bold text-gray-900">Ad Insight</CardTitle>
+                      <CardDescription className="text-gray-600">View insights and analytics for all your ads</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        variant="outline"
+                        className="w-full border-2 border-blue-500 text-blue-700 hover:bg-blue-500 hover:text-white font-semibold py-3 rounded-xl transition-all bg-transparent"
+                      >
+                        View Insights
                       </Button>
                     </CardContent>
                   </Card>

@@ -131,6 +131,7 @@ export default function ProductPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isMerchant, setIsMerchant] = useState(false)
+  const [merchantCheckComplete, setMerchantCheckComplete] = useState(false)
   const [showLoginDialog, setShowLoginDialog] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedState, setSelectedState] = useState<State | null>(null)
@@ -155,16 +156,21 @@ export default function ProductPage() {
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50
 
-  // Check authentication and fetch initial data
+  // Update the useEffect to handle non-authenticated users
   useEffect(() => {
     // Check authentication
     const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null
     const userStoreData = typeof window !== "undefined" ? localStorage.getItem("userStore") : null
     setIsAuthenticated(!!token)
-    setIsMerchant(!!userStoreData)
+    
+    // Only set isMerchant from localStorage if we have a token
+    if (token && userStoreData) {
+      setIsMerchant(!!userStoreData)
+    } else {
+      setIsMerchant(false)
+    }
 
     // Fetch initial data
-    fetchCategories()
     fetchStates()
 
     // Fetch user data if authenticated
@@ -172,6 +178,9 @@ export default function ProductPage() {
       fetchUserProfile(token)
       fetchUserStore(token)
       fetchWishlist(token)
+    } else {
+      // If not authenticated, merchant check is complete
+      setMerchantCheckComplete(true)
     }
 
     // Fetch product data
@@ -180,38 +189,40 @@ export default function ProductPage() {
     }
   }, [params.slug])
 
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/categories")
-      if (response.ok) {
-        const data: ApiResponse<Category[]> = await response.json()
-        setCategories(data.data)
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error)
-    }
-  }
-
+  // Update the fetchUserStore function
   const fetchUserStore = async (token: string) => {
     try {
       const response = await fetch("https://ga.vplaza.com.ng/api/v1/mystore", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      })
+      });
+
       if (response.ok) {
-        const data = await response.json()
-        setUserStore(data)
-        setIsMerchant(true)
-        // Store in localStorage
-        if (typeof window !== "undefined") {
-          localStorage.setItem("userStore", JSON.stringify(data))
+        const data = await response.json();
+
+        if (data && Object.keys(data).length > 0) {
+          setUserStore(data);
+          setIsMerchant(true);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("userStore", JSON.stringify(data));
+          }
+        } else {
+          setIsMerchant(false); // Explicitly mark as not a merchant if empty
         }
+      } else {
+        // If request fails, user is not a merchant
+        setIsMerchant(false);
       }
     } catch (error) {
-      console.error("Error fetching user store:", error)
+      console.error("Error fetching user store:", error);
+      setIsMerchant(false); // Set to false on error
+    } finally {
+      // Mark merchant check as complete
+      setMerchantCheckComplete(true);
     }
   }
+
 
   const fetchUserProfile = async (token: string) => {
     try {
@@ -795,7 +806,8 @@ export default function ProductPage() {
                     <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Retail Price</p>
                     <p className="text-2xl md:text-4xl font-bold text-gray-900">{formatPrice(product.price)}</p>
                   </div>
-                  {isMerchant && product.wholesale_price && (
+                  {/* Only show merchant price if merchant check is complete, user is authenticated, is a merchant, and wholesale price exists */}
+                  {merchantCheckComplete && isAuthenticated && isMerchant && product.wholesale_price && (
                     <div className="pt-3 border-t border-gray-200">
                       <p className="text-sm font-medium text-red-500 uppercase tracking-wide mb-1">Merchant Price</p>
                       <p className="text-2xl font-bold text-red-600">{formatPrice(product.wholesale_price)}</p>

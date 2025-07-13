@@ -189,6 +189,7 @@ export default function MyProductsPage() {
 
   const handleRunAd = (productId: string) => {
     // TODO: Implement run ad functionality
+    router.push(`/feature-product`)    
     console.log("Running ad for product:", productId)
   }
 

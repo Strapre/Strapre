@@ -53,22 +53,19 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top Banner */}
-      <div className="bg-red-800 text-white text-center py-2 px-4 text-sm">
-        Best Online store to connect vendors to vendors and vendors to customers
-      </div>
-
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-white shadow-sm ">
+        <div className="w-full md:w-[90%] md:max-w-[1750px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
+            <div className=" items-center">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
+                    <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
+                </div>
               </div>
-              <span className="text-orange-500 font-bold text-xl">Strapre</span>
-            </div>
-            <Button className="bg-red-600 hover:bg-red-700 text-white px-6">LOGIN / REGISTER</Button>
+
           </div>
         </div>
       </header>
