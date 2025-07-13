@@ -230,6 +230,7 @@ export default function Header({
       const response = await fetchWithErrorHandling("https://ga.vplaza.com.ng/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       const data = await response.json()
@@ -249,6 +250,7 @@ export default function Header({
       const response = await fetchWithErrorHandling("https://ga.vplaza.com.ng/api/v1/mystore", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       const data = await response.json()
@@ -454,10 +456,13 @@ export default function Header({
             {/* Logo */}
             <div className="hidden md:flex items-center">
               <Link href="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
-                  <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
+                <div className="w-24 h-auto overflow-hidden flex items-center justify-center bg-white">
+                  <img
+                    src="/straprelogo.png"  // ⚠️ Also removed the extra space in filename
+                    alt="Strapre Logo"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
-                <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
               </Link>
             </div>
 
