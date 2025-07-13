@@ -1,4 +1,4 @@
-/** @type {import('next').NextConfig} */
+/** @type {import('next').NextConfig} */ 
 const nextConfig = {
   experimental: {
     ppr: false,
@@ -10,8 +10,8 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ['placeholder.svg'],
-    unoptimized: true,
+    domains: ['ga.vplaza.com.ng'], 
+    formats: ['image/webp'], 
   },
 }
 

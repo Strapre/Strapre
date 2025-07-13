@@ -618,6 +618,7 @@ const fetchUserProfile = async (token: string) => {
                                 fill
                                 className="object-cover"
                                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                                quality={50}
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement
                                   target.src = "/placeholder.svg?height=200&width=200"
