@@ -256,19 +256,19 @@ export default function CreateProductPage() {
     }
 
     if (!wholesalePrice.trim()) {
-      setError("Wholesale price is required.")
+      setError("Vendor price is required.")
       setLoading(false)
       return
     }
 
     if (Number.parseFloat(wholesalePrice) <= 0) {
-      setError("Wholesale price must be greater than 0.")
+      setError("Vendor price must be greater than 0.")
       setLoading(false)
       return
     }
 
     if (Number.parseFloat(wholesalePrice) >= Number.parseFloat(price)) {
-      setError("Wholesale price must be less than the regular price.")
+      setError("Vendor price must be less than the regular price.")
       setLoading(false)
       return
     }
@@ -538,7 +538,7 @@ export default function CreateProductPage() {
                   </div>
                   <div>
                     <Label htmlFor="wholesalePrice" className="text-sm font-medium text-gray-700 mb-2 block">
-                      Wholesale Price (₦) *
+                      Vendor Price (₦) *
                     </Label>
                     <Input
                       id="wholesalePrice"
@@ -558,12 +558,12 @@ export default function CreateProductPage() {
                 <Card className="bg-blue-50 border-blue-200">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-semibold text-blue-900 flex items-center">
-                      💼 Wholesale Pricing Information
+                      💼 Vendor Pricing Information
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <CardDescription className="text-blue-800 text-sm">
-                      The wholesale price is a special vendor-to-vendor price that other merchants on the platform will
+                      The vendor price is a special vendor-to-vendor price that other merchants on the platform will
                       see when they want to purchase your products for resale. This price should be lower than your
                       regular price to encourage bulk purchases from other vendors.
                     </CardDescription>

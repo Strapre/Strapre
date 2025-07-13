@@ -137,6 +137,7 @@ export default function WishlistPage() {
       const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       const data = await response.json()
@@ -158,6 +159,7 @@ export default function WishlistPage() {
       const response = await fetch("https://ga.vplaza.com.ng/api/v1/mystore", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       if (response.ok) {
@@ -186,6 +188,7 @@ export default function WishlistPage() {
       const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       if (response.ok) {

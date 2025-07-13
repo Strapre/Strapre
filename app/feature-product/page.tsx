@@ -264,7 +264,7 @@ export default function FeatureProductPage() {
                   : "All your products are already featured or try searching with different keywords."}
               </p>
               {filteredProducts.length === 0 && (
-                <Link href="/create-product">
+                <Link href="/my-store/products/create">
                   <Button className="bg-[#CB0207] hover:bg-[#A50206] text-white px-6 py-3 rounded-xl">
                     Create Product
                   </Button>

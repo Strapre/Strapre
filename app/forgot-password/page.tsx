@@ -57,15 +57,13 @@ export default function ForgotPasswordPage() {
       <header className="bg-white shadow-sm ">
         <div className="w-full md:w-[90%] md:max-w-[1750px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className=" items-center">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white">
-                    <img src="/strapre-logo.jpg" alt="Strapre Logo" className="w-full h-full object-cover" />
-                  </div>
-                  <span className="text-[#CB0207] font-bold text-xl">Strapre</span>
-                </div>
+            <div className="w-24 h-auto overflow-hidden flex items-center justify-center bg-white">
+                  <img
+                    src="/straprelogo.png" 
+                    alt="Strapre Logo"
+                    className="w-full h-full object-contain"
+                  />
               </div>
-
           </div>
         </div>
       </header>
