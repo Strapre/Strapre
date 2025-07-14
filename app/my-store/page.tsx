@@ -257,34 +257,47 @@ export default function MyStorePage() {
                         </h1>
                         <p className="text-lg text-gray-600 leading-relaxed max-w-2xl">{storeData.store_description}</p>
                       </div>
-                      <div className="flex flex-row items-center space-x-3">
-                        {/* Show status badge based on store status */}
-                        {isStorePending() ? (
-                          <Badge
-                            variant="secondary"
-                            className="px-4 py-2 text-sm font-semibold bg-orange-100 text-orange-800 border-orange-200"
-                          >
-                            🔍 Under Review
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="default"
-                            className="px-4 py-2 text-sm font-semibold bg-green-100 text-green-800 border-green-200"
-                          >
-                            ✅ Approved
-                          </Badge>
-                        )}
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
+                        <div className="flex items-center space-x-3">
+                          {/* Show status badge based on store status */}
+                          {isStorePending() ? (
+                            <Badge
+                              variant="secondary"
+                              className="px-4 py-2 text-sm font-semibold bg-orange-100 text-orange-800 border-orange-200"
+                            >
+                              🔍 Under Review
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="default"
+                              className="px-4 py-2 text-sm font-semibold bg-green-100 text-green-800 border-green-200"
+                            >
+                              ✅ Approved
+                            </Badge>
+                          )}
 
-                        <Badge
-                          variant={storeData.is_active === 1 ? "default" : "secondary"}
-                          className={`px-4 py-2 text-sm font-semibold ${
-                            storeData.is_active === 1
-                              ? "bg-green-100 text-green-800 border-green-200"
-                              : "bg-gray-100 text-gray-600 border-gray-200"
-                          }`}
-                        >
-                          {storeData.is_active === 1 ? "🟢 Active" : "⚫ Inactive"}
-                        </Badge>
+                          <Badge
+                            variant={storeData.is_active === 1 ? "default" : "secondary"}
+                            className={`px-4 py-2 text-sm font-semibold ${
+                              storeData.is_active === 1
+                                ? "bg-green-100 text-green-800 border-green-200"
+                                : "bg-gray-100 text-gray-600 border-gray-200"
+                            }`}
+                          >
+                            {storeData.is_active === 1 ? "🟢 Active" : "⚫ Inactive"}
+                          </Badge>
+                        </div>
+                        
+                        {/* Edit Button */}
+                        <Link href={`/my-store/edit/${storeData.slug}`}>
+                          <Button
+                            variant="outline"
+                            className="flex items-center space-x-2 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all bg-transparent"
+                          >
+                            <Edit className="h-4 w-4" />
+                            <span>Edit Store</span>
+                          </Button>
+                        </Link>
                       </div>
                     </div>
 

@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Header from "@/components/header"
-import Footer from '@/components/footer'
+import Footer from "@/components/footer"
 import RegisterSW from "./register-sw"
 import InstallPrompt from "./install-prompt"
 import Link from "next/link"
@@ -60,7 +60,7 @@ interface Product {
   store: ProductStore
   created_at: string
   is_featured: number
-  average_rating:number
+  average_rating: number
 }
 
 interface UserProfile {
@@ -89,6 +89,18 @@ interface UserStore {
   is_active: number
   created_at: string
   updated_at: string
+}
+
+interface Advert {
+  id: string
+  store_id: string | null
+  state_id: string
+  title: string
+  link: string
+  starts_at: string
+  ends_at: string
+  image: string
+  is_dummy: number
 }
 
 interface ApiResponse<T> {
@@ -143,18 +155,73 @@ function HomePage() {
       active: boolean
     }>
   >([])
-
   // Wishlist state
   const [wishlistItems, setWishlistItems] = useState<string[]>([])
   const [wishlistLoading, setWishlistLoading] = useState<string[]>([])
+  const [adverts, setAdverts] = useState<Advert[]>([])
+  const [advertsLoading, setAdvertsLoading] = useState(true)
 
-  const slides = [
-    "/strapre-hero.png",
-    "/strapre-hero1.jpg",
-    "/strapre-hero2.jpg",
-    "/strapre-hero3.jpg",
-    "/strapre-hero4.jpg",
-  ]
+  // Add function to fetch adverts
+  const fetchAdverts = async () => {
+    try {
+      setAdvertsLoading(true)
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/adverts/dummy", {
+        headers: {
+          Accept: "application/json",
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setAdverts(data.data)
+      } else {
+        console.error("Failed to fetch adverts")
+        // Fallback to static images if API fails
+        setAdverts([
+          {
+            id: "1",
+            store_id: null,
+            state_id: "",
+            title: "Strapre",
+            link: "#",
+            starts_at: "",
+            ends_at: "",
+            image: "/strapre-hero.png",
+            is_dummy: 1,
+          },
+          {
+            id: "2",
+            store_id: null,
+            state_id: "",
+            title: "Featured Products",
+            link: "#",
+            starts_at: "",
+            ends_at: "",
+            image: "/strapre-hero1.jpg",
+            is_dummy: 1,
+          },
+        ])
+      }
+    } catch (error) {
+      console.error("Error fetching adverts:", error)
+      // Fallback to static images if API fails
+      setAdverts([
+        {
+          id: "1",
+          store_id: null,
+          state_id: "",
+          title: "Strapre - Gadget Home",
+          link: "#",
+          starts_at: "",
+          ends_at: "",
+          image: "/strapre-hero.png",
+          is_dummy: 1,
+        },
+      ])
+    } finally {
+      setAdvertsLoading(false)
+    }
+  }
 
   // Check authentication and fetch user data
   useEffect(() => {
@@ -172,6 +239,7 @@ function HomePage() {
     fetchCategories()
     fetchStates()
     fetchProducts()
+    fetchAdverts()
   }, [])
 
   // Fetch LGAs when state changes
@@ -190,42 +258,47 @@ function HomePage() {
     fetchProducts(1) // Reset to page 1 when filters change
   }, [selectedState, selectedLGA])
 
-const fetchUserProfile = async (token: string) => {
-  try {
-    const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/get-profile", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    });
-
-    if (response.status === 401) {
-      router.push("/login");
-      return;
-    }
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setUserProfile(data.data);
-      localStorage.setItem("userDetails", JSON.stringify(data.data));
-
-      if (!data.data.first_name) {
-        router.push("/complete-profile");
-        return;
+  const fetchUserProfile = async (token: string) => {
+    try {
+      const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/get-profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      })
+      if (response.status === 401) {
+        router.push("/login")
+        return
       }
+      const data = await response.json()
+      if (response.ok) {
+        setUserProfile(data.data)
+        localStorage.setItem("userDetails", JSON.stringify(data.data))
+        if (!data.data.first_name) {
+          router.push("/complete-profile")
+          return
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error)
     }
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
   }
-}
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, 4000)
-    return () => clearInterval(interval)
-  }, [])
+    if (adverts.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % adverts.length)
+      }, 4000)
+      return () => clearInterval(interval)
+    }
+  }, [adverts.length])
+
+  // Helper function to handle advert clicks
+  const handleAdvertClick = (advert: Advert) => {
+    if (advert.link && advert.link !== "#" && advert.link !== "https://example.com") {
+      window.open(advert.link, "_blank")
+    }
+  }
 
   const fetchUserStore = async (token: string) => {
     try {
@@ -266,7 +339,6 @@ const fetchUserProfile = async (token: string) => {
   const addToWishlist = async (productId: string) => {
     const token = localStorage.getItem("auth_token")
     if (!token) return
-
     setWishlistLoading((prev) => [...prev, productId])
     try {
       const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
@@ -290,7 +362,6 @@ const fetchUserProfile = async (token: string) => {
   const removeFromWishlist = async (productId: string) => {
     const token = localStorage.getItem("auth_token")
     if (!token) return
-
     setWishlistLoading((prev) => [...prev, productId])
     try {
       const response = await fetch(`https://ga.vplaza.com.ng/api/v1/wishlist/${productId}`, {
@@ -363,7 +434,6 @@ const fetchUserProfile = async (token: string) => {
     try {
       const params = new URLSearchParams()
       params.append("page", page.toString())
-
       if (searchParams.search) {
         params.append("search", searchParams.search)
       }
@@ -376,11 +446,9 @@ const fetchUserProfile = async (token: string) => {
       if (searchParams.state_id) {
         params.append("state_id", searchParams.state_id)
       }
-
       const url = `https://ga.vplaza.com.ng/api/v1/products/search?${params.toString()}`
       const response = await fetch(url)
       const data: ApiResponse<Product> = await response.json()
-
       setProducts(data.data)
       if (data.meta) {
         setCurrentPage(data.meta.current_page)
@@ -398,15 +466,12 @@ const fetchUserProfile = async (token: string) => {
     setLoading(true)
     try {
       let url = `https://ga.vplaza.com.ng/api/v1/products?page=${page}`
-
       if (selectedState) {
         url += `&state_id=${selectedState.id}`
       }
-
       if (selectedLGA) {
         url += `&lga_id=${selectedLGA.id}`
       }
-
       const response = await fetch(url)
       const data: ApiResponse<Product> = await response.json()
       setProducts(data.data)
@@ -441,11 +506,9 @@ const fetchUserProfile = async (token: string) => {
   const handleSearch = () => {
     if (searchQuery.trim()) {
       const searchParams: any = { search: searchQuery.trim() }
-
       if (isAuthenticated && useUserLocation && userProfile?.state_id) {
         searchParams.state_id = userProfile.state_id
       }
-
       searchProducts(1, searchParams)
     } else {
       fetchProducts(1)
@@ -455,7 +518,6 @@ const fetchUserProfile = async (token: string) => {
   // Updated apply filters function
   const applyFilters = () => {
     const searchParams: any = {}
-
     if (searchQuery.trim()) {
       searchParams.search = searchQuery.trim()
     }
@@ -465,7 +527,6 @@ const fetchUserProfile = async (token: string) => {
     if (maxAmount) {
       searchParams.max_price = maxAmount
     }
-
     // Handle state selection for logged in users
     if (isAuthenticated) {
       if (useUserLocation && userProfile?.state_id) {
@@ -479,7 +540,6 @@ const fetchUserProfile = async (token: string) => {
         searchParams.state_id = filterState
       }
     }
-
     searchProducts(1, searchParams)
     setShowFilterDialog(false)
   }
@@ -503,6 +563,60 @@ const fetchUserProfile = async (token: string) => {
     }
   }
 
+  // Update the Hero Section JSX
+  const renderHeroSection = () => {
+    if (advertsLoading) {
+      return (
+        <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden h-[200px] md:h-[400px] bg-gray-200 animate-pulse">
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#CB0207] border-t-transparent"></div>
+          </div>
+        </div>
+      )
+    }
+    if (adverts.length === 0) {
+      return (
+        <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden h-[200px] md:h-[400px] bg-gray-200">
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-500">No adverts available</p>
+          </div>
+        </div>
+      )
+    }
+    const currentAdvert = adverts[currentSlide]
+
+    return (
+      <div
+        className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[200px] md:h-[400px] transition-all duration-500 cursor-pointer"
+        style={{ backgroundImage: `url(${currentAdvert.image})` }}
+        onClick={() => handleAdvertClick(currentAdvert)}
+      >
+        {/* Black overlay */}
+        <div className="absolute inset-0 bg-black/10 z-0"></div>
+
+        {/* Content */}
+        <div className="relative z-10 mt-4">
+          <h1 className="text-white text-xl md:text-4xl font-bold mb-2">{currentAdvert.title}</h1>
+         
+        </div>
+
+        {/* Slide Indicators */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
+          {adverts.map((_, index) => (
+            <button
+              key={index}
+              className={`w-3 h-3 rounded-full ${currentSlide === index ? "bg-white" : "bg-white/50"}`}
+              onClick={(e) => {
+                e.stopPropagation()
+                setCurrentSlide(index)
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header Component */}
@@ -516,7 +630,6 @@ const fetchUserProfile = async (token: string) => {
         onStateChange={handleStateChange}
         onLGAChange={handleLGAChange}
       />
-
       <div
         className={`${
           isAuthenticated ? "w-full md:w-[90%] md:max-w-[1750px]" : "w-full md:w-[90%] md:max-w-[1750px]"
@@ -548,38 +661,10 @@ const fetchUserProfile = async (token: string) => {
               </div>
             </div>
           </aside>
-
           {/* Main Content */}
           <main className="flex-1">
             {/* Hero Section */}
-            <div
-              className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[200px] md:h-[400px] transition-all duration-500"
-              style={{ backgroundImage: `url(${slides[currentSlide]})` }}
-            >
-              {/* Black overlay */}
-              <div className="absolute inset-0 bg-black/10 z-0"></div>
-              {/* Content */}
-              <div className="relative z-10 mt-4">
-                <h1 className="text-white text-xl md:text-4xl font-bold mb-2">New iPhone 14 Pro Max</h1>
-                <p className="text-white/90 text-[5px] md:text-base mb-4 max-w-[257px] md:max-w-2xl">
-                  Apple's top-tier phone with a 6.7&quot; OLED display, A16 Bionic chip, and Dynamic Island. It features
-                  a 48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless steel.
-                </p>
-                <div className="inline-block bg-white text-[8px] md:text-[12px] text-black font-bold hover:bg-gray-100 px-2 md:px-4 py-1 md:py-2 rounded cursor-pointer">
-                  VIEW INFO
-                </div>
-              </div>
-              {/* Slide Indicators */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
-                {slides.map((_, index) => (
-                  <button
-                    key={index}
-                    className={`w-3 h-3 rounded-full ${currentSlide === index ? "bg-white" : "bg-white/50"}`}
-                    onClick={() => setCurrentSlide(index)}
-                  />
-                ))}
-              </div>
-            </div>
+            {renderHeroSection()}
 
             {/* Products Section */}
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 md:p-8">
@@ -595,14 +680,12 @@ const fetchUserProfile = async (token: string) => {
                   <Filter className="h-2 w-4" />
                 </Button>
               </div>
-
               {/* Loading State */}
               {loading && (
                 <div className="flex justify-center items-center py-16">
                   <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#CB0207] border-t-transparent"></div>
                 </div>
               )}
-
               {/* Products Grid */}
               {!loading && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 pb-2">
@@ -671,7 +754,6 @@ const fetchUserProfile = async (token: string) => {
                               <span>Store:</span>
                               <span>{product.store.name || "N/A"}</span>
                             </p>
-
                           </CardContent>
                         </Card>
                       </Link>
@@ -703,7 +785,6 @@ const fetchUserProfile = async (token: string) => {
                   ))}
                 </div>
               )}
-
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex justify-center items-center space-x-2 mt-12">
@@ -753,7 +834,6 @@ const fetchUserProfile = async (token: string) => {
                   })}
                 </div>
               )}
-
               {/* No Products Message */}
               {!loading && products.length === 0 && (
                 <div className="text-center py-16">
@@ -764,7 +844,6 @@ const fetchUserProfile = async (token: string) => {
           </main>
         </div>
       </div>
-
       {/* Modern Filter Dialog */}
       <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
         <DialogContent className="sm:max-w-lg rounded-2xl border-0 shadow-2xl">
@@ -847,7 +926,6 @@ const fetchUserProfile = async (token: string) => {
                 </div>
               </div>
             )}
-
             {/* Location Section for Non-Logged In Users */}
             {!isAuthenticated && (
               <div>
@@ -883,7 +961,6 @@ const fetchUserProfile = async (token: string) => {
                 </div>
               </div>
             )}
-
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <DollarSign className="h-5 w-5 text-[#CB0207]" />
@@ -907,7 +984,6 @@ const fetchUserProfile = async (token: string) => {
                 />
               </div>
             </div>
-
             <div className="flex space-x-4 pt-4">
               <Button
                 onClick={applyFilters}
@@ -926,7 +1002,6 @@ const fetchUserProfile = async (token: string) => {
           </div>
         </DialogContent>
       </Dialog>
-
       {/* Footer */}
       <Footer />
     </div>
