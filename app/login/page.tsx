@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import Footer from "@/components/footer"
 import { ArrowLeft, Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
@@ -195,96 +196,7 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-red-900 text-white hidden md:flex">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Buy</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="hover:underline">
-                    Create account
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Bid
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Gift cards
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Sell</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="hover:underline">
-                    Become a seller
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Auction
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Store
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Logistics</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="hover:underline">
-                    Local
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Cross boarder
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Customer Support</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#" className="hover:underline">
-                    Contact us
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Email
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-red-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <div className="flex space-x-4 mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                <span className="text-red-900 font-bold">f</span>
-              </div>
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                <span className="text-red-900 font-bold">in</span>
-              </div>
-              <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                <span className="text-red-900 font-bold">@</span>
-              </div>
-            </div>
-            <p className="text-sm text-gray-300">© 2025 Strapre. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
