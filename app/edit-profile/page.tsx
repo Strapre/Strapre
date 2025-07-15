@@ -144,7 +144,7 @@ export default function EditProfilePage() {
   const fetchStates = async () => {
     setLoadingStates(true)
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/states")
+      const response = await fetch("https://api.strapre.com/api/v1/states")
       const data: ApiResponse<State> = await response.json()
       // Sort states alphabetically by name
       const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -160,7 +160,7 @@ export default function EditProfilePage() {
   const fetchLGAs = async (stateSlug: string) => {
     setLoadingLGAs(true)
     try {
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`)
       const data: ApiResponse<LGA> = await response.json()
       // Sort LGAs alphabetically by name
       const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -270,7 +270,7 @@ export default function EditProfilePage() {
       // Console log for debugging
       console.log("=== UPDATING PROFILE ===")
       console.log("Token:", token)
-      console.log("Endpoint:", "https://ga.vplaza.com.ng/api/v1/auth/update-profile")
+      console.log("Endpoint:", "https://api.strapre.com/api/v1/auth/update-profile")
       console.log("Form Data Contents:")
       for (const [key, value] of formData.entries()) {
         if (value instanceof File) {
@@ -284,7 +284,7 @@ export default function EditProfilePage() {
         }
       }
 
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/update-profile", {
+      const response = await fetch("https://api.strapre.com/api/v1/auth/update-profile", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

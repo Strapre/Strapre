@@ -133,9 +133,9 @@ export default function MyProductsPage() {
     try {
       console.log("=== FETCHING PRODUCTS DATA ===")
       console.log("Token:", token)
-      console.log("Endpoint:", `https://ga.vplaza.com.ng/api/v1/my-products?page=${page}`)
+      console.log("Endpoint:", `https://api.strapre.com/api/v1/my-products?page=${page}`)
 
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/my-products?page=${page}`, {
+      const response = await fetch(`https://api.strapre.com/api/v1/my-products?page=${page}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -200,7 +200,7 @@ export default function MyProductsPage() {
   const handleDeleteProduct = async (product: Product) => {
     const token = localStorage.getItem("auth_token")
     try {
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/products/${product.slug}`, {
+      const response = await fetch(`https://api.strapre.com/api/v1/products/${product.slug}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

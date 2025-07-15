@@ -185,7 +185,7 @@ export default function CategoryPage() {
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/auth/get-profile", {
+      const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -209,7 +209,7 @@ export default function CategoryPage() {
 
   const fetchUserStore = async (token: string) => {
     try {
-      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/mystore", {
+      const response = await fetch("https://api.strapre.com/api/v1/mystore", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -225,7 +225,7 @@ export default function CategoryPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/categories")
+      const response = await fetch("https://api.strapre.com/api/v1/categories")
       const data: ApiResponse<Category> = await response.json()
       setCategories(data.data)
       // Find current category
@@ -238,7 +238,7 @@ export default function CategoryPage() {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/states")
+      const response = await fetch("https://api.strapre.com/api/v1/states")
       const data: ApiResponse<State> = await response.json()
       // Sort states alphabetically by name
       const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -250,7 +250,7 @@ export default function CategoryPage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://gadget.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`)
       const data: ApiResponse<LGA> = await response.json()
       // Sort LGAs alphabetically by name
       const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -263,7 +263,7 @@ export default function CategoryPage() {
   const fetchCategoryProducts = async (categoryId: string, page = 1) => {
     setLoading(true)
     try {
-      let url = `https://gadget.vplaza.com.ng/api/v1/products/category/${categoryId}?page=${page}`
+      let url = `https://api.strapre.com/api/v1/products/category/${categoryId}?page=${page}`
       // Add state filter if selected
       if (selectedState) {
         url += `&state_id=${selectedState.id}`

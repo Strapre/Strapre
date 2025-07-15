@@ -99,7 +99,7 @@ export default function FeatureProductPage() {
     setLoading(true)
     try {
       const token = localStorage.getItem("auth_token")
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/my-products?page=${page}`, {
+      const response = await fetch(`https://api.strapre.com/api/v1/my-products?page=${page}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -121,7 +121,7 @@ export default function FeatureProductPage() {
   const fetchFeaturedPlans = async () => {
     setPlansLoading(true)
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/featured-plans")
+      const response = await fetch("https://api.strapre.com/api/v1/featured-plans")
 
       if (response.ok) {
         const data: ApiResponse<FeaturedPlan> = await response.json()
@@ -146,7 +146,7 @@ export default function FeatureProductPage() {
     setProcessing(true)
     try {
       const token = localStorage.getItem("auth_token")
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/payments/feature-product", {
+      const response = await fetch("https://api.strapre.com/api/v1/payments/feature-product", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

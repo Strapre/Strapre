@@ -134,7 +134,7 @@ export default function WishlistPage() {
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/get-profile", {
+      const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -156,7 +156,7 @@ export default function WishlistPage() {
 
   const fetchUserStore = async (token: string) => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/mystore", {
+      const response = await fetch("https://api.strapre.com/api/v1/mystore", {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -174,7 +174,7 @@ export default function WishlistPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/categories")
+      const response = await fetch("https://api.strapre.com/api/v1/categories")
       const data: ApiResponse<Category> = await response.json()
       setCategories(data.data)
     } catch (error) {
@@ -185,7 +185,7 @@ export default function WishlistPage() {
   const fetchWishlist = async (token: string) => {
     setLoading(true)
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
+      const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -209,7 +209,7 @@ export default function WishlistPage() {
     setRemovingItems((prev) => [...prev, productId])
 
     try {
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/wishlist/${productId}`, {
+      const response = await fetch(`https://api.strapre.com/api/v1/wishlist/${productId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

@@ -97,9 +97,9 @@ export default function MyStorePage() {
     try {
       console.log("=== FETCHING STORE DATA ===")
       console.log("Token:", token)
-      console.log("Endpoint:", "https://ga.vplaza.com.ng/api/v1/mystore")
+      console.log("Endpoint:", "https://api.strapre.com/api/v1/mystore")
 
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/mystore", {
+      const response = await fetch("https://api.strapre.com/api/v1/mystore", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -289,15 +289,26 @@ export default function MyStorePage() {
                         </div>
                         
                         {/* Edit Button */}
-                        <Link href={`/my-store/edit/${storeData.slug}`}>
+                        {isStorePending() ? (
                           <Button
+                            disabled
                             variant="outline"
-                            className="flex items-center space-x-2 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all bg-transparent"
+                            className="flex items-center space-x-2 border-2 border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed"
                           >
                             <Edit className="h-4 w-4" />
                             <span>Edit Store</span>
                           </Button>
-                        </Link>
+                        ) : (
+                          <Link href={`/my-store/edit/${storeData.slug}`}>
+                            <Button
+                              variant="outline"
+                              className="flex items-center space-x-2 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all bg-transparent"
+                            >
+                              <Edit className="h-4 w-4" />
+                              <span>Edit Store</span>
+                            </Button>
+                          </Link>
+                        )}
                       </div>
                     </div>
 

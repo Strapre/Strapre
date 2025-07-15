@@ -192,7 +192,7 @@ export default function ProductPage() {
   // Update the fetchUserStore function
   const fetchUserStore = async (token: string) => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/mystore", {
+      const response = await fetch("https://api.strapre.com/api/v1/mystore", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -226,7 +226,7 @@ export default function ProductPage() {
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/get-profile", {
+      const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -251,7 +251,7 @@ export default function ProductPage() {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/states")
+      const response = await fetch("https://api.strapre.com/api/v1/states")
       if (response.ok) {
         const data: ApiResponse<State[]> = await response.json()
         // Sort states alphabetically by name
@@ -265,7 +265,7 @@ export default function ProductPage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`)
       if (response.ok) {
         const data: ApiResponse<LGA[]> = await response.json()
         // Sort LGAs alphabetically by name
@@ -280,7 +280,7 @@ export default function ProductPage() {
   const fetchProduct = async (slug: string) => {
     setLoading(true)
     try {
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/products/${slug}`)
+      const response = await fetch(`https://api.strapre.com/api/v1/products/${slug}`)
       if (response.ok) {
         const data: ApiResponse<Product> = await response.json()
         setProduct(data.data)
@@ -300,7 +300,7 @@ export default function ProductPage() {
 
   const fetchWishlist = async (token: string) => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
+      const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -325,7 +325,7 @@ export default function ProductPage() {
 
     setWishlistLoading((prev) => [...prev, productId])
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
+      const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -349,7 +349,7 @@ export default function ProductPage() {
 
     setWishlistLoading((prev) => [...prev, productId])
     try {
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/wishlist/${productId}`, {
+      const response = await fetch(`https://api.strapre.com/api/v1/wishlist/${productId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -378,7 +378,7 @@ export default function ProductPage() {
 
     setReviewLoading(true)
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/reviews", {
+      const response = await fetch("https://api.strapre.com/api/v1/reviews", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

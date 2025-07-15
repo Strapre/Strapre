@@ -74,7 +74,7 @@ export default function VerifyOTPPage() {
       return
     }
 
-    const token = localStorage.getItem("temp_token")
+    const token = localStorage.getItem("auth_token")
     if (!token) {
       setError("Session expired. Please register again.")
       setLoading(false)
@@ -82,7 +82,7 @@ export default function VerifyOTPPage() {
     }
 
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/verify-email", {
+      const response = await fetch("https://api.strapre.com/api/v1/auth/verify-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -120,7 +120,7 @@ export default function VerifyOTPPage() {
     }
 
     try {
-      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/auth/resend-otp", {
+      const response = await fetch("https://api.strapre.com/api/v1/auth/resend-otp", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,

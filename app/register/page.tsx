@@ -90,7 +90,7 @@ const handleRegister = async (e: React.FormEvent) => {
   }
 
   try {
-    const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/register", {
+    const response = await fetch("https://api.strapre.com/api/v1/auth/register", {
       method: "POST",
       mode: "cors",
       headers: {
@@ -106,7 +106,7 @@ const handleRegister = async (e: React.FormEvent) => {
     if (response.ok) {
       localStorage.setItem("auth_token", data.token);
       localStorage.setItem("temp_email", email);
-      router.push("/complete-profile");
+      router.push("/verify-otp");
     } else {
       setError(data.message || "Registration failed");
     }

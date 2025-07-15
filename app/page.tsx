@@ -165,7 +165,7 @@ function HomePage() {
   const fetchAdverts = async () => {
     try {
       setAdvertsLoading(true)
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/adverts/dummy", {
+      const response = await fetch("https://api.strapre.com/api/v1/adverts/dummy", {
         headers: {
           Accept: "application/json",
         },
@@ -260,7 +260,7 @@ function HomePage() {
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/get-profile", {
+      const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -302,7 +302,7 @@ function HomePage() {
 
   const fetchUserStore = async (token: string) => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/mystore", {
+      const response = await fetch("https://api.strapre.com/api/v1/mystore", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -320,7 +320,7 @@ function HomePage() {
   // Wishlist functions
   const fetchWishlist = async (token: string) => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
+      const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -341,7 +341,7 @@ function HomePage() {
     if (!token) return
     setWishlistLoading((prev) => [...prev, productId])
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/wishlist", {
+      const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -364,7 +364,7 @@ function HomePage() {
     if (!token) return
     setWishlistLoading((prev) => [...prev, productId])
     try {
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/wishlist/${productId}`, {
+      const response = await fetch(`https://api.strapre.com/api/v1/wishlist/${productId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -390,7 +390,7 @@ function HomePage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/categories")
+      const response = await fetch("https://api.strapre.com/api/v1/categories")
       const data: ApiResponse<Category> = await response.json()
       setCategories(data.data)
     } catch (error) {
@@ -400,7 +400,7 @@ function HomePage() {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/states")
+      const response = await fetch("https://api.strapre.com/api/v1/states")
       const data: ApiResponse<State> = await response.json()
       const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
       setStates(sortedStates)
@@ -411,7 +411,7 @@ function HomePage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`)
       const data: ApiResponse<LGA> = await response.json()
       const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
       setLgas(sortedLGAs)
@@ -446,7 +446,7 @@ function HomePage() {
       if (searchParams.state_id) {
         params.append("state_id", searchParams.state_id)
       }
-      const url = `https://ga.vplaza.com.ng/api/v1/products/search?${params.toString()}`
+      const url = `https://api.strapre.com/api/v1/products/search?${params.toString()}`
       const response = await fetch(url)
       const data: ApiResponse<Product> = await response.json()
       setProducts(data.data)
@@ -465,7 +465,7 @@ function HomePage() {
   const fetchProducts = async (page = 1) => {
     setLoading(true)
     try {
-      let url = `https://ga.vplaza.com.ng/api/v1/products?page=${page}`
+      let url = `https://api.strapre.com/api/v1/products?page=${page}`
       if (selectedState) {
         url += `&state_id=${selectedState.id}`
       }

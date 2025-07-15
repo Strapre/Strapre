@@ -37,7 +37,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch("https://gadget.vplaza.com.ng/api/v1/auth/login", {
+      const response = await fetch("https://api.strapre.com/api/v1/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

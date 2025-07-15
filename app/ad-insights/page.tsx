@@ -54,7 +54,7 @@ export default function AdInsightsPage() {
     setLoading(true)
     try {
       const token = localStorage.getItem("auth_token")
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/my-featured", {
+      const response = await fetch("https://api.strapre.com/api/v1/my-featured", {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",

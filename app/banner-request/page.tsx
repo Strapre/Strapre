@@ -114,7 +114,7 @@ export default function BannerRequestPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/categories")
+      const response = await fetch("https://api.strapre.com/api/v1/categories")
       if (response.ok) {
         const data: ApiResponse<Category[]> = await response.json()
         setCategories(data.data)
@@ -126,7 +126,7 @@ export default function BannerRequestPage() {
 
   const fetchUserStore = async (token: string) => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/mystore", {
+      const response = await fetch("https://api.strapre.com/api/v1/mystore", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -148,7 +148,7 @@ export default function BannerRequestPage() {
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/auth/get-profile", {
+      const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -169,7 +169,7 @@ export default function BannerRequestPage() {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/states")
+      const response = await fetch("https://api.strapre.com/api/v1/states")
       if (response.ok) {
         const data: ApiResponse<State[]> = await response.json()
         // Sort states alphabetically by name
@@ -183,7 +183,7 @@ export default function BannerRequestPage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`)
       if (response.ok) {
         const data: ApiResponse<LGA[]> = await response.json()
         // Sort LGAs alphabetically by name
@@ -201,10 +201,10 @@ export default function BannerRequestPage() {
       if (!token) return
 
       const [myBannersResponse, allBannersResponse] = await Promise.all([
-        fetch("https://ga.vplaza.com.ng/api/v1/my-adverts", {
+        fetch("https://api.strapre.com/api/v1/my-adverts", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch("https://ga.vplaza.com.ng/api/v1/adverts", {
+        fetch("https://api.strapre.com/api/v1/adverts", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ])

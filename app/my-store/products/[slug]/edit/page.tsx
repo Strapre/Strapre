@@ -119,7 +119,7 @@ export default function EditProductPage() {
     setLoadingCategories(true)
     const token = localStorage.getItem("auth_token")
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/categories", {
+      const response = await fetch("https://api.strapre.com/api/v1/categories", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -145,7 +145,7 @@ export default function EditProductPage() {
     setLoadingProduct(true)
     const token = localStorage.getItem("auth_token")
     try {
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/products/${productSlug}`, {
+      const response = await fetch(`https://api.strapre.com/api/v1/products/${productSlug}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -337,9 +337,9 @@ export default function EditProductPage() {
 
       console.log("=== UPDATING PRODUCT ===")
       console.log("Token:", token)
-      console.log("Endpoint:", `https://ga.vplaza.com.ng/api/v1/products/${slug}`)
+      console.log("Endpoint:", `https://api.strapre.com/api/v1/products/${slug}`)
 
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/products/${slug}`, {
+      const response = await fetch(`https://api.strapre.com/api/v1/products/${slug}`, {
         method: "POST", // Using POST with _method=PUT for file uploads
         headers: {
           Authorization: `Bearer ${token}`,

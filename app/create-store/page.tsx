@@ -205,7 +205,7 @@ export default function CreateStorePage() {
   const fetchStates = async () => {
     setLoadingStates(true)
     try {
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/states")
+      const response = await fetch("https://api.strapre.com/api/v1/states")
       const data: ApiResponse<State> = await response.json()
       // Sort states alphabetically by name
       const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -221,7 +221,7 @@ export default function CreateStorePage() {
   const fetchLGAs = async (stateSlug: string) => {
     setLoadingLGAs(true)
     try {
-      const response = await fetch(`https://ga.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`)
       const data: ApiResponse<LGA> = await response.json()
       // Sort LGAs alphabetically by name
       const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -456,7 +456,7 @@ export default function CreateStorePage() {
       // Console log for debugging
       console.log("=== CREATING STORE ===")
       console.log("Token:", token)
-      console.log("Endpoint:", "https://ga.vplaza.com.ng/api/v1/stores")
+      console.log("Endpoint:", "https://api.strapre.com/api/v1/stores")
       console.log("Form Data Contents:")
       for (const [key, value] of formData.entries()) {
         if (value instanceof File) {
@@ -470,7 +470,7 @@ export default function CreateStorePage() {
         }
       }
 
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/stores", {
+      const response = await fetch("https://api.strapre.com/api/v1/stores", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -550,18 +550,7 @@ export default function CreateStorePage() {
           </div>
         </div>
 
-        {/* Alerts */}
-        {error && (
-          <Alert className="border-red-200 bg-red-50 mb-6 rounded-lg">
-            <AlertDescription className="text-red-600 font-medium">{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {success && (
-          <Alert className="border-green-200 bg-green-50 mb-6 rounded-lg">
-            <AlertDescription className="text-green-600 font-medium">{success}</AlertDescription>
-          </Alert>
-        )}
+        
 
         {/* Main Form Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -849,6 +838,19 @@ export default function CreateStorePage() {
                   className="hidden"
                 />
               </div>
+
+              {/* Alerts */}
+              {error && (
+                <Alert className="border-red-200 bg-red-50 mb-6 rounded-lg">
+                  <AlertDescription className="text-red-600 font-medium">{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {success && (
+                <Alert className="border-green-200 bg-green-50 mb-6 rounded-lg">
+                  <AlertDescription className="text-green-600 font-medium">{success}</AlertDescription>
+                </Alert>
+              )}
 
               {/* Action Buttons */}
               <div className="flex flex-col-reverse sm:flex-row gap-4 pt-6 border-t border-gray-200">

@@ -54,10 +54,10 @@ export default function InstallPrompt() {
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-sm">B</span>
+            <img src="/strapreicon.png" alt="User" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Install Butlaxispro</h3>
+            <h3 className="font-semibold text-sm">Install Strapre</h3>
             <p className="text-xs text-gray-600">Add to your home screen for quick access</p>
           </div>
         </div>

@@ -110,9 +110,9 @@ export default function CreateProductPage() {
     try {
       console.log("=== FETCHING CATEGORIES ===")
       console.log("Token:", token)
-      console.log("Endpoint:", "https://ga.vplaza.com.ng/api/v1/categories")
+      console.log("Endpoint:", "https://api.strapre.com/api/v1/categories")
 
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/categories", {
+      const response = await fetch("https://api.strapre.com/api/v1/categories", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -295,7 +295,7 @@ export default function CreateProductPage() {
       // Console log for debugging
       console.log("=== CREATING PRODUCT ===")
       console.log("Token:", token)
-      console.log("Endpoint:", "https://ga.vplaza.com.ng/api/v1/products")
+      console.log("Endpoint:", "https://api.strapre.com/api/v1/products")
       console.log("Form Data Contents:")
       for (const [key, value] of formData.entries()) {
         if (value instanceof File) {
@@ -309,7 +309,7 @@ export default function CreateProductPage() {
         }
       }
 
-      const response = await fetch("https://ga.vplaza.com.ng/api/v1/products", {
+      const response = await fetch("https://api.strapre.com/api/v1/products", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
