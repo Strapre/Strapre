@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 const routes = {
   'about-strapre': '/about',
+  'safety': '/safety',
   'terms-conditions': '/terms',
   'privacy-policy': '/privacy-policy',
   'copyright-infringement': '/copyright',
@@ -37,6 +38,7 @@ const Footer = () => {
             <h3 className="font-bold text-xl mb-6">About us</h3>
             <ul className="space-y-3 text-sm">
               <li><button onClick={() => handleNavigation('about-strapre')} className="hover:text-gray-200 text-left">About strapre</button></li>
+              <li><button onClick={() => handleNavigation('safety')} className="hover:text-gray-200 text-left">Satety Tips</button></li>
               <li><button onClick={() => handleNavigation('terms-conditions')} className="hover:text-gray-200 text-left">Terms and Conditions</button></li>
               <li><button onClick={() => handleNavigation('privacy-policy')} className="hover:text-gray-200 text-left">Privacy Policy</button></li>
               <li><button onClick={() => handleNavigation('copyright-infringement')} className="hover:text-gray-200 text-left">Copyright infringement policy</button></li>
