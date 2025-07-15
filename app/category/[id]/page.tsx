@@ -1,23 +1,34 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { Filter, ChevronRight, MapPin, ArrowLeft } from "lucide-react"
+import { Filter, ChevronRight, ChevronLeft, MapPin, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Header from "@/components/header"
-import Footer from '@/components/footer'
+import Footer from "@/components/footer"
 
 interface Category {
   id: string
   name: string
   slug: string
+}
+
+interface Advert {
+  id: string
+  store_id: string | null
+  state_id: string
+  title: string
+  link: string
+  starts_at: string
+  ends_at: string
+  image: string
+  is_dummy: number
 }
 
 interface State {
@@ -53,6 +64,7 @@ interface UserProfile {
   email: string
   phone: string
   profile_picture: string | null
+  state_id?: string
 }
 
 interface UserStore {
@@ -133,6 +145,7 @@ export default function CategoryPage() {
   const [maxAmount, setMaxAmount] = useState("")
   const [filterState, setFilterState] = useState("")
   const [filterLGA, setFilterLGA] = useState("")
+  const [useUserLocation, setUseUserLocation] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [paginationLinks, setPaginationLinks] = useState<
@@ -143,13 +156,92 @@ export default function CategoryPage() {
     }>
   >([])
 
+  // Wishlist state
+  const [wishlistItems, setWishlistItems] = useState<string[]>([])
+  const [wishlistLoading, setWishlistLoading] = useState<string[]>([])
+  const [adverts, setAdverts] = useState<Advert[]>([])
+  const [advertsLoading, setAdvertsLoading] = useState(true)
+
+  // Add function to fetch adverts
+  const fetchAdverts = async () => {
+    try {
+      setAdvertsLoading(true)
+      const response = await fetch("https://api.strapre.com/api/v1/adverts/dummy", {
+        headers: {
+          Accept: "application/json",
+        },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setAdverts(data.data)
+      } else {
+        console.error("Failed to fetch adverts")
+        // Fallback to static images if API fails
+        setAdverts([
+          {
+            id: "1",
+            store_id: null,
+            state_id: "",
+            title: "Strapre",
+            link: "#",
+            starts_at: "",
+            ends_at: "",
+            image: "/strapre-hero.png",
+            is_dummy: 1,
+          },
+          {
+            id: "2",
+            store_id: null,
+            state_id: "",
+            title: "Featured Products",
+            link: "#",
+            starts_at: "",
+            ends_at: "",
+            image: "/strapre-hero1.jpg",
+            is_dummy: 1,
+          },
+        ])
+      }
+    } catch (error) {
+      console.error("Error fetching adverts:", error)
+      // Fallback to static images if API fails
+      setAdverts([
+        {
+          id: "1",
+          store_id: null,
+          state_id: "",
+          title: "Strapre - Gadget Home",
+          link: "#",
+          starts_at: "",
+          ends_at: "",
+          image: "/strapre-hero.png",
+          is_dummy: 1,
+        },
+      ])
+    } finally {
+      setAdvertsLoading(false)
+    }
+  }
+
+  // Manual navigation functions
+  const goToNextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % adverts.length)
+  }
+
+  const goToPreviousSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + adverts.length) % adverts.length)
+  }
+
   useEffect(() => {
     // Check authentication
     const token = localStorage.getItem("auth_token")
     setIsAuthenticated(!!token)
+
     // Fetch initial data
     fetchCategories()
     fetchStates()
+    fetchAdverts()
+
     // Fetch category products
     if (params.id) {
       fetchCategoryProducts(params.id as string)
@@ -163,6 +255,7 @@ export default function CategoryPage() {
       setIsAuthenticated(true)
       fetchUserProfile(token)
       fetchUserStore(token)
+      fetchWishlist(token)
     }
   }, [])
 
@@ -193,7 +286,6 @@ export default function CategoryPage() {
       const data = await response.json()
       if (response.ok) {
         setUserProfile(data.data)
-
         // ✅ Store in localStorage
         localStorage.setItem("userDetails", JSON.stringify(data.data))
         // Check if profile is incomplete (first_name is null)
@@ -204,6 +296,22 @@ export default function CategoryPage() {
       }
     } catch (error) {
       console.error("Error fetching user profile:", error)
+    }
+  }
+
+  useEffect(() => {
+    if (adverts.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % adverts.length)
+      }, 4000)
+      return () => clearInterval(interval)
+    }
+  }, [adverts.length])
+
+  // Helper function to handle advert clicks
+  const handleAdvertClick = (advert: Advert) => {
+    if (advert.link && advert.link !== "#" && advert.link !== "https://strapre.com") {
+      window.open(advert.link, "_blank")
     }
   }
 
@@ -220,6 +328,79 @@ export default function CategoryPage() {
       }
     } catch (error) {
       console.error("Error fetching user store:", error)
+    }
+  }
+
+  // Wishlist functions
+  const fetchWishlist = async (token: string) => {
+    try {
+      const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        const productIds = data.data?.map((item: any) => item.product_id) || []
+        setWishlistItems(productIds)
+      }
+    } catch (error) {
+      console.error("Error fetching wishlist:", error)
+    }
+  }
+
+  const addToWishlist = async (productId: string) => {
+    const token = localStorage.getItem("auth_token")
+    if (!token) return
+
+    setWishlistLoading((prev) => [...prev, productId])
+    try {
+      const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ product_id: productId }),
+      })
+      if (response.ok) {
+        setWishlistItems((prev) => [...prev, productId])
+      }
+    } catch (error) {
+      console.error("Error adding to wishlist:", error)
+    } finally {
+      setWishlistLoading((prev) => prev.filter((id) => id !== productId))
+    }
+  }
+
+  const removeFromWishlist = async (productId: string) => {
+    const token = localStorage.getItem("auth_token")
+    if (!token) return
+
+    setWishlistLoading((prev) => [...prev, productId])
+    try {
+      const response = await fetch(`https://api.strapre.com/api/v1/wishlist/${productId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.ok) {
+        setWishlistItems((prev) => prev.filter((id) => id !== productId))
+      }
+    } catch (error) {
+      console.error("Error removing from wishlist:", error)
+    } finally {
+      setWishlistLoading((prev) => prev.filter((id) => id !== productId))
+    }
+  }
+
+  const toggleWishlist = (productId: string) => {
+    if (wishlistItems.includes(productId)) {
+      removeFromWishlist(productId)
+    } else {
+      addToWishlist(productId)
     }
   }
 
@@ -264,16 +445,20 @@ export default function CategoryPage() {
     setLoading(true)
     try {
       let url = `https://api.strapre.com/api/v1/products/category/${categoryId}?page=${page}`
+
       // Add state filter if selected
       if (selectedState) {
         url += `&state_id=${selectedState.id}`
       }
+
       // Add LGA filter if selected
       if (selectedLGA) {
         url += `&lga_id=${selectedLGA.id}`
       }
+
       const response = await fetch(url)
       const data: ApiResponse<Product> = await response.json()
+
       if (response.ok) {
         setProducts(data.data)
         if (data.meta) {
@@ -286,6 +471,51 @@ export default function CategoryPage() {
       }
     } catch (error) {
       setError("Failed to load products")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // New search function using the search endpoint
+  const searchProducts = async (
+    page = 1,
+    searchParams: {
+      search?: string
+      min_price?: string
+      max_price?: string
+      state_id?: string
+    } = {},
+  ) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      params.append("page", page.toString())
+
+      if (searchParams.search) {
+        params.append("search", searchParams.search)
+      }
+      if (searchParams.min_price) {
+        params.append("min_price", searchParams.min_price)
+      }
+      if (searchParams.max_price) {
+        params.append("max_price", searchParams.max_price)
+      }
+      if (searchParams.state_id) {
+        params.append("state_id", searchParams.state_id)
+      }
+
+      const url = `https://api.strapre.com/api/v1/products/search?${params.toString()}`
+      const response = await fetch(url)
+      const data: ApiResponse<Product> = await response.json()
+
+      setProducts(data.data)
+      if (data.meta) {
+        setCurrentPage(data.meta.current_page)
+        setTotalPages(data.meta.last_page)
+        setPaginationLinks(data.meta.links)
+      }
+    } catch (error) {
+      console.error("Error searching products:", error)
     } finally {
       setLoading(false)
     }
@@ -308,6 +538,7 @@ export default function CategoryPage() {
 
   const handlePageChange = (url: string | null) => {
     if (!url || !params.id) return
+
     // Extract page number from URL
     const urlParams = new URLSearchParams(url.split("?")[1])
     const page = urlParams.get("page")
@@ -316,9 +547,35 @@ export default function CategoryPage() {
     }
   }
 
+  // Updated apply filters function
   const applyFilters = () => {
-    // Here you would implement additional filter logic
-    console.log("Applying filters:", { filterState, filterLGA, minAmount, maxAmount })
+    const searchParams: any = {}
+
+    if (searchQuery.trim()) {
+      searchParams.search = searchQuery.trim()
+    }
+    if (minAmount) {
+      searchParams.min_price = minAmount
+    }
+    if (maxAmount) {
+      searchParams.max_price = maxAmount
+    }
+
+    // Handle state selection for logged in users
+    if (isAuthenticated) {
+      if (useUserLocation && userProfile?.state_id) {
+        searchParams.state_id = userProfile.state_id
+      } else if (filterState) {
+        searchParams.state_id = filterState
+      }
+    } else {
+      // For non-logged in users, use filter state
+      if (filterState) {
+        searchParams.state_id = filterState
+      }
+    }
+
+    searchProducts(1, searchParams)
     setShowFilterDialog(false)
   }
 
@@ -336,11 +593,96 @@ export default function CategoryPage() {
       console.log("Searching for:", searchQuery)
     }
   }
+  const handleBackToHome = () => {
+    router.push("/")
+  }
 
   if (loading && products.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+      </div>
+    )
+  }
+
+  // Update the Hero Section JSX
+  const renderHeroSection = () => {
+    if (advertsLoading) {
+      return (
+        <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden h-[200px] md:h-[400px] bg-gray-200 animate-pulse">
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#CB0207] border-t-transparent"></div>
+          </div>
+        </div>
+      )
+    }
+
+    if (adverts.length === 0) {
+      return (
+        <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden h-[200px] md:h-[400px] bg-gray-200">
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-500">No adverts available</p>
+          </div>
+        </div>
+      )
+    }
+
+    const currentAdvert = adverts[currentSlide]
+
+    return (
+      <div
+        className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[200px] md:h-[400px] transition-all duration-500 cursor-pointer"
+        style={{ backgroundImage: `url(${currentAdvert.image})` }}
+        onClick={() => handleAdvertClick(currentAdvert)}
+      >
+        {/* Black overlay */}
+        <div className="absolute inset-0 bg-black/10 z-0"></div>
+
+        {/* Content */}
+        <div className="relative z-10 mt-4">
+          <h1 className="text-white text-xl md:text-4xl font-bold mb-2">{currentAdvert.title}</h1>
+        </div>
+
+        {/* Navigation Arrows */}
+        {adverts.length > 1 && (
+          <>
+            {/* Previous Button */}
+            <button
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-all duration-200 backdrop-blur-sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                goToPreviousSlide()
+              }}
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+
+            {/* Next Button */}
+            <button
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-all duration-200 backdrop-blur-sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                goToNextSlide()
+              }}
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+          </>
+        )}
+
+        {/* Slide Indicators */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
+          {adverts.map((_, index) => (
+            <button
+              key={index}
+              className={`w-3 h-3 rounded-full ${currentSlide === index ? "bg-white" : "bg-white/50"}`}
+              onClick={(e) => {
+                e.stopPropagation()
+                setCurrentSlide(index)
+              }}
+            />
+          ))}
+        </div>
       </div>
     )
   }
@@ -361,6 +703,7 @@ export default function CategoryPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
         <div className="flex gap-6">
           {/* Sidebar - Desktop Only */}
           <aside className="hidden md:block w-64 bg-white rounded-lg shadow-sm p-4">
@@ -383,43 +726,26 @@ export default function CategoryPage() {
 
           {/* Main Content */}
           <main className="flex-1">
-            {/* Hero Section */}
-            <Link href="/" className="flex items-center text-gray-600 hover:text-gray-800 mb-6">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Main Menu
-            </Link>
-
-            <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-[url('/strapre-hero.png')] bg-cover bg-center">
-              {/* Black overlay */}
-              <div className="absolute inset-0 bg-black/10 z-0"></div>
-              {/* Content */}
-              <div className="relative z-10">
-                <h1 className="text-white text-xl md:text-4xl font-bold mb-2">New iPhone 14 Pro Max</h1>
-                <p className="text-white/90 text-[5px] md:text-base mb-4 max-w-[257px] md:max-w-2xl">
-                  Apple's top-tier phone with a 6.7" OLED display, A16 Bionic chip, and Dynamic Island. It features a
-                  48MP main camera, ProRAW/ProRes support, and cinematic 4K video. Built with stainless steel.
-                </p>
-                <div className="inline-block bg-white text-[8px] md:text-[12px] text-black font-bold hover:bg-gray-100 px-2 md:px-4 py-1 md:py-2 rounded cursor-pointer">
-                  VIEW INFO
+            {/* Back Button */}
+                <div className="">
+                  <Button
+                    onClick={handleBackToHome}
+                    variant="ghost"
+                    className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 p-0"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                    <span className="font-medium">Back to Home</span>
+                  </Button>
                 </div>
-              </div>
-              {/* Slide Indicators (centered horizontally) */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
-                {[0, 1, 2, 3, 4].map((index) => (
-                  <button
-                    key={index}
-                    className={`w-3 h-3 rounded-full ${currentSlide === index ? "bg-white" : "bg-white/50"}`}
-                    onClick={() => setCurrentSlide(index)}
-                  />
-                ))}
-              </div>
-            </div>
+            {/* Hero Section */}
+            {renderHeroSection()}
 
             {/* Category Header */}
             <div className="flex flex-col justify-between mb-6">
               <div className="flex items-center space-x-4 justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-semibold">Category ({category?.name || "Loading..."})</h2>
+
                   {/* Desktop State/LGA Filters */}
                   <div className="hidden md:flex items-center space-x-3">
                     <Select onValueChange={handleStateChange} value={selectedState?.id || "all"}>
@@ -435,6 +761,7 @@ export default function CategoryPage() {
                         ))}
                       </SelectContent>
                     </Select>
+
                     <Select onValueChange={handleLGAChange} value={selectedLGA?.id || "all"} disabled={!selectedState}>
                       <SelectTrigger className="w-32">
                         <SelectValue placeholder="LGA" />
@@ -450,6 +777,7 @@ export default function CategoryPage() {
                     </Select>
                   </div>
                 </div>
+
                 <Button
                   variant="outline"
                   className="flex items-center gap-2 border-[2] border-gray-60 text-black hover:bg-[#CB0207] hover:text-white rounded-xl px-3 py-2 font-medium transition-all duration-300 bg-transparent"

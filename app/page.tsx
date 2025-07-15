@@ -304,7 +304,7 @@ function HomePage() {
 
   // Helper function to handle advert clicks
   const handleAdvertClick = (advert: Advert) => {
-    if (advert.link && advert.link !== "#" && advert.link !== "https://example.com") {
+    if (advert.link && advert.link !== "#" && advert.link !== "https://strapre.com") {
       window.open(advert.link, "_blank")
     }
   }
