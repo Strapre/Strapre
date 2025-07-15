@@ -227,7 +227,7 @@ export default function Header({
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetchWithErrorHandling("https://ga.vplaza.com.ng/api/v1/auth/get-profile", {
+      const response = await fetchWithErrorHandling("https://api.strapre.com/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -247,7 +247,7 @@ export default function Header({
 
   const fetchUserStore = async (token: string) => {
     try {
-      const response = await fetchWithErrorHandling("https://ga.vplaza.com.ng/api/v1/mystore", {
+      const response = await fetchWithErrorHandling("https://api.strapre.com/api/v1/mystore", {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -263,7 +263,7 @@ export default function Header({
 
   const fetchWishlist = async (token: string) => {
     try {
-      const response = await fetchWithErrorHandling("https://ga.vplaza.com.ng/api/v1/wishlist", {
+      const response = await fetchWithErrorHandling("https://api.strapre.com/api/v1/wishlist", {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -285,7 +285,7 @@ export default function Header({
 
   const fetchCategories = async () => {
     try {
-      const response = await fetchWithErrorHandling("https://ga.vplaza.com.ng/api/v1/categories")
+      const response = await fetchWithErrorHandling("https://api.strapre.com/api/v1/categories")
       const data: ApiResponse<Category> = await response.json()
       setCategories(data.data)
     } catch (error) {
@@ -295,7 +295,7 @@ export default function Header({
 
   const fetchStates = async () => {
     try {
-      const response = await fetchWithErrorHandling("https://ga.vplaza.com.ng/api/v1/states")
+      const response = await fetchWithErrorHandling("https://api.strapre.com/api/v1/states")
       const data: ApiResponse<State> = await response.json()
       const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
       setStates(sortedStates)
@@ -306,7 +306,7 @@ export default function Header({
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetchWithErrorHandling(`https://ga.vplaza.com.ng/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetchWithErrorHandling(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`)
       const data: ApiResponse<LGA> = await response.json()
       const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
       setLgas(sortedLGAs)
