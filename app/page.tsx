@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Filter, ChevronRight, Heart, X, MapPin, DollarSign, Star } from "lucide-react"
+import { Filter, ChevronRight, Heart, X, MapPin, DollarSign, Star, ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -221,6 +221,15 @@ function HomePage() {
     } finally {
       setAdvertsLoading(false)
     }
+  }
+
+  // Manual navigation functions
+  const goToNextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % adverts.length)
+  }
+
+  const goToPreviousSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + adverts.length) % adverts.length)
   }
 
   // Check authentication and fetch user data
@@ -599,6 +608,33 @@ function HomePage() {
           <h1 className="text-white text-xl md:text-4xl font-bold mb-2">{currentAdvert.title}</h1>
          
         </div>
+
+        {/* Navigation Arrows */}
+        {adverts.length > 1 && (
+          <>
+            {/* Previous Button */}
+            <button
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-all duration-200 backdrop-blur-sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                goToPreviousSlide()
+              }}
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+
+            {/* Next Button */}
+            <button
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-all duration-200 backdrop-blur-sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                goToNextSlide()
+              }}
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+          </>
+        )}
 
         {/* Slide Indicators */}
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
