@@ -609,7 +609,7 @@ export default function CategoryPage() {
   const renderHeroSection = () => {
     if (advertsLoading) {
       return (
-        <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden h-[200px] md:h-[400px] bg-gray-200 animate-pulse">
+        <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden h-[150px] md:h-[400px] bg-gray-200 animate-pulse">
           <div className="flex items-center justify-center h-full">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#CB0207] border-t-transparent"></div>
           </div>
@@ -619,7 +619,7 @@ export default function CategoryPage() {
 
     if (adverts.length === 0) {
       return (
-        <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden h-[200px] md:h-[400px] bg-gray-200">
+        <div className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden h-[150px] md:h-[400px] bg-gray-200">
           <div className="flex items-center justify-center h-full">
             <p className="text-gray-500">No adverts available</p>
           </div>
@@ -631,7 +631,7 @@ export default function CategoryPage() {
 
     return (
       <div
-        className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[200px] md:h-[400px] transition-all duration-500 cursor-pointer"
+        className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[150px] md:h-[400px] transition-all duration-500 cursor-pointer"
         style={{ backgroundImage: `url(${currentAdvert.image})` }}
         onClick={() => handleAdvertClick(currentAdvert)}
       >

@@ -111,7 +111,7 @@ export default function CreateStorePage() {
   const router = useRouter()
 
   // Constants
-  const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2MB in bytes
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB in bytes
 
   // Check if all required fields are filled
   const isFormValid = useMemo(() => {
@@ -279,9 +279,9 @@ export default function CreateStorePage() {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, type: "store" | "cac" | "id") => {
     const file = event.target.files?.[0]
     if (file) {
-      // Check file size (2MB = 2 * 1024 * 1024 bytes)
+      // Check file size (5MB = 2 * 1024 * 1024 bytes)
       if (file.size > MAX_IMAGE_SIZE) {
-        setError(`Image size must be less than 2MB. Selected file is ${formatFileSize(file.size)}.`)
+        setError(`Image size must be less than 5MB. Selected file is ${formatFileSize(file.size)}.`)
         // Clear the file input
         const inputRef = type === "store" ? fileInputRef : type === "cac" ? cacFileInputRef : idFileInputRef
         if (inputRef.current) {
@@ -423,19 +423,19 @@ export default function CreateStorePage() {
     }
 
     if (storeImage.size > MAX_IMAGE_SIZE) {
-      setError(`Store image size must be less than 2MB. Selected file is ${formatFileSize(storeImage.size)}.`)
+      setError(`Store image size must be less than 5MB. Selected file is ${formatFileSize(storeImage.size)}.`)
       setLoading(false)
       return
     }
 
     if (storeCacImage.size > MAX_IMAGE_SIZE) {
-      setError(`CAC image size must be less than 2MB. Selected file is ${formatFileSize(storeCacImage.size)}.`)
+      setError(`CAC image size must be less than 5MB. Selected file is ${formatFileSize(storeCacImage.size)}.`)
       setLoading(false)
       return
     }
 
     if (storeIdImage.size > MAX_IMAGE_SIZE) {
-      setError(`ID image size must be less than 2MB. Selected file is ${formatFileSize(storeIdImage.size)}.`)
+      setError(`ID image size must be less than 5MB. Selected file is ${formatFileSize(storeIdImage.size)}.`)
       setLoading(false)
       return
     }
