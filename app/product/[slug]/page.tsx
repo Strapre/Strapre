@@ -457,20 +457,34 @@ export default function ProductPage() {
   }
 
   const handleContactAction = (action: "whatsapp" | "call") => {
-    if (!isAuthenticated) {
-      setShowLoginDialog(true)
-      return
-    }
-    if (!product) return
-
-    if (action === "whatsapp") {
-      const message = `Hi, I'm interested in your ${product.name} listed for ${formatPrice(product.price)}`
-      const whatsappUrl = `https://wa.me/${product.store.phone_number}?text=${encodeURIComponent(message)}`
-      window.open(whatsappUrl, "_blank")
-    } else if (action === "call") {
-      window.location.href = `tel:${product.store.phone_number}`
-    }
+  if (!isAuthenticated) {
+    setShowLoginDialog(true)
+    return
   }
+  if (!product) return
+
+  const formatPhoneNumberForNigeria = (phone: string) => {
+    const digits = phone.replace(/\D/g, '')
+    if (digits.startsWith('0')) {
+      return `234${digits.slice(1)}`
+    }
+    if (digits.startsWith('234')) {
+      return digits
+    }
+    return `234${digits}`
+  }
+
+  const formattedPhone = formatPhoneNumberForNigeria(product.store.phone_number)
+
+  if (action === "whatsapp") {
+    const message = `Hi, I'm interested in your ${product.name} listed for ${formatPrice(product.price)}`
+    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`
+    window.open(whatsappUrl, "_blank")
+  } else if (action === "call") {
+    window.location.href = `tel:+${formattedPhone}`
+  }
+}
+
 
   const handleLoginRedirect = () => {
     // Store current URL to return after login
