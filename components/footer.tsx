@@ -6,13 +6,14 @@ import { useRouter } from 'next/navigation';
 const routes = {
   'about-strapre': '/about',
   'safety': '/safety',
+  'ip-violation': '/ip-violation',
   'terms-conditions': '/terms',
   'privacy-policy': '/privacy-policy',
-  'copyright-infringement': '/copyright',
+  'intellectual-property': '/intellectual-property',
   'support-email': 'mailto:support@strapre.com',
-  'facebook': 'https://facebook.com/strapre',
-  'instagram': 'https://instagram.com/strapre',
-  'twitter': 'https://twitter.com/strapre',
+  'tiktok': 'https://www.tiktok.com/@mastakonet2015?_t=ZM-8xwzxzfLkGO&_r=1',
+  'instagram': 'https://www.instagram.com/mastakonet2015?igsh=azhqeDEzMHkyZ2N5&utm_source=qr',
+  'twitter': 'https://x.com/mastakonnect?s=21&t=cKxBkMcle1uLVPlicrRMrA',
 } as const;
 
 type Section = keyof typeof routes;
@@ -40,8 +41,9 @@ const Footer = () => {
               <li><button onClick={() => handleNavigation('about-strapre')} className="hover:text-gray-200 text-left">About strapre</button></li>
               <li><button onClick={() => handleNavigation('safety')} className="hover:text-gray-200 text-left">Satety Tips</button></li>
               <li><button onClick={() => handleNavigation('terms-conditions')} className="hover:text-gray-200 text-left">Terms and Conditions</button></li>
+              <li><button onClick={() => handleNavigation('ip-violation')} className="hover:text-gray-200 text-left">IP Violation and Copyright</button></li>
               <li><button onClick={() => handleNavigation('privacy-policy')} className="hover:text-gray-200 text-left">Privacy Policy</button></li>
-              <li><button onClick={() => handleNavigation('copyright-infringement')} className="hover:text-gray-200 text-left">Copyright infringement policy</button></li>
+              <li><button onClick={() => handleNavigation('intellectual-property')} className="hover:text-gray-200 text-left">intellectual Property</button></li>
             </ul>
           </div>
           <div>
@@ -54,11 +56,11 @@ const Footer = () => {
             <h3 className="font-bold text-xl mb-6">Our resources</h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <button onClick={() => handleNavigation('facebook')} className="hover:text-gray-200 text-left flex items-center space-x-2">
-                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                <button onClick={() => handleNavigation('tiktok')} className="hover:text-gray-200 text-left flex items-center space-x-2">
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M41.6 15.1c-3.5 0-6.5-1.1-8.9-3V30c0 8.4-6.9 15.3-15.3 15.3S2 38.4 2 30s6.9-15.3 15.3-15.3c1.1 0 2.2.1 3.3.4v7.2c-1-.3-2.1-.5-3.3-.5-4.5 0-8.1 3.6-8.1 8.1s3.6 8.1 8.1 8.1 8.1-3.6 8.1-8.1V2h7.1c.4 2.6 1.8 5 3.8 6.7 2 1.7 4.5 2.6 7.2 2.6v7.8z" />
                   </svg>
-                  <span>Facebook</span>
+                  <span>Tiktok</span>
                 </button>
               </li>
               <li>
@@ -88,9 +90,11 @@ const Footer = () => {
               <h3 className="font-bold text-[16px] md:text-lg mb-4">About us</h3>
               <ul className="space-y-2 text-[12px] md:text-sm">
                 <li><button onClick={() => handleNavigation('about-strapre')} className="hover:text-gray-200 text-left">About strapre</button></li>
-                <li><button onClick={() => handleNavigation('terms-conditions')} className="hover:text-gray-200 text-left">Terms & Conditions</button></li>
+                <li><button onClick={() => handleNavigation('safety')} className="hover:text-gray-200 text-left">Satety Tips</button></li>
+                <li><button onClick={() => handleNavigation('terms-conditions')} className="hover:text-gray-200 text-left">Terms and Conditions</button></li>
+                <li><button onClick={() => handleNavigation('ip-violation')} className="hover:text-gray-200 text-left">IP Violation and Copyright</button></li>
                 <li><button onClick={() => handleNavigation('privacy-policy')} className="hover:text-gray-200 text-left">Privacy Policy</button></li>
-                <li><button onClick={() => handleNavigation('copyright-infringement')} className="hover:text-gray-200 text-left">Copyright infringement</button></li>
+                <li><button onClick={() => handleNavigation('intellectual-property')} className="hover:text-gray-200 text-left">intellectual Property</button></li>
               </ul>
             </div>
             <div>
@@ -100,9 +104,9 @@ const Footer = () => {
               </ul>
               <h3 className="font-bold text-[16px] md:text-lg mb-4">Follow us</h3>
               <div className="flex space-x-4">
-                <button onClick={() => handleNavigation('facebook')} className="hover:text-gray-200">
-                  <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                <button onClick={() => handleNavigation('tiktok')} className="hover:text-gray-200">
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M41.6 15.1c-3.5 0-6.5-1.1-8.9-3V30c0 8.4-6.9 15.3-15.3 15.3S2 38.4 2 30s6.9-15.3 15.3-15.3c1.1 0 2.2.1 3.3.4v7.2c-1-.3-2.1-.5-3.3-.5-4.5 0-8.1 3.6-8.1 8.1s3.6 8.1 8.1 8.1 8.1-3.6 8.1-8.1V2h7.1c.4 2.6 1.8 5 3.8 6.7 2 1.7 4.5 2.6 7.2 2.6v7.8z" />
                   </svg>
                 </button>
                 <button onClick={() => handleNavigation('instagram')} className="hover:text-gray-200">
