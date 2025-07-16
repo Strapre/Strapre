@@ -146,7 +146,7 @@ export default function TermsAndConditionsPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900">10. Privacy</h2>
               <p className="text-gray-700 leading-relaxed">
-                Your data is handled under our Privacy Policy (<a href="https://strapre.vercel.app/privacy" className="text-blue-600 underline">https://strapre.vercel.app/privacy</a>). By using the platform, you agree to our data practices.
+                Your data is handled under our Privacy Policy (<a href="https://strapre.com/privacy-policy" className="text-blue-600 underline">https://strapre.com/privacy-policy</a>). By using the platform, you agree to our data practices.
               </p>
             </section>
 
@@ -160,10 +160,7 @@ export default function TermsAndConditionsPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900">12. Contact</h2>
               <p className="text-gray-700">
-                Support Email: <a href="mailto:support@strapre.africa" className="text-blue-600 underline">support@strapre.africa</a>
-              </p>
-              <p className="text-gray-700">
-                Complaints & Feedback: <a href="mailto:dpo@strapre.africa" className="text-blue-600 underline">dpo@strapre.africa</a>
+                Support Email: <a href="mailto:support@strapre.com" className="text-blue-600 underline">support@strapre.com</a>
               </p>
             </section>
 
