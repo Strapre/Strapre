@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import type React from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Camera, Upload, X, Plus, Package } from "lucide-react"
+import { ArrowLeft, X, Plus, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -61,7 +61,6 @@ export default function CreateProductPage() {
   const [wholesalePrice, setWholesalePrice] = useState("")
   const [productImages, setProductImages] = useState<File[]>([])
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([])
-  const [showImageOptions, setShowImageOptions] = useState<boolean[]>([false, false, false, false, false])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingCategories, setLoadingCategories] = useState(false)
@@ -257,11 +256,6 @@ export default function CreateProductPage() {
 
       setProductImages(newImages)
 
-      // Hide dropdown
-      const newShowOptions = [...showImageOptions]
-      newShowOptions[imageIndex] = false
-      setShowImageOptions(newShowOptions)
-
       // Clear any previous errors
       setError("")
     } catch (error) {
@@ -275,20 +269,6 @@ export default function CreateProductPage() {
     }
   }
 
-  const handleTakePhoto = (imageIndex: number) => {
-    if (fileInputRefs.current[imageIndex]) {
-      fileInputRefs.current[imageIndex]!.setAttribute("capture", "camera")
-      fileInputRefs.current[imageIndex]!.click()
-    }
-  }
-
-  const handleUploadFromGallery = (imageIndex: number) => {
-    if (fileInputRefs.current[imageIndex]) {
-      fileInputRefs.current[imageIndex]!.removeAttribute("capture")
-      fileInputRefs.current[imageIndex]!.click()
-    }
-  }
-
   const removeImage = (index: number) => {
     const newImages = [...productImages]
     const newPreviewUrls = [...imagePreviewUrls]
@@ -298,18 +278,6 @@ export default function CreateProductPage() {
 
     setProductImages(newImages)
     setImagePreviewUrls(newPreviewUrls)
-  }
-
-  const toggleImageOptions = (index: number) => {
-    const newShowOptions = [...showImageOptions]
-    newShowOptions[index] = !newShowOptions[index]
-    // Close all other dropdowns
-    for (let i = 0; i < newShowOptions.length; i++) {
-      if (i !== index) {
-        newShowOptions[i] = false
-      }
-    }
-    setShowImageOptions(newShowOptions)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -501,7 +469,7 @@ export default function CreateProductPage() {
                     <div key={index} className="relative">
                       <div
                         className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 cursor-pointer hover:border-[#CB0207] transition-colors"
-                        onClick={() => toggleImageOptions(index)}
+                        onClick={() => fileInputRefs.current[index]?.click()}
                       >
                         {imagePreviewUrls[index] ? (
                           <>
@@ -526,28 +494,6 @@ export default function CreateProductPage() {
                         )}
                       </div>
 
-                      {showImageOptions[index] && (
-                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10 min-w-[200px]">
-                          <Button
-                            type="button"
-                            onClick={() => handleTakePhoto(index)}
-                            className="w-full mb-2 bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center justify-center space-x-2"
-                          >
-                            <Camera className="h-4 w-4" />
-                            <span>Take Photo</span>
-                          </Button>
-                          <Button
-                            type="button"
-                            onClick={() => handleUploadFromGallery(index)}
-                            variant="outline"
-                            className="w-full border-gray-300 hover:border-[#CB0207] hover:text-[#CB0207] flex items-center justify-center space-x-2 bg-transparent"
-                          >
-                            <Upload className="h-4 w-4" />
-                            <span>Upload Image</span>
-                          </Button>
-                        </div>
-                      )}
-
                       <input
                         ref={(el) => (fileInputRefs.current[index] = el)}
                         type="file"
@@ -563,35 +509,13 @@ export default function CreateProductPage() {
                     <div className="relative">
                       <div
                         className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 cursor-pointer hover:border-[#CB0207] transition-colors"
-                        onClick={() => toggleImageOptions(productImages.length)}
+                        onClick={() => fileInputRefs.current[productImages.length]?.click()}
                       >
                         <div className="text-center">
                           <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                           <p className="text-xs text-gray-500">Add Image</p>
                         </div>
                       </div>
-
-                      {showImageOptions[productImages.length] && (
-                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10 min-w-[200px]">
-                          <Button
-                            type="button"
-                            onClick={() => handleTakePhoto(productImages.length)}
-                            className="w-full mb-2 bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center justify-center space-x-2"
-                          >
-                            <Camera className="h-4 w-4" />
-                            <span>Take Photo</span>
-                          </Button>
-                          <Button
-                            type="button"
-                            onClick={() => handleUploadFromGallery(productImages.length)}
-                            variant="outline"
-                            className="w-full border-gray-300 hover:border-[#CB0207] hover:text-[#CB0207] flex items-center justify-center space-x-2 bg-transparent"
-                          >
-                            <Upload className="h-4 w-4" />
-                            <span>Upload Image</span>
-                          </Button>
-                        </div>
-                      )}
 
                       <input
                         ref={(el) => (fileInputRefs.current[productImages.length] = el)}
@@ -605,9 +529,7 @@ export default function CreateProductPage() {
                 </div>
 
                 <div className="bg-white rounded-lg p-4">
-                  <ul className="text-xs text-blue-700">
-                    <li>• Maximum 5MB per image</li>
-                  </ul>
+                    <p>• Maximum 5MB per image</p>
                 </div>
               </div>
 
