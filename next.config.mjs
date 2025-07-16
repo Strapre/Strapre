@@ -10,7 +10,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ['ga.vplaza.com.ng'], 
+    domains: ['api.strapre.com'], 
     formats: ['image/webp'], 
   },
 }
