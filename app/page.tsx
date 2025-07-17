@@ -140,6 +140,7 @@ function HomePage() {
   const [userStore, setUserStore] = useState<UserStore | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showFilterDialog, setShowFilterDialog] = useState(false)
+  const [isSearchActive, setIsSearchActive] = useState(false)
   const [minAmount, setMinAmount] = useState("")
   const [maxAmount, setMaxAmount] = useState("")
   const [filterState, setFilterState] = useState("")
@@ -519,8 +520,10 @@ function HomePage() {
         searchParams.state_id = userProfile.state_id
       }
       searchProducts(1, searchParams)
+      setIsSearchActive(true) // Add this line
     } else {
       fetchProducts(1)
+      setIsSearchActive(false) // Add this line
     }
   }
 
@@ -549,8 +552,31 @@ function HomePage() {
         searchParams.state_id = filterState
       }
     }
-    searchProducts(1, searchParams)
+
+    // Check if any filters are active
+    const hasActiveFilters = Object.keys(searchParams).length > 0
+    
+    if (hasActiveFilters) {
+      searchProducts(1, searchParams)
+      setIsSearchActive(true) // Add this line
+    } else {
+      fetchProducts(1)
+      setIsSearchActive(false) // Add this line
+    }
+    
     setShowFilterDialog(false)
+  }
+
+  // 4. Add new function to return to all products (add after applyFilters function)
+  const returnToAllProducts = () => {
+    setSearchQuery("")
+    setMinAmount("")
+    setMaxAmount("")
+    setFilterState("")
+    setFilterLGA("")
+    setUseUserLocation(true)
+    setIsSearchActive(false)
+    fetchProducts(1)
   }
 
   const clearFilters = () => {
@@ -560,6 +586,7 @@ function HomePage() {
     setMaxAmount("")
     setSearchQuery("")
     setUseUserLocation(true)
+    setIsSearchActive(false) // NEW LINE ADDED
     fetchProducts(1)
   }
 
@@ -705,9 +732,21 @@ function HomePage() {
             {/* Products Section */}
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 md:p-8">
               <div className="flex items-center justify-between mb-4 md:mb-8">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-                  {isAuthenticated ? "Products" : "🔥 Hot Sales"}
-                </h2>
+                <div className="flex items-center gap-4">
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+                    {isAuthenticated ? "Products" : "🔥 Hot Sales"}
+                  </h2>
+                  {isSearchActive && (
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2 border-2 border-[#CB0207] text-[8px] md:text-[12px] text-[#CB0207] hover:bg-[#CB0207] hover:text-white rounded-xl px-2 py-2 font-medium transition-all duration-300 bg-transparent"
+                      onClick={returnToAllProducts}
+                    >
+                      <ChevronLeft className="h-[5px] md:h-4 w-[5px] md:w-4" />
+                      Back to All Products
+                    </Button>
+                  )}
+                </div>
                 <Button
                   variant="outline"
                   className="flex items-center gap-2 border-[2] border-gray-60 text-black hover:bg-[#CB0207] hover:text-white rounded-xl px-3 py-2 font-medium transition-all duration-300 bg-transparent"
