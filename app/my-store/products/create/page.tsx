@@ -76,6 +76,9 @@ export default function CreateProductPage() {
     { id: "5", name: "Books", slug: "books" },
   ])
 
+  const [displayPrice, setDisplayPrice] = useState("")
+  const [displayWholesalePrice, setDisplayWholesalePrice] = useState("")
+
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([])
   const router = useRouter()
 
@@ -84,6 +87,17 @@ export default function CreateProductPage() {
   const MAX_IMAGE_HEIGHT = 1200
   const JPEG_QUALITY = 0.8
   const MAX_IMAGES = 5
+
+    // ADD THESE HELPER FUNCTIONS HERE:
+  const formatNumberWithCommas = (value) => {
+    if (!value) return ""
+    const numericValue = value.replace(/\D/g, "")
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  }
+
+  const removeCommas = (value) => {
+    return value.replace(/,/g, "")
+  }
 
   useEffect(() => {
     // Check if user has auth token
@@ -305,6 +319,26 @@ export default function CreateProductPage() {
 
     setProductImages(newImages)
     setImagePreviewUrls(newPreviewUrls)
+  }
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value
+    const numericValue = removeCommas(inputValue)
+    
+    if (numericValue === "" || /^\d*\.?\d*$/.test(numericValue)) {
+      setPrice(numericValue) // Raw value for backend
+      setDisplayPrice(formatNumberWithCommas(numericValue)) // Formatted for display
+    }
+  }
+
+  const handleWholesalePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value
+    const numericValue = removeCommas(inputValue)
+    
+    if (numericValue === "" || /^\d*\.?\d*$/.test(numericValue)) {
+      setWholesalePrice(numericValue) // Raw value for backend
+      setDisplayWholesalePrice(formatNumberWithCommas(numericValue)) // Formatted for display
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -606,12 +640,10 @@ export default function CreateProductPage() {
                     </Label>
                     <Input
                       id="price"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      placeholder="0.00"
+                      type="text"
+                      value={displayPrice}
+                      onChange={handlePriceChange}
+                      placeholder="0"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CB0207] focus:border-[#CB0207]"
                       required
                     />
@@ -624,12 +656,10 @@ export default function CreateProductPage() {
                     </Label>
                     <Input
                       id="wholesalePrice"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={wholesalePrice}
-                      onChange={(e) => setWholesalePrice(e.target.value)}
-                      placeholder="0.00"
+                      type="text"
+                      value={displayWholesalePrice}
+                      onChange={handleWholesalePriceChange}
+                      placeholder="0"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CB0207] focus:border-[#CB0207]"
                       required
                     />
