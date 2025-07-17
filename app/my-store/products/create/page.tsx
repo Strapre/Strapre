@@ -83,6 +83,7 @@ export default function CreateProductPage() {
   const MAX_IMAGE_WIDTH = 1200
   const MAX_IMAGE_HEIGHT = 1200
   const JPEG_QUALITY = 0.8
+  const MAX_IMAGES = 5
 
   useEffect(() => {
     // Check if user has auth token
@@ -97,6 +98,18 @@ export default function CreateProductPage() {
     // Fetch categories
     fetchCategories()
   }, [router])
+
+  // Add this useEffect to clean up object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clean up all object URLs when component unmounts
+      imagePreviewUrls.forEach(url => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url)
+        }
+      })
+    }
+  }, [])
 
   const loadProfileData = () => {
     try {
@@ -212,55 +225,64 @@ export default function CreateProductPage() {
     const files = Array.from(event.target.files || [])
     if (files.length === 0) return
 
-    const file = files[0]
-
-    // Check file size (5MB limit)
-    if (file.size > MAX_FILE_SIZE) {
-      setError(`Image size must be less than 5MB. Selected image is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
+    // Calculate how many slots are available
+    const availableSlots = MAX_IMAGES - productImages.length
+    
+    // If no available slots, show error
+    if (availableSlots <= 0) {
+      setError("Maximum 5 images allowed. Please remove some images first.")
       return
     }
 
-    // Check if it's an image
-    if (!file.type.startsWith("image/")) {
-      setError("Please select a valid image file")
-      return
+    // If user selected more files than available slots, take only what we can fit
+    const filesToProcess = files.slice(0, availableSlots)
+    
+    // If we had to limit the selection, inform the user
+    if (files.length > availableSlots) {
+      setError(`You selected ${files.length} images, but only ${availableSlots} slot(s) available. Processing first ${filesToProcess.length} image(s).`)
     }
 
-    try {
-      // Resize and compress the image
-      const resizedFile = await resizeImage(file)
+    const processedImages: File[] = []
+    const processedPreviewUrls: string[] = []
+    let hasError = false
 
-      // Add to the arrays
-      const newImages = [...productImages]
-      const newPreviewUrls = [...imagePreviewUrls]
-
-      // If adding to existing slot, replace it
-      if (imageIndex < newImages.length) {
-        newImages[imageIndex] = resizedFile
-      } else {
-        // Adding new image
-        newImages.push(resizedFile)
+    // Process each selected file
+    for (const file of filesToProcess) {
+      // Check file size (5MB limit)
+      if (file.size > MAX_FILE_SIZE) {
+        setError(`Image "${file.name}" is too large (${(file.size / (1024 * 1024)).toFixed(2)}MB). Maximum size is 5MB.`)
+        hasError = true
+        continue
       }
 
-      // Create preview URL
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        if (imageIndex < newPreviewUrls.length) {
-          newPreviewUrls[imageIndex] = e.target?.result as string
-        } else {
-          newPreviewUrls.push(e.target?.result as string)
-        }
-        setImagePreviewUrls([...newPreviewUrls])
+      // Check if it's an image
+      if (!file.type.startsWith("image/")) {
+        setError(`"${file.name}" is not a valid image file.`)
+        hasError = true
+        continue
       }
-      reader.readAsDataURL(resizedFile)
 
-      setProductImages(newImages)
+      try {
+        // Resize and compress the image
+        const resizedFile = await resizeImage(file)
+        processedImages.push(resizedFile)
 
-      // Clear any previous errors
-      setError("")
-    } catch (error) {
-      console.error("Error processing image:", error)
-      setError("Error processing image. Please try again.")
+        // Create preview URL synchronously using URL.createObjectURL
+        const previewUrl = URL.createObjectURL(resizedFile)
+        processedPreviewUrls.push(previewUrl)
+
+      } catch (error) {
+        console.error(`Error processing image "${file.name}":`, error)
+        setError(`Error processing image "${file.name}". Please try again.`)
+        hasError = true
+      }
+    }
+
+    // Update state only once after all images are processed
+    if (!hasError && processedImages.length > 0) {
+      setProductImages(prev => [...prev, ...processedImages])
+      setImagePreviewUrls(prev => [...prev, ...processedPreviewUrls])
+      setError("") // Clear any previous errors
     }
 
     // Clear the input
@@ -272,6 +294,11 @@ export default function CreateProductPage() {
   const removeImage = (index: number) => {
     const newImages = [...productImages]
     const newPreviewUrls = [...imagePreviewUrls]
+
+    // Clean up the object URL to prevent memory leaks
+    if (newPreviewUrls[index]) {
+      URL.revokeObjectURL(newPreviewUrls[index])
+    }
 
     newImages.splice(index, 1)
     newPreviewUrls.splice(index, 1)
@@ -361,22 +388,6 @@ export default function CreateProductPage() {
         formData.append(`images[${index}]`, image)
       })
 
-      // Console log for debugging
-      console.log("=== CREATING PRODUCT ===")
-      console.log("Token:", token)
-      console.log("Endpoint:", "https://api.strapre.com/api/v1/products")
-      console.log("Form Data Contents:")
-      for (const [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          console.log(`${key}:`, {
-            name: value.name,
-            size: value.size,
-            type: value.type,
-          })
-        } else {
-          console.log(`${key}:`, value)
-        }
-      }
 
       const response = await fetch("https://api.strapre.com/api/v1/products", {
         method: "POST",
@@ -498,6 +509,7 @@ export default function CreateProductPage() {
                         ref={(el) => (fileInputRefs.current[index] = el)}
                         type="file"
                         accept="image/*"
+                        multiple
                         onChange={(e) => handleFileSelect(e, index)}
                         className="hidden"
                       />
@@ -505,7 +517,7 @@ export default function CreateProductPage() {
                   ))}
 
                   {/* Show one more empty box if under the limit */}
-                  {productImages.length < 5 && (
+                  {productImages.length < MAX_IMAGES && (
                     <div className="relative">
                       <div
                         className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 cursor-pointer hover:border-[#CB0207] transition-colors"
@@ -513,7 +525,7 @@ export default function CreateProductPage() {
                       >
                         <div className="text-center">
                           <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-xs text-gray-500">Add Image</p>
+                          <p className="text-xs text-gray-500">Add Image(s)</p>
                         </div>
                       </div>
 
@@ -521,6 +533,7 @@ export default function CreateProductPage() {
                         ref={(el) => (fileInputRefs.current[productImages.length] = el)}
                         type="file"
                         accept="image/*"
+                        multiple
                         onChange={(e) => handleFileSelect(e, productImages.length)}
                         className="hidden"
                       />
@@ -530,6 +543,7 @@ export default function CreateProductPage() {
 
                 <div className="bg-white rounded-lg p-4">
                     <p>• Maximum 5MB per image</p>
+                    <p>• You can select multiple images at once (up to 5 total)</p>
                 </div>
               </div>
 
