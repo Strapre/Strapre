@@ -183,7 +183,7 @@ function ProfilePage() {
   }
 
   const handleContactSupport = () => {
-    window.open("https://wa.me/2348138695216?text=Hello%2C%20I%20need%20help%21", "_blank")
+    window.open("https://wa.me/2348129769093?text=Hello%2C%20I%20need%20help%21", "_blank")
   }
 
   const getUserInitials = () => {
