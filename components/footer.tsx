@@ -39,7 +39,7 @@ const Footer = () => {
             <h3 className="font-bold text-xl mb-6">About us</h3>
             <ul className="space-y-3 text-sm">
               <li><button onClick={() => handleNavigation('about-strapre')} className="hover:text-gray-200 text-left">About strapre</button></li>
-              <li><button onClick={() => handleNavigation('safety')} className="hover:text-gray-200 text-left">Satety Tips</button></li>
+              <li><button onClick={() => handleNavigation('safety')} className="hover:text-gray-200 text-left">Safety Tips</button></li>
               <li><button onClick={() => handleNavigation('terms-conditions')} className="hover:text-gray-200 text-left">Terms and Conditions</button></li>
               <li><button onClick={() => handleNavigation('ip-violation')} className="hover:text-gray-200 text-left">IP Violation and Copyright</button></li>
               <li><button onClick={() => handleNavigation('privacy-policy')} className="hover:text-gray-200 text-left">Privacy Policy</button></li>
@@ -90,11 +90,11 @@ const Footer = () => {
               <h3 className="font-bold text-[16px] md:text-lg mb-4">About us</h3>
               <ul className="space-y-2 text-[12px] md:text-sm">
                 <li><button onClick={() => handleNavigation('about-strapre')} className="hover:text-gray-200 text-left">About strapre</button></li>
-                <li><button onClick={() => handleNavigation('safety')} className="hover:text-gray-200 text-left">Satety Tips</button></li>
+                <li><button onClick={() => handleNavigation('safety')} className="hover:text-gray-200 text-left">Safety Tips</button></li>
                 <li><button onClick={() => handleNavigation('terms-conditions')} className="hover:text-gray-200 text-left">Terms and Conditions</button></li>
                 <li><button onClick={() => handleNavigation('ip-violation')} className="hover:text-gray-200 text-left">IP Violation and Copyright</button></li>
                 <li><button onClick={() => handleNavigation('privacy-policy')} className="hover:text-gray-200 text-left">Privacy Policy</button></li>
-                <li><button onClick={() => handleNavigation('intellectual-property')} className="hover:text-gray-200 text-left">Intellectual Property</button></li>
+                <li><button onClick={() => handleNavigation('intellectual-property')} className="hover:text-gray-200 text-left">intellectual Property</button></li>
               </ul>
             </div>
             <div>
