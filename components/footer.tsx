@@ -12,7 +12,7 @@ const routes = {
   'intellectual-property': '/intellectual-property',
   'support-email': 'mailto:support@strapre.com',
   'tiktok': 'https://www.tiktok.com/@mastakonet2015?_t=ZM-8xwzxzfLkGO&_r=1',
-  'instagram': 'https://www.instagram.com/mastakonet2015?igsh=azhqeDEzMHkyZ2N5&utm_source=qr',
+  'instagram': 'https://www.instagram.com/strapre_?igsh=azhqeDEzMHkyZ2N5&utm_source=qr',
   'twitter': 'https://x.com/mastakonnect?s=21&t=cKxBkMcle1uLVPlicrRMrA',
 } as const;
 
@@ -43,7 +43,7 @@ const Footer = () => {
               <li><button onClick={() => handleNavigation('terms-conditions')} className="hover:text-gray-200 text-left">Terms and Conditions</button></li>
               <li><button onClick={() => handleNavigation('ip-violation')} className="hover:text-gray-200 text-left">IP Violation and Copyright</button></li>
               <li><button onClick={() => handleNavigation('privacy-policy')} className="hover:text-gray-200 text-left">Privacy Policy</button></li>
-              <li><button onClick={() => handleNavigation('intellectual-property')} className="hover:text-gray-200 text-left">intellectual Property</button></li>
+              <li><button onClick={() => handleNavigation('intellectual-property')} className="hover:text-gray-200 text-left">Intellectual Property</button></li>
             </ul>
           </div>
           <div>
@@ -94,7 +94,7 @@ const Footer = () => {
                 <li><button onClick={() => handleNavigation('terms-conditions')} className="hover:text-gray-200 text-left">Terms and Conditions</button></li>
                 <li><button onClick={() => handleNavigation('ip-violation')} className="hover:text-gray-200 text-left">IP Violation and Copyright</button></li>
                 <li><button onClick={() => handleNavigation('privacy-policy')} className="hover:text-gray-200 text-left">Privacy Policy</button></li>
-                <li><button onClick={() => handleNavigation('intellectual-property')} className="hover:text-gray-200 text-left">intellectual Property</button></li>
+                <li><button onClick={() => handleNavigation('intellectual-property')} className="hover:text-gray-200 text-left">Intellectual Property</button></li>
               </ul>
             </div>
             <div>
