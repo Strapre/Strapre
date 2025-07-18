@@ -94,7 +94,7 @@ const Footer = () => {
                 <li><button onClick={() => handleNavigation('terms-conditions')} className="hover:text-gray-200 text-left">Terms and Conditions</button></li>
                 <li><button onClick={() => handleNavigation('ip-violation')} className="hover:text-gray-200 text-left">IP Violation and Copyright</button></li>
                 <li><button onClick={() => handleNavigation('privacy-policy')} className="hover:text-gray-200 text-left">Privacy Policy</button></li>
-                <li><button onClick={() => handleNavigation('intellectual-property')} className="hover:text-gray-200 text-left">intellectual Property</button></li>
+                <li><button onClick={() => handleNavigation('intellectual-property')} className="hover:text-gray-200 text-left">Intellectual Property</button></li>
               </ul>
             </div>
             <div>
