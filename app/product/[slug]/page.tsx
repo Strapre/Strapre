@@ -86,6 +86,38 @@ interface Product {
   created_at: string
 }
 
+interface SimilarProduct {
+  id: string
+  category_id: string
+  name: string
+  slug: string
+  description: string
+  price: string
+  wholesale_price: string
+  average_rating: number
+  images: ProductImage[]
+  store: ProductStore
+  created_at: string
+}
+
+interface SimilarProductsResponse {
+  data: SimilarProduct[]
+  links: {
+    first: string
+    last: string
+    prev: string | null
+    next: string | null
+  }
+  meta: {
+    current_page: number
+    from: number
+    last_page: number
+    per_page: number
+    to: number
+    total: number
+  }
+}
+
 interface UserProfile {
   id: string
   first_name: string
@@ -152,6 +184,9 @@ export default function ProductPage() {
   const [reviewComment, setReviewComment] = useState("")
   const [reviewLoading, setReviewLoading] = useState(false)
   const [reviews, setReviews] = useState<Review[]>([])
+
+  const [similarProducts, setSimilarProducts] = useState<SimilarProduct[]>([])
+  const [similarProductsLoading, setSimilarProductsLoading] = useState(false)
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50
@@ -229,6 +264,7 @@ export default function ProductPage() {
       const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json"
         },
       })
       const data = await response.json()
@@ -288,6 +324,8 @@ export default function ProductPage() {
         if (data.data.reviews) {
           setReviews(data.data.reviews)
         }
+        // Fetch similar products
+        fetchSimilarProducts(data.data.name, data.data.id)
       } else {
         setError("Product not found")
       }
@@ -295,6 +333,31 @@ export default function ProductPage() {
       setError("Failed to load product")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchSimilarProducts = async (productName: string, currentProductId: string) => {
+    setSimilarProductsLoading(true)
+    try {
+      // Create search parameters
+      const params = new URLSearchParams({
+        search: productName,
+        limit: '6' // Get 6 to exclude current product and show 5
+      })
+      
+      const response = await fetch(`https://api.strapre.com/api/v1/products/search?${params.toString()}`)
+      if (response.ok) {
+        const data: SimilarProductsResponse = await response.json()
+        // Filter out the current product and limit to 5
+        const filteredProducts = data.data
+          .filter(product => product.id !== currentProductId)
+          .slice(0, 5)
+        setSimilarProducts(filteredProducts)
+      }
+    } catch (error) {
+      console.error("Error fetching similar products:", error)
+    } finally {
+      setSimilarProductsLoading(false)
     }
   }
 
@@ -382,6 +445,7 @@ export default function ProductPage() {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -390,6 +454,8 @@ export default function ProductPage() {
           comment: reviewComment.trim(),
         }),
       })
+
+      console.log("Response status:", response)
 
       if (response.ok) {
         const data = await response.json()
@@ -457,34 +523,20 @@ export default function ProductPage() {
   }
 
   const handleContactAction = (action: "whatsapp" | "call") => {
-  if (!isAuthenticated) {
-    setShowLoginDialog(true)
-    return
-  }
-  if (!product) return
-
-  const formatPhoneNumberForNigeria = (phone: string) => {
-    const digits = phone.replace(/\D/g, '')
-    if (digits.startsWith('0')) {
-      return `234${digits.slice(1)}`
+    if (!isAuthenticated) {
+      setShowLoginDialog(true)
+      return
     }
-    if (digits.startsWith('234')) {
-      return digits
+    if (!product) return
+
+    if (action === "whatsapp") {
+      const message = `Hi, I'm interested in your ${product.name} listed for ${formatPrice(product.price)}`
+      const whatsappUrl = `https://wa.me/${product.store.phone_number}?text=${encodeURIComponent(message)}`
+      window.open(whatsappUrl, "_blank")
+    } else if (action === "call") {
+      window.location.href = `tel:${product.store.phone_number}`
     }
-    return `234${digits}`
   }
-
-  const formattedPhone = formatPhoneNumberForNigeria(product.store.phone_number)
-
-  if (action === "whatsapp") {
-    const message = `Hi, I'm interested in your ${product.name} listed for ${formatPrice(product.price)}`
-    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`
-    window.open(whatsappUrl, "_blank")
-  } else if (action === "call") {
-    window.location.href = `tel:+${formattedPhone}`
-  }
-}
-
 
   const handleLoginRedirect = () => {
     // Store current URL to return after login
@@ -608,6 +660,107 @@ export default function ProductPage() {
             />
           </button>
         ))}
+      </div>
+    )
+  }
+
+  const SimilarProductCard = ({ product }: { product: SimilarProduct }) => {
+    const isInWishlist = wishlistItems.includes(product.id)
+    const isWishlistLoading = wishlistLoading.includes(product.id)
+
+    const handleWishlistToggle = (e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      
+      if (isInWishlist) {
+        removeFromWishlist(product.id)
+      } else {
+        addToWishlist(product.id)
+      }
+    }
+
+    const handleProductClick = () => {
+      router.push(`/product/${product.slug}`)
+    }
+
+    return (
+      <div 
+        className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
+        onClick={handleProductClick}
+      >
+        <div className="relative aspect-square">
+          <Image
+            src={product.images[0]?.url || "/placeholder.svg"}
+            alt={product.name}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 768px) 50vw, 20vw"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.src = "/placeholder.svg?height=200&width=200"
+            }}
+          />
+          
+          {/* Wishlist Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`absolute top-2 right-2 z-10 transition-all duration-200 ${
+              isInWishlist
+                ? "bg-red-100 hover:bg-red-200 text-red-600"
+                : "bg-white/80 hover:bg-white text-gray-600"
+            }`}
+            onClick={handleWishlistToggle}
+            disabled={isWishlistLoading}
+          >
+            {isWishlistLoading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+            ) : (
+              <Heart
+                className={`h-4 w-4 transition-all duration-200 ${
+                  isInWishlist ? "fill-current" : ""
+                }`}
+              />
+            )}
+          </Button>
+        </div>
+
+        <div className="p-4 space-y-2">
+          <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm leading-tight">
+            {product.name}
+          </h3>
+          
+          <div className="flex items-center space-x-1 text-xs text-gray-500">
+            <span>{product.store.store_lga}</span>
+            <span>•</span>
+            <span>{product.store.store_state}</span>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-lg font-bold text-gray-900">
+              {formatPrice(product.price)}
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Avatar className="h-6 w-6">
+              {product.store.store_image ? (
+                <Image
+                  src={product.store.store_image}
+                  alt={product.store.name}
+                  width={24}
+                  height={24}
+                  className="object-cover"
+                />
+              ) : (
+                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                  {product.store.name.charAt(0)}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <span className="text-xs text-gray-600 truncate">{product.store.name}</span>
+          </div>
+        </div>
       </div>
     )
   }
@@ -1057,6 +1210,27 @@ export default function ProductPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Similar Products Section */}
+      {similarProducts.length > 0 && (
+        <div className="mt-12 px-4 md:px-6 lg:px-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-900">Similar Products</h2>
+          </div>
+
+          {similarProductsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {similarProducts.map((similarProduct) => (
+                <SimilarProductCard key={similarProduct.id} product={similarProduct} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Footer */}
       <Footer />
