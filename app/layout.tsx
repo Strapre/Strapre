@@ -18,17 +18,17 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
-  openGraph: {
-    type: "website",
-    siteName: "Strapre",
-    title: "Strapre - Online Marketplace",
-    description: "Best Online store to connect vendors to vendors and vendors to customers",
-  },
-  twitter: {
-    card: "summary",
-    title: "Strapre - Online Marketplace",
-    description: "Best Online store to connect vendors to vendors and vendors to customers",
-  },
+  // openGraph: {
+  //   type: "website",
+  //   siteName: "Strapre",
+  //   title: "Strapre - Online Marketplace",
+  //   description: "Best Online store to connect vendors to vendors and vendors to customers",
+  // },
+  // twitter: {
+  //   card: "summary",
+  //   title: "Strapre - Online Marketplace",
+  //   description: "Best Online store to connect vendors to vendors and vendors to customers",
+  // },
   generator: 'v0.dev',
   icons: {
     icon: [
