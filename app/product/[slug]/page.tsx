@@ -1,4 +1,30 @@
+"use client"
 import type { Metadata } from "next"
+import { useState, useEffect, useRef } from "react"
+import type React from "react"
+
+import { useParams, useRouter } from "next/navigation"
+import Image from "next/image"
+import Link from "next/link"
+import {
+  ArrowLeft,
+  Heart,
+  Phone,
+  MessageCircle,
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  Shield,
+  AlertTriangle,
+  Send,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Header from "@/components/header"
+import Footer from '@/components/footer'
 
 interface Props {
   params: { slug: string }
@@ -71,33 +97,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   }
 }
-
-"use client"
-import { useState, useEffect, useRef } from "react"
-import type React from "react"
-
-import { useParams, useRouter } from "next/navigation"
-import Image from "next/image"
-import Link from "next/link"
-import {
-  ArrowLeft,
-  Heart,
-  Phone,
-  MessageCircle,
-  ChevronLeft,
-  ChevronRight,
-  Star,
-  Shield,
-  AlertTriangle,
-  Send,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import Header from "@/components/header"
-import Footer from '@/components/footer'
 
 interface ProductImage {
   id: string
