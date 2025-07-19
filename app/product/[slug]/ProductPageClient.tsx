@@ -561,7 +561,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
       const formattedPhoneNumber = formatPhoneForWhatsApp(product.store.phone_number)
       
       // Create WhatsApp URL with message and page URL
-      const messageWithPageUrl = `${message}\n\n${currentPageUrl}\n\non Strapre.com I am interested. \n\nIs it still available?`
+      const messageWithPageUrl = `${message}\n\n${currentPageUrl}\n\non Strapre.com. I am interested. \n\nIs it still available?`
       const whatsappUrl = `https://wa.me/${formattedPhoneNumber}?text=${encodeURIComponent(messageWithPageUrl)}`
       
       window.open(whatsappUrl, "_blank")
