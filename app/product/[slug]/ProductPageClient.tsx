@@ -532,7 +532,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
     if (!product) return
 
     if (action === "whatsapp") {
-      const message = `Hello, I saw an advert you place on Strapre I am interested. Is it still available?`
+      const message = `Hello, I saw an advert you place `
       
       // Get current page URL
       const currentPageUrl = typeof window !== "undefined" ? window.location.href : ""
@@ -561,7 +561,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
       const formattedPhoneNumber = formatPhoneForWhatsApp(product.store.phone_number)
       
       // Create WhatsApp URL with message and page URL
-      const messageWithPageUrl = `${message}\n\n${currentPageUrl}`
+      const messageWithPageUrl = `${message}\n\n${currentPageUrl}\n\non Strapre.com I am interested. \n\nIs it still available?`
       const whatsappUrl = `https://wa.me/${formattedPhoneNumber}?text=${encodeURIComponent(messageWithPageUrl)}`
       
       window.open(whatsappUrl, "_blank")
