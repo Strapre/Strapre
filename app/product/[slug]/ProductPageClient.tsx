@@ -532,7 +532,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
     if (!product) return
 
     if (action === "whatsapp") {
-      const message = `Hello, I saw an advert you place on Strapre.com. I am interested. Is it still available?`
+      const message = `Hello, I saw an advert you place on Strapre I am interested. Is it still available?`
       
       // Get current page URL
       const currentPageUrl = typeof window !== "undefined" ? window.location.href : ""
