@@ -162,6 +162,70 @@ function HomePage() {
   const [adverts, setAdverts] = useState<Advert[]>([])
   const [advertsLoading, setAdvertsLoading] = useState(true)
 
+  // Smart Pagination Logic - Mobile Optimized with better page visibility
+  const generateSmartPagination = () => {
+    const pages = []
+    const totalPagesNum = totalPages
+    const currentPageNum = currentPage
+    
+    if (totalPagesNum <= 5) {
+      // If total pages is 5 or less, show all pages
+      for (let i = 1; i <= totalPagesNum; i++) {
+        pages.push(i)
+      }
+    } else {
+      // Always show page 1
+      pages.push(1)
+      
+      if (currentPageNum <= 3) {
+        // Near the beginning: 1 2 3 4 ... last
+        for (let i = 2; i <= 4; i++) {
+          pages.push(i)
+        }
+        pages.push('...')
+        pages.push(totalPagesNum)
+      } else if (currentPageNum >= totalPagesNum - 2) {
+        // Near the end: 1 ... (last-3) (last-2) (last-1) last
+        pages.push('...')
+        for (let i = totalPagesNum - 3; i <= totalPagesNum; i++) {
+          pages.push(i)
+        }
+      } else {
+        // In the middle: 1 ... (current-1) current (current+1) ... last
+        pages.push('...')
+        for (let i = currentPageNum - 1; i <= currentPageNum + 1; i++) {
+          pages.push(i)
+        }
+        pages.push('...')
+        pages.push(totalPagesNum)
+      }
+    }
+    
+    // Remove duplicates and sort
+    return [...new Set(pages)].sort((a, b) => {
+      if (a === '...' || b === '...') return 0
+      return Number(a) - Number(b)
+    })
+  }
+
+  // Helper function to handle page navigation
+  const handleSmartPageChange = (page) => {
+    if (isSearchActive) {
+      const searchParams = {}
+      if (searchQuery.trim()) searchParams.search = searchQuery.trim()
+      if (minAmount) searchParams.min_price = minAmount
+      if (maxAmount) searchParams.max_price = maxAmount
+      if (isAuthenticated && useUserLocation && userProfile?.state_id) {
+        searchParams.state_id = userProfile.state_id
+      } else if (filterState) {
+        searchParams.state_id = filterState
+      }
+      searchProducts(page, searchParams)
+    } else {
+      fetchProducts(page)
+    }
+  }
+
   // Add function to fetch adverts
   const fetchAdverts = async () => {
     try {
@@ -567,7 +631,7 @@ function HomePage() {
     setShowFilterDialog(false)
   }
 
-  // 4. Add new function to return to all products (add after applyFilters function)
+  // Add new function to return to all products
   const returnToAllProducts = () => {
     setSearchQuery("")
     setMinAmount("")
@@ -586,17 +650,8 @@ function HomePage() {
     setMaxAmount("")
     setSearchQuery("")
     setUseUserLocation(true)
-    setIsSearchActive(false) // NEW LINE ADDED
+    setIsSearchActive(false)
     fetchProducts(1)
-  }
-
-  const handlePageChange = (url: string | null) => {
-    if (!url) return
-    const urlParams = new URLSearchParams(url.split("?")[1])
-    const page = urlParams.get("page")
-    if (page) {
-      fetchProducts(Number.parseInt(page))
-    }
   }
 
   // Update the Hero Section JSX
@@ -860,55 +915,61 @@ function HomePage() {
                   ))}
                 </div>
               )}
-              {/* Pagination */}
+              
+              {/* Smart Pagination */}
               {totalPages > 1 && (
                 <div className="flex justify-center items-center space-x-2 mt-12">
-                  {paginationLinks.map((link, index) => {
-                    if (link.label.includes("Previous")) {
+                  {/* Previous Button - Icon Only */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === 1}
+                    onClick={() => handleSmartPageChange(currentPage - 1)}
+                    className="rounded-xl border-2 border-gray-200 font-medium bg-transparent hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed p-2"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  {/* Smart Page Numbers */}
+                  {generateSmartPagination().map((page, index) => {
+                    if (page === '...') {
                       return (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          disabled={!link.url}
-                          onClick={() => handlePageChange(link.url)}
-                          className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                        >
-                          Previous
-                        </Button>
-                      )
-                    } else if (link.label.includes("Next")) {
-                      return (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          disabled={!link.url}
-                          onClick={() => handlePageChange(link.url)}
-                          className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                        >
-                          Next
-                        </Button>
-                      )
-                    } else if (!isNaN(Number.parseInt(link.label))) {
-                      return (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePageChange(link.url)}
-                          className={`rounded-xl border-2 font-medium ${
-                            link.active ? "bg-[#CB0207] text-white border-[#CB0207]" : "border-gray-200 bg-transparent"
-                          }`}
-                        >
-                          {link.label}
-                        </Button>
+                        <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-400 font-medium select-none">
+                          ...
+                        </span>
                       )
                     }
-                    return null
+                    
+                    return (
+                      <Button
+                        key={page}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSmartPageChange(Number(page))}
+                        className={`rounded-xl border-2 font-medium min-w-[40px] transition-all duration-200 ${
+                          currentPage === Number(page)
+                            ? "bg-[#CB0207] text-white border-[#CB0207] shadow-md"
+                            : "border-gray-200 bg-transparent hover:bg-gray-50 hover:border-gray-300"
+                        }`}
+                      >
+                        {page}
+                      </Button>
+                    )
                   })}
+
+                  {/* Next Button - Icon Only */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === totalPages}
+                    onClick={() => handleSmartPageChange(currentPage + 1)}
+                    className="rounded-xl border-2 border-gray-200 font-medium bg-transparent hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed p-2"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
               )}
+              
               {/* No Products Message */}
               {!loading && products.length === 0 && (
                 <div className="text-center py-16">
@@ -919,6 +980,7 @@ function HomePage() {
           </main>
         </div>
       </div>
+      
       {/* Modern Filter Dialog */}
       <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
         <DialogContent className="sm:max-w-lg rounded-2xl border-0 shadow-2xl">
@@ -1077,6 +1139,7 @@ function HomePage() {
           </div>
         </DialogContent>
       </Dialog>
+      
       {/* Footer */}
       <Footer />
     </div>
