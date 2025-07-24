@@ -6,8 +6,8 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Strapre - Online Marketplace",
-  description: "Best Online store to connect vendors to vendors and vendors to customers",
+  title: "Strapre - Multi-Vendor Marketplace | B2B & B2C Platform",
+  description: "Strapre connects vendors to vendors and customers worldwide. Join our online marketplace to buy, sell, network, and grow your business today.",
   manifest: "/manifest.json",
   themeColor: "#dc2626",
   appleWebApp: {
