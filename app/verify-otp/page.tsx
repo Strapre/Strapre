@@ -87,6 +87,7 @@ export default function VerifyOTPPage() {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
         body: JSON.stringify({
           otp: otpCode,
@@ -124,6 +125,7 @@ export default function VerifyOTPPage() {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
 
