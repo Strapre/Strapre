@@ -1,6 +1,7 @@
-/** @type {import('next').NextConfig} */
+/** @type {import('next').NextConfig} */ 
 const nextConfig = {
-  trailingSlash: true,
+  // output: 'export', // Enable static export
+  trailingSlash: true, // Ensures proper routing for static sites
   experimental: {
     ppr: false,
   },
@@ -11,26 +12,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    // Use modern remotePatterns instead of deprecated domains
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'api.strapre.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.strapre.com', // Wildcard for any strapre subdomain
-        port: '',
-        pathname: '/**',
-      },
-    ],
-    formats: ['image/webp'],
-    quality: 60, // Lower quality to reduce optimization load
-    // Limit the sizes to commonly used ones
-    imageSizes: [16, 32, 48, 64, 96, 128, 256],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    unoptimized: true, // Required for static export
+    domains: ['api.strapre.com'], 
+    formats: ['image/webp'], 
   },
 }
 
