@@ -9,7 +9,11 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     // Fetch product data
-    const response = await fetch(`https://api.strapre.com/api/v1/products/${params.slug}`)
+    const response = await fetch(`https://api.strapre.com/api/v1/products/${params.slug}`, {
+      headers: {
+        Accept: "application/json",
+      },
+    })
     
     if (!response.ok) {
       return {
