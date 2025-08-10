@@ -124,6 +124,7 @@ function ProfilePage() {
       const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       const data = await response.json()
@@ -143,6 +144,7 @@ function ProfilePage() {
       const response = await fetch("https://api.strapre.com/api/v1/mystore", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       if (response.ok) {
@@ -160,6 +162,7 @@ function ProfilePage() {
       const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       if (response.ok) {
@@ -174,7 +177,11 @@ function ProfilePage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/categories")
+      const response = await fetch("https://api.strapre.com/api/v1/categories", {
+        headers: {
+          Accept: "application/json",
+        },
+      })
       const data: ApiResponse<Category> = await response.json()
       setCategories(data.data)
     } catch (error) {
