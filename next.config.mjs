@@ -1,5 +1,6 @@
-/** @type {import('next').NextConfig} */ 
+/** @type {import('next').NextConfig} */
 const nextConfig = {
+  trailingSlash: true,
   experimental: {
     ppr: false,
   },
@@ -10,8 +11,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ['api.strapre.com'], 
-    formats: ['image/webp'], 
+    unoptimized: true, // Complete disable - cleanest approach
   },
 }
 
