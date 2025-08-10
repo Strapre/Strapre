@@ -219,7 +219,11 @@ export default function EditStoreRequestPage() {
   const fetchStates = async () => {
     setLoadingStates(true)
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/states")
+      const response = await fetch("https://api.strapre.com/api/v1/states", {
+        headers: {
+          Accept: "application/json",
+        },
+      })
       const data: ApiResponse<State> = await response.json()
       // Sort states alphabetically by name
       const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -235,7 +239,11 @@ export default function EditStoreRequestPage() {
   const fetchLGAs = async (stateSlug: string) => {
     setLoadingLGAs(true)
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`, {
+        headers: {
+          Accept: "application/json",
+        },
+      })
       const data: ApiResponse<LGA> = await response.json()
       // Sort LGAs alphabetically by name
       const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
