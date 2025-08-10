@@ -281,6 +281,7 @@ export default function CategoryPage() {
       const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       const data = await response.json()
@@ -320,6 +321,7 @@ export default function CategoryPage() {
       const response = await fetch("https://api.strapre.com/api/v1/mystore", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       if (response.ok) {
@@ -361,6 +363,7 @@ export default function CategoryPage() {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify({ product_id: productId }),
       })
@@ -384,6 +387,7 @@ export default function CategoryPage() {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       if (response.ok) {
@@ -406,7 +410,11 @@ export default function CategoryPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/categories")
+      const response = await fetch("https://api.strapre.com/api/v1/categories", {
+        headers: {
+          Accept: "application/json",
+        },
+      })
       const data: ApiResponse<Category> = await response.json()
       setCategories(data.data)
       // Find current category
@@ -419,7 +427,11 @@ export default function CategoryPage() {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/states")
+      const response = await fetch("https://api.strapre.com/api/v1/states", {
+        headers: {
+          Accept: "application/json",
+        },
+      })
       const data: ApiResponse<State> = await response.json()
       // Sort states alphabetically by name
       const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -431,7 +443,11 @@ export default function CategoryPage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`, {
+        headers: {
+          Accept: "application/json",
+        },
+      })
       const data: ApiResponse<LGA> = await response.json()
       // Sort LGAs alphabetically by name
       const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
@@ -456,7 +472,11 @@ export default function CategoryPage() {
         url += `&lga_id=${selectedLGA.id}`
       }
 
-      const response = await fetch(url)
+      const response = await fetch(url, {
+        headers: {
+          Accept: "application/json",
+        },
+      })
       const data: ApiResponse<Product> = await response.json()
 
       if (response.ok) {
@@ -505,7 +525,11 @@ export default function CategoryPage() {
       }
 
       const url = `https://api.strapre.com/api/v1/products/search?${params.toString()}`
-      const response = await fetch(url)
+      const response = await fetch(url, {
+        headers: {
+          Accept: "application/json",
+        },
+      })
       const data: ApiResponse<Product> = await response.json()
 
       setProducts(data.data)
