@@ -233,6 +233,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
       const response = await fetch("https://api.strapre.com/api/v1/mystore", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       });
 
@@ -289,7 +290,11 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/states")
+      const response = await fetch("https://api.strapre.com/api/v1/states", {
+        headers: {
+          Accept: "application/json",
+        },
+      })
       if (response.ok) {
         const data: ApiResponse<State[]> = await response.json()
         // Sort states alphabetically by name
@@ -303,7 +308,11 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`, {
+        headers: {
+          Accept: "application/json",
+        },
+      })
       if (response.ok) {
         const data: ApiResponse<LGA[]> = await response.json()
         // Sort LGAs alphabetically by name
@@ -318,7 +327,12 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   const fetchProduct = async (slug: string) => {
     setLoading(true)
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/products/${slug}`)
+      const response = await fetch(`https://api.strapre.com/api/v1/products/${slug}`, {
+        headers: {
+          Accept: "application/json",
+        },
+      })
+
       if (response.ok) {
         const data: ApiResponse<Product> = await response.json()
         setProduct(data.data)
@@ -347,7 +361,11 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
         limit: '6' // Get 6 to exclude current product and show 5
       })
       
-      const response = await fetch(`https://api.strapre.com/api/v1/products/search?${params.toString()}`)
+      const response = await fetch(`https://api.strapre.com/api/v1/products/search?${params.toString()}`, {
+        headers: {
+          Accept: "application/json",
+        },
+      })
       if (response.ok) {
         const data: SimilarProductsResponse = await response.json()
         // Filter out the current product and limit to 5
@@ -368,6 +386,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
       const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       if (response.ok) {
@@ -395,6 +414,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify({ product_id: productId }),
       })
@@ -418,6 +438,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       })
       if (response.ok) {
