@@ -16,6 +16,7 @@ import {
   Shield,
   AlertTriangle,
   Send,
+  Share2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -190,6 +191,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
   const [similarProducts, setSimilarProducts] = useState<SimilarProduct[]>([])
   const [similarProductsLoading, setSimilarProductsLoading] = useState(false)
+  const [showShareDialog, setShowShareDialog] = useState(false)
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50
@@ -597,6 +599,66 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
       localStorage.setItem("redirect_after_login", window.location.pathname)
     }
     router.push("/login")
+  }
+
+  const handleShare = async () => {
+    const shareData = {
+      title: product.name,
+      text: `Check out this ${product.name} on Strapre`,
+      url: typeof window !== "undefined" ? window.location.href : "",
+    }
+
+    // Check if native sharing is supported (mobile devices)
+    if (navigator.share && typeof navigator.share === 'function') {
+      try {
+        await navigator.share(shareData)
+        return
+      } catch (error) {
+        console.log('Native sharing failed:', error)
+        // Fall back to custom share dialog
+      }
+    }
+    
+    // Show custom share dialog for desktop or if native sharing fails
+    setShowShareDialog(true)
+  }
+
+  const shareToSocial = (platform: string) => {
+    const currentUrl = typeof window !== "undefined" ? window.location.href : ""
+    const shareText = `Check out this ${product.name} on Strapre`
+    
+    let shareUrl = ""
+    
+    switch (platform) {
+      case "whatsapp":
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText}\n${currentUrl}`)}`
+        break
+      case "twitter":
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(currentUrl)}`
+        break
+      case "facebook":
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`
+        break
+      case "linkedin":
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`
+        break
+      case "telegram":
+        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(shareText)}`
+        break
+      case "copy":
+        navigator.clipboard.writeText(currentUrl).then(() => {
+          alert("Link copied to clipboard!")
+          setShowShareDialog(false)
+        })
+        return
+      default:
+        return
+    }
+    
+    if (shareUrl) {
+      window.open(shareUrl, "_blank", "width=600,height=400")
+      setShowShareDialog(false)
+    }
   }
 
   const handleSearch = () => {
@@ -1103,14 +1165,26 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 <MessageCircle className="h-5 w-5" />
                 <span>Message on WhatsApp</span>
               </Button>
-              <Button
-                onClick={() => handleContactAction("call")}
-                variant="outline"
-                className="w-full border-2 border-red-600 text-red-600 hover:bg-red-50 py-2 flex items-center justify-center space-x-3 rounded-xl font-semibold text-base hover:border-red-700 hover:text-red-700 transition-all duration-200"
-              >
-                <Phone className="h-5 w-5" />
-                <span>Call Seller</span>
-              </Button>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  onClick={() => handleContactAction("call")}
+                  variant="outline"
+                  className="border-2 border-red-600 text-red-600 hover:bg-red-50 py-2 flex items-center justify-center space-x-2 rounded-xl font-semibold text-base hover:border-red-700 hover:text-red-700 transition-all duration-200"
+                >
+                  <Phone className="h-5 w-5" />
+                  <span>Call</span>
+                </Button>
+                
+                <Button
+                  onClick={handleShare}
+                  variant="outline"
+                  className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 py-2 flex items-center justify-center space-x-2 rounded-xl font-semibold text-base hover:border-gray-400 transition-all duration-200"
+                >
+                  <Share2 className="h-5 w-5" />
+                  <span>Share</span>
+                </Button>
+              </div>
             </div>
 
             {/* Description */}
@@ -1257,6 +1331,86 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 Login / Register
               </Button>
               <Button onClick={() => setShowLoginDialog(false)} variant="outline" className="flex-1">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share this product</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-gray-600 text-sm">
+              Share this product with friends and family
+            </p>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                onClick={() => shareToSocial("whatsapp")}
+                variant="outline"
+                className="flex items-center justify-center space-x-2 p-3 hover:bg-green-50 hover:border-green-300"
+              >
+                <div className="w-5 h-5 bg-green-500 rounded"></div>
+                <span>WhatsApp</span>
+              </Button>
+              
+              <Button
+                onClick={() => shareToSocial("facebook")}
+                variant="outline"
+                className="flex items-center justify-center space-x-2 p-3 hover:bg-blue-50 hover:border-blue-300"
+              >
+                <div className="w-5 h-5 bg-blue-600 rounded"></div>
+                <span>Facebook</span>
+              </Button>
+              
+              <Button
+                onClick={() => shareToSocial("twitter")}
+                variant="outline"
+                className="flex items-center justify-center space-x-2 p-3 hover:bg-sky-50 hover:border-sky-300"
+              >
+                <div className="w-5 h-5 bg-sky-500 rounded"></div>
+                <span>Twitter</span>
+              </Button>
+              
+              <Button
+                onClick={() => shareToSocial("linkedin")}
+                variant="outline"
+                className="flex items-center justify-center space-x-2 p-3 hover:bg-blue-50 hover:border-blue-400"
+              >
+                <div className="w-5 h-5 bg-blue-700 rounded"></div>
+                <span>LinkedIn</span>
+              </Button>
+              
+              <Button
+                onClick={() => shareToSocial("telegram")}
+                variant="outline"
+                className="flex items-center justify-center space-x-2 p-3 hover:bg-sky-50 hover:border-sky-400"
+              >
+                <div className="w-5 h-5 bg-sky-500 rounded"></div>
+                <span>Telegram</span>
+              </Button>
+              
+              <Button
+                onClick={() => shareToSocial("copy")}
+                variant="outline"
+                className="flex items-center justify-center space-x-2 p-3 hover:bg-gray-50 hover:border-gray-400"
+              >
+                <div className="w-5 h-5 bg-gray-500 rounded"></div>
+                <span>Copy Link</span>
+              </Button>
+            </div>
+            
+            <div className="pt-2">
+              <Button
+                onClick={() => setShowShareDialog(false)}
+                variant="ghost"
+                className="w-full"
+              >
                 Cancel
               </Button>
             </div>
