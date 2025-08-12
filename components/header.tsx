@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Search, Menu, ChevronDown, ChevronRight, Heart, User, LogOut, WifiOff, X } from "lucide-react"
+import { Search, Menu, ChevronDown, ChevronRight, Heart, User, LogOut, WifiOff, X, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -570,10 +570,14 @@ export default function Header({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-0">
-                      <DropdownMenuItem className="rounded-lg" onClick={() => router.push("/profile")}>
-                        <User className="h-4 w-4 mr-2" />
-                        My Profile
-                      </DropdownMenuItem>
+                    <DropdownMenuItem className="rounded-lg" onClick={() => router.push("/notifications")}>
+                      <Bell className="h-4 w-4 mr-2" />
+                      Notifications
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="rounded-lg" onClick={() => router.push("/profile")}>
+                      <User className="h-4 w-4 mr-2" />
+                      My Profile
+                    </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
                           if (userStore && Object.keys(userStore).length > 0) {
@@ -611,6 +615,14 @@ export default function Header({
                       {wishlistItems.length}
                     </span>
                   )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-gray-100 rounded-xl"
+                  onClick={() => router.push("/notifications")}
+                >
+                  <Bell className="h-7 w-7" />
                 </Button>
                 {userProfile && (
                   <div
