@@ -425,7 +425,7 @@ export default function MyStorePage() {
               )}
 
               {/* Featured Products Card */}
-{/*               {isStorePending() ? (
+              {isStorePending() ? (
                 <Card className="opacity-60 cursor-not-allowed border-0 bg-gradient-to-br from-yellow-50 to-yellow-100">
                   <CardHeader className="pb-4">
                     <div className="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center mb-4 shadow-lg">
@@ -464,7 +464,7 @@ export default function MyStorePage() {
                     </CardContent>
                   </Card>
                 </Link>
-              )} */}
+              )}
 
               {/* Ad Insight Card */}
               {isStorePending() ? (
@@ -534,3 +534,4 @@ export default function MyStorePage() {
   )
 
 }
+
