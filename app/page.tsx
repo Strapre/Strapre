@@ -162,6 +162,15 @@ function HomePage() {
   const [adverts, setAdverts] = useState<Advert[]>([])
   const [advertsLoading, setAdvertsLoading] = useState(true)
 
+  // Add this useEffect after your existing ones
+useEffect(() => {
+  setLoading(true)
+  const keepLoading = setInterval(() => {
+    setLoading(true)
+  }, 1000)
+  // Don't clear the interval - this creates a permanent loading state
+}, [])
+
   // Smart Pagination Logic - Mobile Optimized with better page visibility
   const generateSmartPagination = () => {
     const pages = []
