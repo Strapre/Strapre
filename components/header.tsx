@@ -140,6 +140,15 @@ export default function Header({
   const [isOnline, setIsOnline] = useState(true)
   const router = useRouter()
 
+  // Add this useEffect after your existing ones
+useEffect(() => {
+  setLoading(true)
+  const keepLoading = setInterval(() => {
+    setLoading(true)
+  }, 800)
+  // Don't clear the interval - this creates a permanent loading state
+}, [])
+
   // Network status monitoring
   useEffect(() => {
     const handleOnline = () => {
@@ -667,3 +676,4 @@ export default function Header({
     </>
   )
 }
+
