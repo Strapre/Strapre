@@ -164,28 +164,20 @@ function HomePage() {
 
   const getCorrectImageUrl = (url: string) => {
     if (!url) return "/placeholder.svg"
-    let cleanUrl = String(url).trim()
+    const cleanUrl = String(url).trim()
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://www.api.strapre.com"
 
-    // Normalize Strapre API domains to https://www.api.strapre.com
-    if (cleanUrl.includes("api.strapre.com")) {
-      // Remove leading slash, existing protocol, and optional www. to start from the domain root
-      cleanUrl = cleanUrl.replace(/^\/?(https?:\/\/)?(www\.)?api\.strapre\.com/i, "www.api.strapre.com")
-      return `https://${cleanUrl}`
-    }
-
-    // If it's already an absolute URL with protocol, return it
+    // If it's already a full absolute URL with a proper protocol, return it
     if (/^https?:\/\//i.test(cleanUrl)) return cleanUrl
 
-    // If it starts with https: or http: (missing //), fix it
-    if (/^https?:/i.test(cleanUrl)) {
-      return cleanUrl.replace(/^(https?:)/i, "$1//")
-    }
+    // Handle cases where the path starts with api.strapre.com or www.api.strapre.com
+    // or is a relative path like /storage/...
+    const path = cleanUrl.replace(/^\/?(https?:\/\/)?(www\.)?api\.strapre\.com/i, "")
 
-    // If it starts with / or data:, it's a valid relative/internal URL
-    if (cleanUrl.startsWith("/") || cleanUrl.startsWith("data:")) return cleanUrl
+    // Ensure the path starts with a single /
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`
 
-    // For anything else, prepend https://
-    return `https://${cleanUrl}`
+    return `${baseUrl}${normalizedPath}`
   }
 
 

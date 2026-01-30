@@ -12,9 +12,21 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true, // Required for static export
-    domains: ['api.strapre.com'], 
-    formats: ['image/webp'], 
+    unoptimized: true,
+    domains: ['api.strapre.com', 'www.api.strapre.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'api.strapre.com',
+        pathname: '/storage/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.api.strapre.com',
+        pathname: '/storage/**',
+      },
+    ],
+    formats: ['image/webp'],
   },
 }
 
