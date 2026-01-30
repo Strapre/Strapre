@@ -165,10 +165,16 @@ function HomePage() {
   const getCorrectImageUrl = (url: string) => {
     if (!url) return "/placeholder.svg"
     const cleanUrl = String(url).trim()
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://www.api.strapre.com"
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.strapre.com"
 
     // If it's already a full absolute URL with a proper protocol (http:// or https://), return it
-    if (/^https?:\/\//i.test(cleanUrl)) return cleanUrl
+    if (/^https?:\/\//i.test(cleanUrl)) {
+      // Normalize www.api to api to avoid SSL certificate errors
+      if (cleanUrl.includes("www.api.strapre.com")) {
+        return cleanUrl.replace("www.api.strapre.com", "api.strapre.com")
+      }
+      return cleanUrl
+    }
 
     // Handle cases where the path starts with malformed domain prefixes
     // This strips variations like "https:api.strapre.com", "/api.strapre.com", etc.
