@@ -166,9 +166,11 @@ function HomePage() {
     if (!url) return "/placeholder.svg"
     let cleanUrl = String(url).trim()
 
-    // Handle cases where an absolute URL is incorrectly prefixed with a slash like "/api.strapre.com"
-    if (cleanUrl.startsWith("/api.strapre.com")) {
-      cleanUrl = cleanUrl.substring(1)
+    // Normalize Strapre API domains to https://www.api.strapre.com
+    if (cleanUrl.includes("api.strapre.com")) {
+      // Remove leading slash, existing protocol, and optional www. to start from the domain root
+      cleanUrl = cleanUrl.replace(/^\/?(https?:\/\/)?(www\.)?api\.strapre\.com/i, "www.api.strapre.com")
+      return `https://${cleanUrl}`
     }
 
     // If it's already an absolute URL with protocol, return it
@@ -182,7 +184,7 @@ function HomePage() {
     // If it starts with / or data:, it's a valid relative/internal URL
     if (cleanUrl.startsWith("/") || cleanUrl.startsWith("data:")) return cleanUrl
 
-    // For anything else (like api.strapre.com), prepend https://
+    // For anything else, prepend https://
     return `https://${cleanUrl}`
   }
 
