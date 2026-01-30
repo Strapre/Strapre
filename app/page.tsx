@@ -164,19 +164,26 @@ function HomePage() {
 
   const getCorrectImageUrl = (url: string) => {
     if (!url) return "/placeholder.svg"
-    if (url.startsWith("/") || url.startsWith("data:")) return url
-    if (url.startsWith("http://") || url.startsWith("https://")) return url
+    let cleanUrl = String(url).trim()
 
-    // Handle cases like "https:api.strapre.com"
-    if (url.startsWith("https:")) {
-      return url.replace("https:", "https://")
-    }
-    if (url.startsWith("http:")) {
-      return url.replace("http:", "http://")
+    // Handle cases where an absolute URL is incorrectly prefixed with a slash like "/api.strapre.com"
+    if (cleanUrl.startsWith("/api.strapre.com")) {
+      cleanUrl = cleanUrl.substring(1)
     }
 
-    // Default to https if no protocol
-    return `https://${url}`
+    // If it's already an absolute URL with protocol, return it
+    if (/^https?:\/\//i.test(cleanUrl)) return cleanUrl
+
+    // If it starts with https: or http: (missing //), fix it
+    if (/^https?:/i.test(cleanUrl)) {
+      return cleanUrl.replace(/^(https?:)/i, "$1//")
+    }
+
+    // If it starts with / or data:, it's a valid relative/internal URL
+    if (cleanUrl.startsWith("/") || cleanUrl.startsWith("data:")) return cleanUrl
+
+    // For anything else (like api.strapre.com), prepend https://
+    return `https://${cleanUrl}`
   }
 
 
