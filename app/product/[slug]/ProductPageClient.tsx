@@ -202,7 +202,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
     const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null
     const userStoreData = typeof window !== "undefined" ? localStorage.getItem("userStore") : null
     setIsAuthenticated(!!token)
-    
+
     // Only set isMerchant from localStorage if we have a token
     if (token && userStoreData) {
       setIsMerchant(!!userStoreData)
@@ -362,7 +362,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
         search: productName,
         limit: '6' // Get 6 to exclude current product and show 5
       })
-      
+
       const response = await fetch(`https://api.strapre.com/api/v1/products/search?${params.toString()}`, {
         headers: {
           Accept: "application/json",
@@ -556,15 +556,15 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
     if (action === "whatsapp") {
       const message = `Hello, I saw an advert you place on Strapre. I am interested. Is it still available?`
-      
+
       // Get current page URL
       const currentPageUrl = typeof window !== "undefined" ? window.location.href : ""
-      
+
       // Format phone number for WhatsApp (ensure it starts with 234 without +)
       const formatPhoneForWhatsApp = (phone: string) => {
         // Remove all non-numeric characters
         let cleanPhone = phone.replace(/\D/g, '')
-        
+
         // Handle different formats
         if (cleanPhone.startsWith('234')) {
           // Already has country code
@@ -576,17 +576,17 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
           // 10-digit number without leading 0, add 234
           return '234' + cleanPhone
         }
-        
+
         // Return as is if none of the above conditions match
         return cleanPhone
       }
-      
+
       const formattedPhoneNumber = formatPhoneForWhatsApp(product.store.phone_number)
-      
+
       // Create WhatsApp URL with message and page URL
       const messageWithPageUrl = `${message}\n\n${currentPageUrl}`
       const whatsappUrl = `https://wa.me/${formattedPhoneNumber}?text=${encodeURIComponent(messageWithPageUrl)}`
-      
+
       window.open(whatsappUrl, "_blank")
     } else if (action === "call") {
       window.location.href = `tel:${product.store.phone_number}`
@@ -618,7 +618,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
         // Fall back to custom share dialog
       }
     }
-    
+
     // Show custom share dialog for desktop or if native sharing fails
     setShowShareDialog(true)
   }
@@ -626,9 +626,9 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   const shareToSocial = (platform: string) => {
     const currentUrl = typeof window !== "undefined" ? window.location.href : ""
     const shareText = `Check out this ${product.name} on Strapre`
-    
+
     let shareUrl = ""
-    
+
     switch (platform) {
       case "whatsapp":
         shareUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText}\n${currentUrl}`)}`
@@ -654,7 +654,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
       default:
         return
     }
-    
+
     if (shareUrl) {
       window.open(shareUrl, "_blank", "width=600,height=400")
       setShowShareDialog(false)
@@ -769,9 +769,8 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
             disabled={!interactive}
           >
             <Star
-              className={`h-5 w-5 ${
-                star <= rating ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200"
-              }`}
+              className={`h-5 w-5 ${star <= rating ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200"
+                }`}
             />
           </button>
         ))}
@@ -786,7 +785,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
     const handleWishlistToggle = (e: React.MouseEvent) => {
       e.preventDefault()
       e.stopPropagation()
-      
+
       if (isInWishlist) {
         removeFromWishlist(product.id)
       } else {
@@ -799,7 +798,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
     }
 
     return (
-      <div 
+      <div
         className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
         onClick={handleProductClick}
       >
@@ -815,16 +814,15 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
               target.src = "/placeholder.svg?height=200&width=200"
             }}
           />
-          
+
           {/* Wishlist Button */}
           <Button
             variant="ghost"
             size="icon"
-            className={`absolute top-2 right-2 z-10 transition-all duration-200 ${
-              isInWishlist
+            className={`absolute top-2 right-2 z-10 transition-all duration-200 ${isInWishlist
                 ? "bg-red-100 hover:bg-red-200 text-red-600"
                 : "bg-white/80 hover:bg-white text-gray-600"
-            }`}
+              }`}
             onClick={handleWishlistToggle}
             disabled={isWishlistLoading}
           >
@@ -832,9 +830,8 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
             ) : (
               <Heart
-                className={`h-4 w-4 transition-all duration-200 ${
-                  isInWishlist ? "fill-current" : ""
-                }`}
+                className={`h-4 w-4 transition-all duration-200 ${isInWishlist ? "fill-current" : ""
+                  }`}
               />
             )}
           </Button>
@@ -844,7 +841,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
           <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm leading-tight">
             {product.name}
           </h3>
-          
+
           <div className="flex items-center space-x-1 text-xs text-gray-500">
             <span>{product.store.store_lga}</span>
             <span>•</span>
@@ -955,11 +952,10 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`absolute top-4 right-4 z-10 transition-all duration-200 ${
-                  product && wishlistItems.includes(product.id)
+                className={`absolute top-4 right-4 z-10 transition-all duration-200 ${product && wishlistItems.includes(product.id)
                     ? "bg-red-100 hover:bg-red-200 text-red-600"
                     : "bg-white/80 hover:bg-white text-gray-600"
-                }`}
+                  }`}
                 onClick={toggleWishlist}
                 disabled={product && wishlistLoading.includes(product.id)}
               >
@@ -967,9 +963,8 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
                 ) : (
                   <Heart
-                    className={`h-5 w-5 transition-all duration-200 ${
-                      product && wishlistItems.includes(product.id) ? "fill-current" : ""
-                    }`}
+                    className={`h-5 w-5 transition-all duration-200 ${product && wishlistItems.includes(product.id) ? "fill-current" : ""
+                      }`}
                   />
                 )}
               </Button>
@@ -1010,9 +1005,8 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
-                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                        selectedImageIndex === index ? "bg-white" : "bg-white/50 hover:bg-white/75"
-                      }`}
+                      className={`w-2 h-2 rounded-full transition-all duration-200 ${selectedImageIndex === index ? "bg-white" : "bg-white/50 hover:bg-white/75"
+                        }`}
                     />
                   ))}
                 </div>
@@ -1026,9 +1020,8 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                   <button
                     key={image.id}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${
-                      selectedImageIndex === index ? "border-red-600 scale-105" : "border-gray-200"
-                    }`}
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${selectedImageIndex === index ? "border-red-600 scale-105" : "border-gray-200"
+                      }`}
                   >
                     <Image
                       src={image.url || "/placeholder.svg"}
@@ -1131,27 +1124,27 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
             </div>
 
             {/* Safety Tips */}
-            <Card className="border-orange-200 bg-orange-50">
+            <Card className="border-red-200 bg-white">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center space-x-2 text-orange-800">
+                <CardTitle className="flex items-center space-x-2 text-red-600">
                   <Shield className="h-5 w-5" />
                   <span>Safety Tips</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex items-start space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-orange-700">
+                  <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-red-500">
                     Always inspect the product thoroughly before making any payment
                   </p>
                 </div>
                 <div className="flex items-start space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-orange-700">Meet in a safe, public location when possible</p>
+                  <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-red-500">Meet in a safe, public location when possible</p>
                 </div>
                 <div className="flex items-start space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-orange-700">Verify seller credentials and product authenticity</p>
+                  <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-red-500">Verify seller credentials and product authenticity</p>
                 </div>
               </CardContent>
             </Card>
@@ -1165,7 +1158,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 <MessageCircle className="h-5 w-5" />
                 <span>Message on WhatsApp</span>
               </Button>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <Button
                   onClick={() => handleContactAction("call")}
@@ -1175,7 +1168,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                   <Phone className="h-5 w-5" />
                   <span>Call</span>
                 </Button>
-                
+
                 <Button
                   onClick={handleShare}
                   variant="outline"
@@ -1348,7 +1341,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
             <p className="text-gray-600 text-sm">
               Share this product with friends and family
             </p>
-            
+
             <div className="grid grid-cols-2 gap-3">
               <Button
                 onClick={() => shareToSocial("whatsapp")}
@@ -1358,7 +1351,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 <div className="w-5 h-5 bg-green-500 rounded"></div>
                 <span>WhatsApp</span>
               </Button>
-              
+
               <Button
                 onClick={() => shareToSocial("facebook")}
                 variant="outline"
@@ -1367,7 +1360,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 <div className="w-5 h-5 bg-blue-600 rounded"></div>
                 <span>Facebook</span>
               </Button>
-              
+
               <Button
                 onClick={() => shareToSocial("twitter")}
                 variant="outline"
@@ -1376,7 +1369,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 <div className="w-5 h-5 bg-sky-500 rounded"></div>
                 <span>Twitter</span>
               </Button>
-              
+
               <Button
                 onClick={() => shareToSocial("linkedin")}
                 variant="outline"
@@ -1385,7 +1378,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 <div className="w-5 h-5 bg-blue-700 rounded"></div>
                 <span>LinkedIn</span>
               </Button>
-              
+
               <Button
                 onClick={() => shareToSocial("telegram")}
                 variant="outline"
@@ -1394,7 +1387,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 <div className="w-5 h-5 bg-sky-500 rounded"></div>
                 <span>Telegram</span>
               </Button>
-              
+
               <Button
                 onClick={() => shareToSocial("copy")}
                 variant="outline"
@@ -1404,7 +1397,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 <span>Copy Link</span>
               </Button>
             </div>
-            
+
             <div className="pt-2">
               <Button
                 onClick={() => setShowShareDialog(false)}
