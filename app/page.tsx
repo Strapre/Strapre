@@ -167,12 +167,12 @@ function HomePage() {
     const cleanUrl = String(url).trim()
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://www.api.strapre.com"
 
-    // If it's already a full absolute URL with a proper protocol, return it
+    // If it's already a full absolute URL with a proper protocol (http:// or https://), return it
     if (/^https?:\/\//i.test(cleanUrl)) return cleanUrl
 
-    // Handle cases where the path starts with api.strapre.com or www.api.strapre.com
-    // or is a relative path like /storage/...
-    const path = cleanUrl.replace(/^\/?(https?:\/\/)?(www\.)?api\.strapre\.com/i, "")
+    // Handle cases where the path starts with malformed domain prefixes
+    // This strips variations like "https:api.strapre.com", "/api.strapre.com", etc.
+    const path = cleanUrl.replace(/^\/?(https?:)?\/*(www\.)?api\.strapre\.com/i, "")
 
     // Ensure the path starts with a single /
     const normalizedPath = path.startsWith("/") ? path : `/${path}`
