@@ -2,19 +2,20 @@ import type { Metadata } from "next"
 import ProductPageClient from "./ProductPageClient"
 
 interface Props {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 // Generate dynamic metadata for each product page
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
   try {
     // Fetch product data
-    const response = await fetch(`https://api.strapre.com/api/v1/products/${params.slug}`, {
+    const response = await fetch(`https://api.strapre.com/api/v1/products/${slug}`, {
       headers: {
         Accept: "application/json",
       },
     })
-    
+
     if (!response.ok) {
       return {
         title: "Product Not Found | Strapre",
@@ -78,6 +79,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 // Server component that renders the client component
-export default function ProductPage({ params }: Props) {
-  return <ProductPageClient slug={params.slug} />
+export default async function ProductPage({ params }: Props) {
+  const { slug } = await params
+  return <ProductPageClient slug={slug} />
 }

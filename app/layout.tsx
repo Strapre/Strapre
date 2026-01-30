@@ -9,7 +9,6 @@ export const metadata: Metadata = {
   title: "Strapre - Multi-Vendor Marketplace | B2B & B2C Platform",
   description: "Strapre connects vendors to vendors and customers worldwide. Join our online marketplace to buy, sell, network, and grow your business today.",
   manifest: "/manifest.json",
-  themeColor: "#dc2626",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -40,6 +39,11 @@ export const metadata: Metadata = {
     shortcut: '/favicon.ico',
   },
 }
+
+export const viewport = {
+  themeColor: "#dc2626",
+}
+
 
 export default function RootLayout({
   children,
