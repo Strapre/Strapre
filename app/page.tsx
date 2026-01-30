@@ -162,6 +162,23 @@ function HomePage() {
   const [adverts, setAdverts] = useState<Advert[]>([])
   const [advertsLoading, setAdvertsLoading] = useState(true)
 
+  const getCorrectImageUrl = (url: string) => {
+    if (!url) return "/placeholder.svg"
+    if (url.startsWith("/") || url.startsWith("data:")) return url
+    if (url.startsWith("http://") || url.startsWith("https://")) return url
+
+    // Handle cases like "https:api.strapre.com"
+    if (url.startsWith("https:")) {
+      return url.replace("https:", "https://")
+    }
+    if (url.startsWith("http:")) {
+      return url.replace("http:", "http://")
+    }
+
+    // Default to https if no protocol
+    return `https://${url}`
+  }
+
 
 
   // Smart Pagination Logic - Mobile Optimized with better page visibility
@@ -681,7 +698,7 @@ function HomePage() {
     return (
       <div
         className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[145px] md:h-[400px] transition-all duration-500 cursor-pointer"
-        style={{ backgroundImage: `url(${currentAdvert.image_media_url})` }}
+        style={{ backgroundImage: `url(${getCorrectImageUrl(currentAdvert.image_media_url)})` }}
         onClick={() => handleAdvertClick(currentAdvert)}
       >
         {/* Black overlay */}
@@ -827,7 +844,7 @@ function HomePage() {
                           <div className="bg-gradient-to-br from-gray-50 to-gray-100 h-32 md:h-48 relative">
                             {product.images.length > 0 ? (
                               <Image
-                                src={product.images[0].url || "/placeholder.svg"}
+                                src={getCorrectImageUrl(product.images[0].url)}
                                 alt={product.name}
                                 fill
                                 className="object-cover"
@@ -894,8 +911,8 @@ function HomePage() {
                           variant="ghost"
                           size="icon"
                           className={`absolute top-2 right-2 z-10 rounded-full w-8 h-8 ${wishlistItems.includes(product.id)
-                              ? "bg-red-500 hover:bg-red-600 text-white"
-                              : "bg-white/80 hover:bg-white text-gray-600"
+                            ? "bg-red-500 hover:bg-red-600 text-white"
+                            : "bg-white/80 hover:bg-white text-gray-600"
                             } shadow-lg transition-all duration-200`}
                           onClick={(e) => {
                             e.preventDefault()
@@ -947,8 +964,8 @@ function HomePage() {
                         size="sm"
                         onClick={() => handleSmartPageChange(Number(page))}
                         className={`rounded-xl border-2 font-medium min-w-[40px] transition-all duration-200 ${currentPage === Number(page)
-                            ? "bg-[#CB0207] text-white border-[#CB0207] shadow-md"
-                            : "border-gray-200 bg-transparent hover:bg-gray-50 hover:border-gray-300"
+                          ? "bg-[#CB0207] text-white border-[#CB0207] shadow-md"
+                          : "border-gray-200 bg-transparent hover:bg-gray-50 hover:border-gray-300"
                           }`}
                       >
                         {page}
