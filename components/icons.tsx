@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   ArrowRight,
   CheckCircle,
@@ -69,3 +70,76 @@ export const Icons = {
   user: User,
   users: Users,
 }
+=======
+import {
+  ArrowRight,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Edit,
+  EllipsisIcon as EllipsisHorizontal,
+  Eye,
+  EyeOff,
+  File,
+  FileText,
+  Folder,
+  HelpCircle,
+  Home,
+  Image,
+  LayoutDashboard,
+  Loader2,
+  LogOut,
+  Mail,
+  MessageSquare,
+  Plus,
+  PlusCircle,
+  SignpostIcon as Post,
+  Reply,
+  Settings,
+  Share2,
+  ShoppingCart,
+  Trash,
+  User,
+  Users,
+  X,
+} from "lucide-react"
+
+import type { LucideIcon } from "lucide-react"
+
+type Icon = LucideIcon
+
+export const Icons = {
+  arrowRight: ArrowRight,
+  check: CheckCircle,
+  chevronDown: ChevronDown,
+  chevronUp: ChevronUp,
+  close: X,
+  copy: Copy,
+  dashboard: LayoutDashboard,
+  edit: Edit,
+  ellipsis: EllipsisHorizontal,
+  eye: Eye,
+  eyeOff: EyeOff,
+  file: File,
+  fileText: FileText,
+  folder: Folder,
+  help: HelpCircle,
+  home: Home,
+  image: Image,
+  logout: LogOut,
+  mail: Mail,
+  messageSquare: MessageSquare,
+  plus: Plus,
+  plusCircle: PlusCircle,
+  post: Post,
+  reply: Reply,
+  settings: Settings,
+  share: Share2,
+  spinner: Loader2,
+  store: ShoppingCart,
+  trash: Trash,
+  user: User,
+  users: Users,
+}
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728

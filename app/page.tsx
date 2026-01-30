@@ -99,7 +99,11 @@ interface Advert {
   link: string
   starts_at: string
   ends_at: string
+<<<<<<< HEAD
   image_media_url: string
+=======
+  image: string
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
   is_dummy: number
 }
 
@@ -169,7 +173,11 @@ function HomePage() {
     const pages = []
     const totalPagesNum = totalPages
     const currentPageNum = currentPage
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
     if (totalPagesNum <= 5) {
       // If total pages is 5 or less, show all pages
       for (let i = 1; i <= totalPagesNum; i++) {
@@ -178,7 +186,11 @@ function HomePage() {
     } else {
       // Always show page 1
       pages.push(1)
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
       if (currentPageNum <= 3) {
         // Near the beginning: 1 2 3 4 ... last
         for (let i = 2; i <= 4; i++) {
@@ -202,7 +214,11 @@ function HomePage() {
         pages.push(totalPagesNum)
       }
     }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
     // Remove duplicates and sort
     return [...new Set(pages)].sort((a, b) => {
       if (a === '...' || b === '...') return 0
@@ -253,7 +269,11 @@ function HomePage() {
             link: "#",
             starts_at: "",
             ends_at: "",
+<<<<<<< HEAD
             image_media_url: "/strapre-hero.png",
+=======
+            image: "/strapre-hero.png",
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
             is_dummy: 1,
           },
           {
@@ -264,7 +284,11 @@ function HomePage() {
             link: "#",
             starts_at: "",
             ends_at: "",
+<<<<<<< HEAD
             image_media_url: "/strapre-hero1.jpg",
+=======
+            image: "/strapre-hero1.jpg",
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
             is_dummy: 1,
           },
         ])
@@ -281,7 +305,11 @@ function HomePage() {
           link: "#",
           starts_at: "",
           ends_at: "",
+<<<<<<< HEAD
           image_media_url: "/strapre-hero.png",
+=======
+          image: "/strapre-hero.png",
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
           is_dummy: 1,
         },
       ])
@@ -621,7 +649,11 @@ function HomePage() {
 
     // Check if any filters are active
     const hasActiveFilters = Object.keys(searchParams).length > 0
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
     if (hasActiveFilters) {
       searchProducts(1, searchParams)
       setIsSearchActive(true) // Add this line
@@ -629,7 +661,11 @@ function HomePage() {
       fetchProducts(1)
       setIsSearchActive(false) // Add this line
     }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
     setShowFilterDialog(false)
   }
 
@@ -681,7 +717,11 @@ function HomePage() {
     return (
       <div
         className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[145px] md:h-[400px] transition-all duration-500 cursor-pointer"
+<<<<<<< HEAD
         style={{ backgroundImage: `url(${currentAdvert.image_media_url})` }}
+=======
+        style={{ backgroundImage: `url(${currentAdvert.image})` }}
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
         onClick={() => handleAdvertClick(currentAdvert)}
       >
         {/* Black overlay */}
@@ -690,7 +730,11 @@ function HomePage() {
         {/* Content */}
         <div className="relative z-10 mt-4">
           <h1 className="text-white text-xl md:text-4xl font-bold mb-2">{currentAdvert.title}</h1>
+<<<<<<< HEAD
 
+=======
+         
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
         </div>
 
         {/* Navigation Arrows */}
@@ -751,8 +795,14 @@ function HomePage() {
         onLGAChange={handleLGAChange}
       />
       <div
+<<<<<<< HEAD
         className={`${isAuthenticated ? "w-full md:w-[90%] md:max-w-[1750px]" : "w-full md:w-[90%] md:max-w-[1750px]"
           } mx-auto px-2 sm:px-6 lg:px-8 py-6`}
+=======
+        className={`${
+          isAuthenticated ? "w-full md:w-[90%] md:max-w-[1750px]" : "w-full md:w-[90%] md:max-w-[1750px]"
+        } mx-auto px-2 sm:px-6 lg:px-8 py-6`}
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
       >
         <div className="flex gap-6">
           {/* Sidebar - Desktop Only */}
@@ -893,10 +943,18 @@ function HomePage() {
                         <Button
                           variant="ghost"
                           size="icon"
+<<<<<<< HEAD
                           className={`absolute top-2 right-2 z-10 rounded-full w-8 h-8 ${wishlistItems.includes(product.id)
                               ? "bg-red-500 hover:bg-red-600 text-white"
                               : "bg-white/80 hover:bg-white text-gray-600"
                             } shadow-lg transition-all duration-200`}
+=======
+                          className={`absolute top-2 right-2 z-10 rounded-full w-8 h-8 ${
+                            wishlistItems.includes(product.id)
+                              ? "bg-red-500 hover:bg-red-600 text-white"
+                              : "bg-white/80 hover:bg-white text-gray-600"
+                          } shadow-lg transition-all duration-200`}
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
                           onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
@@ -915,7 +973,11 @@ function HomePage() {
                   ))}
                 </div>
               )}
+<<<<<<< HEAD
 
+=======
+              
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
               {/* Smart Pagination */}
               {totalPages > 1 && (
                 <div className="flex justify-center items-center space-x-2 mt-12">
@@ -939,17 +1001,29 @@ function HomePage() {
                         </span>
                       )
                     }
+<<<<<<< HEAD
 
+=======
+                    
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
                     return (
                       <Button
                         key={page}
                         variant="outline"
                         size="sm"
                         onClick={() => handleSmartPageChange(Number(page))}
+<<<<<<< HEAD
                         className={`rounded-xl border-2 font-medium min-w-[40px] transition-all duration-200 ${currentPage === Number(page)
                             ? "bg-[#CB0207] text-white border-[#CB0207] shadow-md"
                             : "border-gray-200 bg-transparent hover:bg-gray-50 hover:border-gray-300"
                           }`}
+=======
+                        className={`rounded-xl border-2 font-medium min-w-[40px] transition-all duration-200 ${
+                          currentPage === Number(page)
+                            ? "bg-[#CB0207] text-white border-[#CB0207] shadow-md"
+                            : "border-gray-200 bg-transparent hover:bg-gray-50 hover:border-gray-300"
+                        }`}
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
                       >
                         {page}
                       </Button>
@@ -968,7 +1042,11 @@ function HomePage() {
                   </Button>
                 </div>
               )}
+<<<<<<< HEAD
 
+=======
+              
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
               {/* No Products Message */}
               {!loading && products.length === 0 && (
                 <div className="text-center py-16">
@@ -979,7 +1057,11 @@ function HomePage() {
           </main>
         </div>
       </div>
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
       {/* Modern Filter Dialog */}
       <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
         <DialogContent className="sm:max-w-lg rounded-2xl border-0 shadow-2xl">
@@ -1138,7 +1220,11 @@ function HomePage() {
           </div>
         </DialogContent>
       </Dialog>
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
       {/* Footer */}
       <Footer />
     </div>
