@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset
       xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -7,16 +6,6 @@
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 <!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
 
-=======
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset
-      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
-
->>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
 
 <url>
   <loc>https://www.strapre.com/</loc>
@@ -47,13 +36,7 @@
   <loc>https://www.strapre.com/privacy-policy</loc>
   <lastmod>2025-07-21T17:36:31+00:00</lastmod>
   <priority>0.51</priority>
-<<<<<<< HEAD
 </url>
 
 
-=======
-</url>
-
-
->>>>>>> 533c22393c774a56ed1968293eb2ddaf3c4ec728
 </urlset>
