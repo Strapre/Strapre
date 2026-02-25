@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, Star, Clock, Check, Loader2, Crown, AlertCircle } from "lucide-react"
+import { ArrowLeft, Star, Clock, Check, Loader2, Crown, AlertCircle, Package, Zap, Shield, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -102,6 +102,7 @@ export default function FeatureProductPage() {
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedTier, setSelectedTier] = useState<'Basic' | 'Standard' | 'Premium' | 'Merchandise'>('Basic')
   const router = useRouter()
 
   useEffect(() => {
@@ -264,16 +265,151 @@ export default function FeatureProductPage() {
   }
 
   const handleSearch = () => {
-    // Search functionality if needed
     console.log("Searching for:", searchQuery)
   }
 
-  const handleStateChange = () => {
-    // Placeholder function
+  const handleStateChange = () => { }
+  const handleLGAChange = () => { }
+
+  // ─── Plan grouping helpers ───────────────────────────────────────────────
+  type PlanTier = 'Basic' | 'Standard' | 'Premium' | 'Merchandise'
+
+  const getPlanTier = (name: string): PlanTier => {
+    const lower = name.toLowerCase()
+    if (lower.includes('merchandise')) return 'Merchandise'
+    if (lower.includes('premium')) return 'Premium'
+    if (lower.includes('standard')) return 'Standard'
+    return 'Basic'
   }
 
-  const handleLGAChange = () => {
-    // Placeholder function
+  const TIER_ORDER: PlanTier[] = ['Basic', 'Standard', 'Premium', 'Merchandise']
+
+  const TIER_STYLES: Record<PlanTier, {
+    border: string; bg: string; badge: string; icon: JSX.Element; label: string
+  }> = {
+    Basic: {
+      border: 'border-blue-200',
+      bg: 'bg-blue-50',
+      badge: 'bg-blue-100 text-blue-700',
+      icon: <Package className="h-4 w-4 text-blue-500" />,
+      label: 'Basic Plans',
+    },
+    Standard: {
+      border: 'border-purple-200',
+      bg: 'bg-purple-50',
+      badge: 'bg-purple-100 text-purple-700',
+      icon: <Shield className="h-4 w-4 text-purple-500" />,
+      label: 'Standard Plans',
+    },
+    Premium: {
+      border: 'border-amber-200',
+      bg: 'bg-amber-50',
+      badge: 'bg-amber-100 text-amber-700',
+      icon: <Crown className="h-4 w-4 text-amber-500" />,
+      label: 'Premium Plans',
+    },
+    Merchandise: {
+      border: 'border-emerald-200',
+      bg: 'bg-emerald-50',
+      badge: 'bg-emerald-100 text-emerald-700',
+      icon: <ShoppingBag className="h-4 w-4 text-emerald-500" />,
+      label: 'Merchandise Plans',
+    },
+  }
+
+  // Renders the tabbed plan picker used in both modals
+  const PlanPicker = ({ idPrefix }: { idPrefix: string }) => {
+    const style = TIER_STYLES[selectedTier]
+
+    const visiblePlans = featuredPlans
+      .filter(p => getPlanTier(p.name) === selectedTier)
+      .sort((a, b) => a.duration_days - b.duration_days)
+
+    return (
+      <div className="space-y-4">
+        {/* Tier tabs */}
+        <div className="grid grid-cols-4 gap-1 bg-gray-100 p-1 rounded-xl">
+          {TIER_ORDER.map(tier => {
+            const s = TIER_STYLES[tier]
+            const isActive = selectedTier === tier
+            return (
+              <button
+                key={tier}
+                type="button"
+                onClick={() => { setSelectedTier(tier); setSelectedPlan('') }}
+                className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg text-xs font-semibold transition-all duration-150 ${
+                  isActive
+                    ? 'bg-white shadow text-gray-800'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <span className={isActive ? '' : 'opacity-60'}>{s.icon}</span>
+                <span className="leading-none text-center">{tier}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Active tier header */}
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${style.badge}`}>
+          {style.icon}
+          <span className="text-xs font-bold uppercase tracking-wide">{style.label}</span>
+        </div>
+
+        {/* Plans for active tier */}
+        <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan}>
+          <div className="space-y-2">
+            {visiblePlans.map(plan => {
+              const isSelected = selectedPlan === plan.id
+              return (
+                <div
+                  key={plan.id}
+                  onClick={() => setSelectedPlan(plan.id)}
+                  className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-150 ${
+                    isSelected
+                      ? 'border-[#CB0207] bg-red-50 shadow-sm'
+                      : `${style.border} ${style.bg} hover:shadow-sm`
+                  }`}
+                >
+                  {isSelected && (
+                    <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[#CB0207] flex items-center justify-center">
+                      <Check className="h-3 w-3 text-white" />
+                    </span>
+                  )}
+                  <RadioGroupItem value={plan.id} id={`${idPrefix}-${plan.id}`} className="sr-only" />
+                  <Label htmlFor={`${idPrefix}-${plan.id}`} className="cursor-pointer w-full">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-gray-800 text-sm leading-snug">
+                          {plan.duration_days === 1 ? '24 Hours' : `${plan.duration_days} Days`}
+                        </h4>
+                        <p className="text-xs text-gray-500 mt-0.5">{plan.description}</p>
+                        <div className="flex flex-wrap gap-3 mt-2">
+                          <span className="flex items-center gap-1 text-xs text-gray-500">
+                            <Star className="h-3 w-3" />
+                            {plan.max_products} products
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-gray-500">
+                            <Zap className="h-3 w-3" />
+                            Refresh every {plan.refresh_interval}h
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="font-extrabold text-[#CB0207] text-lg leading-none">{formatPrice(plan.price)}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">
+                          {formatPrice((parseFloat(plan.price) / plan.duration_days).toFixed(0))}/day
+                        </p>
+                      </div>
+                    </div>
+                  </Label>
+                </div>
+              )
+            })}
+          </div>
+        </RadioGroup>
+      </div>
+    )
   }
 
   if (subscriptionsLoading) {
@@ -370,15 +506,14 @@ export default function FeatureProductPage() {
                   const isActive = subscription.is_active && !isExpired
                   // Since we don't have products data, we'll show the max_products as available slots
                   const remainingSlotsForSub = isActive ? subscription.plan.max_products : 0
-                  
+
                   return (
                     <div
                       key={subscription.id}
-                      className={`border-2 rounded-2xl p-6 transition-all duration-200 hover:shadow-lg ${
-                        isActive 
-                          ? 'border-green-200 bg-gradient-to-br from-green-50 to-green-25' 
+                      className={`border-2 rounded-2xl p-6 transition-all duration-200 hover:shadow-lg ${isActive
+                          ? 'border-green-200 bg-gradient-to-br from-green-50 to-green-25'
                           : 'border-gray-200 bg-gradient-to-br from-gray-50 to-gray-25'
-                      }`}
+                        }`}
                     >
                       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
                         <div className="flex-1 space-y-4">
@@ -386,21 +521,20 @@ export default function FeatureProductPage() {
                             <h3 className="text-xl font-bold text-gray-800">
                               {subscription.plan.name}
                             </h3>
-                            <Badge 
-                              className={`w-fit text-sm px-3 py-1 font-medium ${
-                                isActive 
-                                  ? 'bg-green-100 text-green-800 border-green-300' 
+                            <Badge
+                              className={`w-fit text-sm px-3 py-1 font-medium ${isActive
+                                  ? 'bg-green-100 text-green-800 border-green-300'
                                   : 'bg-gray-100 text-gray-600 border-gray-300'
-                              }`}
+                                }`}
                             >
                               {isActive ? 'Active' : isExpired ? 'Expired' : 'Inactive'}
                             </Badge>
                           </div>
-                          
+
                           <p className="text-gray-600 text-base leading-relaxed">
                             {subscription.plan.description}
                           </p>
-                          
+
                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                             <div className="bg-white/60 rounded-xl p-4 border border-gray-100">
                               <span className="text-sm text-gray-500 font-medium">Price</span>
@@ -428,7 +562,7 @@ export default function FeatureProductPage() {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                           <div className="bg-white/80 rounded-xl p-4 border border-gray-200 min-w-[200px]">
                             <div className="space-y-3 text-sm">
@@ -438,15 +572,14 @@ export default function FeatureProductPage() {
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-500 font-medium">Expires:</span>
-                                <span className={`font-semibold ${
-                                  isExpired ? 'text-red-600' : isActive ? 'text-green-600' : 'text-gray-600'
-                                }`}>
+                                <span className={`font-semibold ${isExpired ? 'text-red-600' : isActive ? 'text-green-600' : 'text-gray-600'
+                                  }`}>
                                   {formatDate(subscription.ends_at)}
                                 </span>
                               </div>
                             </div>
                           </div>
-                          
+
                           {isActive && (
                             <div className="flex flex-col sm:flex-row items-center gap-4">
                               <div className="text-center bg-white/80 rounded-xl p-4 border border-green-200 min-w-[120px]">
@@ -457,9 +590,9 @@ export default function FeatureProductPage() {
                                   slots remaining
                                 </div>
                               </div>
-                              
+
                               <Link href={`/feature-product/${subscription.id}`}>
-                                <Button 
+                                <Button
                                   className="bg-[#CB0207] hover:bg-[#A50206] text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg"
                                 >
                                   View Details
@@ -481,9 +614,6 @@ export default function FeatureProductPage() {
                   <p className="text-amber-700 mb-6 leading-relaxed">
                     Subscribe to a plan to feature your products and boost visibility.
                   </p>
-                  <Link href="/subscriptions" className="text-amber-700 underline hover:text-amber-900 font-medium">
-                    View Available Plans
-                  </Link>
                 </div>
               </div>
             )}
@@ -502,7 +632,7 @@ export default function FeatureProductPage() {
                 <p className="text-gray-600 mb-8 text-lg leading-relaxed">
                   Manage your subscription plans to feature products and boost visibility.
                 </p>
-                
+
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button
                     onClick={() => {
@@ -514,11 +644,6 @@ export default function FeatureProductPage() {
                     <Star className="h-5 w-5 mr-2" />
                     Subscribe to a Plan
                   </Button>
-                  <Link href="/subscriptions">
-                    <Button variant="outline" className="px-8 py-4 rounded-xl text-lg border-2">
-                      View All Plans
-                    </Button>
-                  </Link>
                 </div>
               </div>
             </div>
@@ -527,91 +652,55 @@ export default function FeatureProductPage() {
       </div>
 
       {/* Plan Selection Dialog */}
-      <Dialog open={showPlanDialog} onOpenChange={setShowPlanDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
+      <Dialog open={showPlanDialog} onOpenChange={(open) => { setShowPlanDialog(open); if (!open) { setSelectedTier('Basic'); setSelectedPlan('') } }}>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center text-lg">
               <Star className="h-5 w-5 text-[#CB0207] mr-2" />
-              Choose Featured Plan
+              Choose a Featured Plan
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="flex flex-col flex-1 min-h-0 gap-4">
             {selectedProduct && (
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <h4 className="font-semibold text-gray-800 mb-1">Selected Product:</h4>
-                <p className="text-sm text-gray-600">{selectedProduct.name}</p>
-                <p className="text-sm font-bold text-[#CB0207]">{formatPrice(selectedProduct.price)}</p>
+              <div className="bg-gray-50 border border-gray-200 p-3 rounded-xl flex items-start gap-3 flex-shrink-0">
+                <Star className="h-4 w-4 text-[#CB0207] mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">Selected Product</p>
+                  <p className="text-sm font-bold text-gray-800 leading-snug">{selectedProduct.name}</p>
+                  <p className="text-sm text-[#CB0207] font-semibold">{formatPrice(selectedProduct.price)}</p>
+                </div>
               </div>
             )}
-
             {activeSubscription && (
-              <Alert className="border-green-200 bg-green-50">
+              <Alert className="border-green-200 bg-green-50 flex-shrink-0">
                 <Crown className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
-                  You're using your {activeSubscription.plan.name} subscription. 
-                  Featuring products through your subscription is free within your plan limits.
+                <AlertDescription className="text-green-800 text-xs">
+                  You have an active <strong>{activeSubscription.plan.name}</strong>. Featuring within plan limits is included.
                 </AlertDescription>
               </Alert>
             )}
-
-            {plansLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#CB0207] border-t-transparent"></div>
-              </div>
-            ) : (
-              <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan}>
-                <div className="space-y-3">
-                  {featuredPlans.map((plan) => (
-                    <div
-                      key={plan.id}
-                      className="flex items-center space-x-3 p-4 border rounded-xl hover:bg-gray-50 transition-colors"
-                    >
-                      <RadioGroupItem value={plan.id} id={plan.id} />
-                      <Label htmlFor={plan.id} className="flex-1 cursor-pointer">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-semibold text-gray-800">{plan.name}</h4>
-                            <p className="text-sm text-gray-600 mb-1">{plan.description}</p>
-                            <div className="flex items-center text-xs text-gray-500">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {plan.duration_days} days
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-[#CB0207]">{formatPrice(plan.price)}</p>
-                          </div>
-                        </div>
-                      </Label>
-                    </div>
-                  ))}
+            <div className="overflow-y-auto flex-1 pr-1">
+              {plansLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#CB0207] border-t-transparent"></div>
                 </div>
-              </RadioGroup>
-            )}
-
-            <div className="flex space-x-3 pt-4">
-              <Button
-                onClick={() => setShowPlanDialog(false)}
-                variant="outline"
-                className="flex-1 rounded-xl"
-                disabled={processing}
-              >
+              ) : (
+                <PlanPicker idPrefix="fp" />
+              )}
+            </div>
+            <div className="flex gap-3 pt-3 border-t flex-shrink-0">
+              <Button onClick={() => setShowPlanDialog(false)} variant="outline" className="flex-1 rounded-xl" disabled={processing}>
                 Cancel
               </Button>
               <Button
                 onClick={handleProceedToPayment}
-                className="flex-1 bg-[#CB0207] hover:bg-[#A50206] text-white rounded-xl"
+                className="flex-1 bg-[#CB0207] hover:bg-[#A50206] text-white rounded-xl font-semibold"
                 disabled={!selectedPlan || processing}
               >
                 {processing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing...</>
                 ) : (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Proceed to Payment
-                  </>
+                  <><Check className="h-4 w-4 mr-2" />Pay {selectedPlan && formatPrice(featuredPlans.find(p => p.id === selectedPlan)?.price || '0')}</>
                 )}
               </Button>
             </div>
@@ -620,67 +709,26 @@ export default function FeatureProductPage() {
       </Dialog>
 
       {/* Subscription Plans Dialog */}
-      <Dialog open={showSubscriptionDialog} onOpenChange={setShowSubscriptionDialog}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
+      <Dialog open={showSubscriptionDialog} onOpenChange={(open) => { setShowSubscriptionDialog(open); if (!open) { setSelectedTier('Basic'); setSelectedPlan('') } }}>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center text-lg">
               <Crown className="h-5 w-5 text-[#CB0207] mr-2" />
               Choose a Subscription Plan
             </DialogTitle>
+            <p className="text-sm text-gray-500 mt-1">Feature your products and boost visibility. Select a duration, then pick a tier.</p>
           </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Select a subscription plan to feature your products and boost visibility.
-            </p>
-
-            {plansLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#CB0207] border-t-transparent"></div>
-              </div>
-            ) : (
-              <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan}>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {featuredPlans.map((plan) => (
-                    <div
-                      key={plan.id}
-                      className="flex items-center space-x-3 p-4 border rounded-xl hover:bg-gray-50 transition-colors"
-                    >
-                      <RadioGroupItem value={plan.id} id={`sub-${plan.id}`} />
-                      <Label htmlFor={`sub-${plan.id}`} className="flex-1 cursor-pointer">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-800 mb-1">{plan.name}</h4>
-                            <p className="text-sm text-gray-600 mb-2">{plan.description}</p>
-                            <div className="grid grid-cols-2 gap-4 text-xs text-gray-500">
-                              <div className="flex items-center">
-                                <Clock className="h-3 w-3 mr-1" />
-                                {plan.duration_days} days
-                              </div>
-                              <div className="flex items-center">
-                                <Star className="h-3 w-3 mr-1" />
-                                {plan.max_products} products
-                              </div>
-                              <div className="flex items-center">
-                                <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1"></span>
-                                Refresh: {plan.refresh_interval}h
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-right ml-4">
-                            <p className="font-bold text-xl text-[#CB0207]">{formatPrice(plan.price)}</p>
-                            <p className="text-xs text-gray-500">
-                              {formatPrice((parseFloat(plan.price) / plan.duration_days).toFixed(2))}/day
-                            </p>
-                          </div>
-                        </div>
-                      </Label>
-                    </div>
-                  ))}
+          <div className="flex flex-col flex-1 min-h-0 gap-4">
+            <div className="overflow-y-auto flex-1 pr-1">
+              {plansLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#CB0207] border-t-transparent"></div>
                 </div>
-              </RadioGroup>
-            )}
-
-            <div className="flex space-x-3 pt-4 border-t">
+              ) : (
+                <PlanPicker idPrefix="sub" />
+              )}
+            </div>
+            <div className="flex gap-3 pt-3 border-t flex-shrink-0">
               <Button
                 onClick={() => setShowSubscriptionDialog(false)}
                 variant="outline"
@@ -691,19 +739,13 @@ export default function FeatureProductPage() {
               </Button>
               <Button
                 onClick={handleSubscriptionPayment}
-                className="flex-1 bg-[#CB0207] hover:bg-[#A50206] text-white rounded-xl"
+                className="flex-1 bg-[#CB0207] hover:bg-[#A50206] text-white rounded-xl font-semibold"
                 disabled={!selectedPlan || processing}
               >
                 {processing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Processing...</>
                 ) : (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Subscribe & Pay {selectedPlan && formatPrice(featuredPlans.find(p => p.id === selectedPlan)?.price || "0")}
-                  </>
+                  <><Check className="h-4 w-4 mr-2" />Subscribe & Pay {selectedPlan && formatPrice(featuredPlans.find(p => p.id === selectedPlan)?.price || '0')}</>
                 )}
               </Button>
             </div>
