@@ -547,6 +547,23 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
     return `₦${numPrice.toLocaleString()}`
   }
 
+  const getCorrectImageUrl = (url: string) => {
+    if (!url) return "/placeholder.svg"
+    const cleanUrl = String(url).trim()
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.strapre.com"
+
+    if (/^https?:\/\//i.test(cleanUrl)) {
+      if (cleanUrl.includes("www.api.strapre.com")) {
+        return cleanUrl.replace("www.api.strapre.com", "api.strapre.com")
+      }
+      return cleanUrl
+    }
+
+    const path = cleanUrl.replace(/^\/?(https?:)?\/*(www\.)?api\.strapre\.com/i, "")
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`
+    return `${baseUrl}${normalizedPath}`
+  }
+
   const handleContactAction = (action: "whatsapp" | "call") => {
     if (!isAuthenticated) {
       setShowLoginDialog(true)
@@ -804,7 +821,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
       >
         <div className="relative aspect-square">
           <Image
-            src={product.images[0]?.url || "/placeholder.svg"}
+            src={getCorrectImageUrl(product.images[0]?.url || "")}
             alt={product.name}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -858,7 +875,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
             <Avatar className="h-6 w-6">
               {product.store.store_image ? (
                 <Image
-                  src={product.store.store_image}
+                  src={getCorrectImageUrl(product.store.store_image)}
                   alt={product.store.name}
                   width={24}
                   height={24}
@@ -936,7 +953,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
               onMouseLeave={onMouseLeave}
             >
               <Image
-                src={product.images[selectedImageIndex]?.url || "/placeholder.svg"}
+                src={getCorrectImageUrl(product.images[selectedImageIndex]?.url || "")}
                 alt={product.name}
                 fill
                 className="object-cover transition-transform duration-300 ease-in-out select-none"
@@ -1024,7 +1041,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                       }`}
                   >
                     <Image
-                      src={image.url || "/placeholder.svg"}
+                      src={getCorrectImageUrl(image.url || "")}
                       alt={`${product.name} ${index + 1}`}
                       width={80}
                       height={80}
