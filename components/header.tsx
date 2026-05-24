@@ -424,9 +424,7 @@ export default function Header({
                           <h3 className="font-bold text-xl text-gray-800">Location</h3>
                           <Select onValueChange={handleStateChangeInternal} value={selectedState?.id || "defaultState"}>
                             <SelectTrigger className="w-full rounded-xl border-2 border-gray-200 focus:border-[#CB0207] h-12 text-gray-800">
-                              <SelectValue>
-                                {selectedState ? selectedState.name : "All States"}
-                              </SelectValue>
+                              <SelectValue placeholder="All States" />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
                               <SelectItem value="defaultState">All States</SelectItem>
@@ -440,9 +438,7 @@ export default function Header({
 
                           <Select onValueChange={handleLGAChangeInternal} value={selectedLGA?.id || "defaultLGA"} disabled={!selectedState}>
                             <SelectTrigger className="w-full rounded-xl border-2 border-gray-200 focus:border-[#CB0207] h-12 text-gray-800">
-                              <SelectValue>
-                                {selectedLGA ? selectedLGA.name : "All LGAs"}
-                              </SelectValue>
+                              <SelectValue placeholder="All LGAs" />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
                               <SelectItem value="defaultLGA">All LGAs</SelectItem>
@@ -548,9 +544,7 @@ export default function Header({
               <div className="hidden md:flex items-center space-x-3">
                 <Select onValueChange={handleStateChangeInternal} value={selectedState?.id || "defaultState"}>
                   <SelectTrigger className="w-36 rounded-xl border-2 border-gray-200 focus:border-[#CB0207] h-12 text-gray-800">
-                    <SelectValue>
-                      {selectedState ? selectedState.name : "All States"}
-                    </SelectValue>
+                    <SelectValue placeholder="All States" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
                     <SelectItem value="defaultState">All States</SelectItem>
@@ -564,9 +558,7 @@ export default function Header({
 
                 <Select onValueChange={handleLGAChangeInternal} value={selectedLGA?.id || "defaultLGA"} disabled={!selectedState}>
                   <SelectTrigger className="w-36 rounded-xl border-2 border-gray-200 focus:border-[#CB0207] h-12 text-gray-800">
-                    <SelectValue>
-                      {selectedLGA ? selectedLGA.name : "All LGAs"}
-                    </SelectValue>
+                    <SelectValue placeholder="All LGAs" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
                     <SelectItem value="defaultLGA">All LGAs</SelectItem>
