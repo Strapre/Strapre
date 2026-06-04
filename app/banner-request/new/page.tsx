@@ -30,7 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Footer from '@/components/footer'
-import { ENDPOINTS } from "@/lib/api"
+import { ENDPOINTS, getCorrectImageUrl } from "@/lib/api"
 
 interface Plan {
   id: string
@@ -478,7 +478,7 @@ export default function CreateBannerPage() {
                       <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200 flex-shrink-0">
                         <Avatar className="h-14 w-14 ring-2 ring-[#CB0207]/20">
                           <AvatarImage
-                            src={userProfile.profile_picture || ""}
+                            src={getCorrectImageUrl(userProfile.profile_picture)}
                             alt={`${userProfile.first_name} ${userProfile.last_name}`}
                           />
                           <AvatarFallback className="bg-[#CB0207] text-white font-bold">
@@ -610,7 +610,7 @@ export default function CreateBannerPage() {
                       className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 h-14"
                     >
                       <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
-                        <AvatarImage src={userProfile.profile_picture || ""} />
+                        <AvatarImage src={getCorrectImageUrl(userProfile.profile_picture)} />
                         <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
                           {getUserInitials()}
                         </AvatarFallback>

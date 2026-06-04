@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useEffect } from "react"
 import {
@@ -22,7 +22,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
-import { ENDPOINTS, authHeaders } from "@/lib/api"
+import { ENDPOINTS, authHeaders, getCorrectImageUrl } from "@/lib/api"
 
 interface Category {
   id: string
@@ -247,7 +247,7 @@ function ProfilePage() {
               <CardHeader className="bg-gradient-to-r from-[#CB0207] to-[#A50206] text-white p-8">
                 <div className="flex items-center space-x-6">
                   <Avatar className="h-24 w-24 ring-4 ring-white/20">
-                    <AvatarImage src={userProfile?.profile_picture || ""} />
+                    <AvatarImage src={getCorrectImageUrl(userProfile?.profile_picture)} />
                     <AvatarFallback className="bg-white/20 text-white font-bold text-2xl">
                       {getUserInitials()}
                     </AvatarFallback>

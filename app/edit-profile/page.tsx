@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
-import { ENDPOINTS } from "@/lib/api"
+import { ENDPOINTS, getCorrectImageUrl } from "@/lib/api"
 
 interface UserProfile {
   id: string
@@ -406,7 +406,7 @@ export default function EditProfilePage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-8">
                   <div className="mb-6 sm:mb-0">
                     <Avatar className="h-24 w-24 mx-auto sm:mx-0">
-                      <AvatarImage src={profilePicturePreview || currentProfilePicture || ""} />
+                      <AvatarImage src={profilePicturePreview || getCorrectImageUrl(currentProfilePicture)} />
                       <AvatarFallback className="bg-[#CB0207] text-white text-xl font-bold">
                         {getUserInitials()}
                       </AvatarFallback>

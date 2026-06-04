@@ -25,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
-import { ENDPOINTS, authHeaders, authJsonHeaders, IMAGE_BASE_URL } from "@/lib/api"
+import { ENDPOINTS, authHeaders, authJsonHeaders, IMAGE_BASE_URL, getCorrectImageUrl } from "@/lib/api"
 
 interface ProductImage {
   id: string
@@ -485,23 +485,6 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   const formatPrice = (price: string) => {
     const numPrice = Number.parseFloat(price)
     return `₦${numPrice.toLocaleString()}`
-  }
-
-  const getCorrectImageUrl = (url: string) => {
-    if (!url) return "/placeholder.svg"
-    const cleanUrl = String(url).trim()
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || IMAGE_BASE_URL
-
-    if (/^https?:\/\//i.test(cleanUrl)) {
-      if (cleanUrl.includes("www.api.strapre.com")) {
-        return cleanUrl.replace("www.api.strapre.com", "api.strapre.com")
-      }
-      return cleanUrl
-    }
-
-    const path = cleanUrl.replace(/^\/?(https?:)?\/*(www\.)?api\.strapre\.com/i, "")
-    const normalizedPath = path.startsWith("/") ? path : `/${path}`
-    return `${baseUrl}${normalizedPath}`
   }
 
   const handleContactAction = (action: "whatsapp" | "call") => {

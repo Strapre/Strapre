@@ -14,7 +14,7 @@ import RegisterSW from "./register-sw"
 import InstallPrompt from "./install-prompt"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ENDPOINTS, authHeaders, authJsonHeaders, IMAGE_BASE_URL } from "@/lib/api"
+import { ENDPOINTS, authHeaders, authJsonHeaders, IMAGE_BASE_URL, getCorrectImageUrl } from "@/lib/api"
 
 interface Category {
   id: string
@@ -162,30 +162,6 @@ function HomePage() {
   const [wishlistLoading, setWishlistLoading] = useState<string[]>([])
   const [adverts, setAdverts] = useState<Advert[]>([])
   const [advertsLoading, setAdvertsLoading] = useState(true)
-
-  const getCorrectImageUrl = (url: string) => {
-    if (!url) return "/placeholder.svg"
-    const cleanUrl = String(url).trim()
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || IMAGE_BASE_URL
-
-    // If it's already a full absolute URL with a proper protocol (http:// or https://), return it
-    if (/^https?:\/\//i.test(cleanUrl)) {
-      // Normalize www.api to api to avoid SSL certificate errors
-      if (cleanUrl.includes("www.api.strapre.com")) {
-        return cleanUrl.replace("www.api.strapre.com", "api.strapre.com")
-      }
-      return cleanUrl
-    }
-
-    // Handle cases where the path starts with malformed domain prefixes
-    // This strips variations like "https:api.strapre.com", "/api.strapre.com", etc.
-    const path = cleanUrl.replace(/^\/?(https?:)?\/*(www\.)?api\.strapre\.com/i, "")
-
-    // Ensure the path starts with a single /
-    const normalizedPath = path.startsWith("/") ? path : `/${path}`
-
-    return `${baseUrl}${normalizedPath}`
-  }
 
 
 

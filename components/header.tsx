@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ENDPOINTS, apiFetch, authHeaders } from "@/lib/api"
+import { ENDPOINTS, apiFetch, authHeaders, getCorrectImageUrl } from "@/lib/api"
 
 interface Category {
   id: string
@@ -387,7 +387,7 @@ export default function Header({
                       <div className="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-200 flex-shrink-0">
                         <Avatar className="h-14 w-14 ring-2 ring-[#CB0207]/20">
                           <AvatarImage
-                            src={userProfile.profile_picture || ""}
+                            src={getCorrectImageUrl(userProfile.profile_picture)}
                             alt={`${userProfile.first_name} ${userProfile.last_name}`}
                           />
                           <AvatarFallback className="bg-[#CB0207] text-white font-bold">
@@ -592,7 +592,7 @@ export default function Header({
                         className="flex items-center space-x-3 hover:bg-gray-100 rounded-xl px-3 h-14"
                       >
                         <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
-                          <AvatarImage src={userProfile.profile_picture || ""} />
+                          <AvatarImage src={getCorrectImageUrl(userProfile.profile_picture)} />
                           <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
                             {getUserInitials()}
                           </AvatarFallback>
@@ -666,7 +666,7 @@ export default function Header({
                     title="View Profile"
                   >
                     <Avatar className="h-8 w-8 ring-2 ring-[#CB0207]/20">
-                      <AvatarImage src={userProfile.profile_picture || ""} />
+                      <AvatarImage src={getCorrectImageUrl(userProfile.profile_picture)} />
                       <AvatarFallback className="bg-[#CB0207] text-white font-bold text-sm">
                         {getUserInitials()}
                       </AvatarFallback>
