@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import { ENDPOINTS, authHeaders } from "@/lib/api"
 
 interface Category {
   id: string
@@ -166,7 +167,7 @@ export default function CategoryPage() {
   const fetchAdverts = async () => {
     try {
       setAdvertsLoading(true)
-      const response = await fetch("https://api.strapre.com/api/v1/adverts/dummy", {
+      const response = await fetch(ENDPOINTS.advertsDummy, {
         headers: {
           Accept: "application/json",
         },
@@ -278,7 +279,7 @@ export default function CategoryPage() {
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
+      const response = await fetch(ENDPOINTS.getProfile, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -318,7 +319,7 @@ export default function CategoryPage() {
 
   const fetchUserStore = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/mystore", {
+      const response = await fetch(ENDPOINTS.myStore, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -336,7 +337,7 @@ export default function CategoryPage() {
   // Wishlist functions
   const fetchWishlist = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
+      const response = await fetch(ENDPOINTS.wishlist, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -358,7 +359,7 @@ export default function CategoryPage() {
 
     setWishlistLoading((prev) => [...prev, productId])
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
+      const response = await fetch(ENDPOINTS.wishlist, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -383,7 +384,7 @@ export default function CategoryPage() {
 
     setWishlistLoading((prev) => [...prev, productId])
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/wishlist/${productId}`, {
+      const response = await fetch(ENDPOINTS.removeWishlist(productId), {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -410,7 +411,7 @@ export default function CategoryPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/categories", {
+      const response = await fetch(ENDPOINTS.categories, {
         headers: {
           Accept: "application/json",
         },
@@ -427,7 +428,7 @@ export default function CategoryPage() {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/states", {
+      const response = await fetch(ENDPOINTS.states, {
         headers: {
           Accept: "application/json",
         },
@@ -443,7 +444,7 @@ export default function CategoryPage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`, {
+      const response = await fetch(ENDPOINTS.lgasByState(stateSlug), {
         headers: {
           Accept: "application/json",
         },
@@ -460,7 +461,7 @@ export default function CategoryPage() {
   const fetchCategoryProducts = async (categoryId: string, page = 1) => {
     setLoading(true)
     try {
-      let url = `https://api.strapre.com/api/v1/products/category/${categoryId}?page=${page}`
+      let url = `${ENDPOINTS.productsByCategory(categoryId)}?page=${page}`
 
       // Add state filter if selected
       if (selectedState) {
@@ -524,7 +525,7 @@ export default function CategoryPage() {
         params.append("state_id", searchParams.state_id)
       }
 
-      const url = `https://api.strapre.com/api/v1/products/search?${params.toString()}`
+      const url = `${ENDPOINTS.searchProducts}?${params.toString()}`
       const response = await fetch(url, {
         headers: {
           Accept: "application/json",

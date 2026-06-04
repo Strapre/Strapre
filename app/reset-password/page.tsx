@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import type React from "react"
 import { useState, useEffect } from "react"
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff } from "lucide-react"
+import { ENDPOINTS, jsonHeaders } from "@/lib/api"
 
 export default function ResetPasswordPage() {
   const [otp, setOtp] = useState("")
@@ -44,12 +45,9 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/auth/reset-password", {
+      const response = await fetch(ENDPOINTS.resetPassword, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
+        headers: jsonHeaders,
         body: JSON.stringify({
           email,
           otp,

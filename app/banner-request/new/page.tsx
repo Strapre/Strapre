@@ -30,6 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Footer from '@/components/footer'
+import { ENDPOINTS } from "@/lib/api"
 
 interface Plan {
   id: string
@@ -127,7 +128,7 @@ export default function CreateBannerPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/categories")
+      const response = await fetch(ENDPOINTS.categories)
       if (response.ok) {
         const data = await response.json()
         setCategories(data.data)
@@ -139,7 +140,7 @@ export default function CreateBannerPage() {
 
   const fetchUserStore = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/mystore", {
+      const response = await fetch(ENDPOINTS.myStore, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -160,7 +161,7 @@ export default function CreateBannerPage() {
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
+      const response = await fetch(ENDPOINTS.getProfile, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -180,7 +181,7 @@ export default function CreateBannerPage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(ENDPOINTS.lgasByState(stateSlug))
       if (response.ok) {
         const data = await response.json()
         const sortedLGAs = data.data.sort((a: LGA, b: LGA) => a.name.localeCompare(b.name))
@@ -262,8 +263,8 @@ export default function CreateBannerPage() {
       fetchCategories()
 
       const [plansResponse, statesResponse] = await Promise.all([
-        fetch("https://api.strapre.com/api/v1/advert-plans"),
-        fetch("https://api.strapre.com/api/v1/states"),
+        fetch(ENDPOINTS.advertPlans),
+        fetch(ENDPOINTS.states),
       ])
 
       if (plansResponse.ok && statesResponse.ok) {
@@ -289,7 +290,7 @@ export default function CreateBannerPage() {
       const token = localStorage.getItem("auth_token")
       if (!token) return
 
-      const response = await fetch("https://api.strapre.com/api/v1/adverts", {
+      const response = await fetch(ENDPOINTS.adverts, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -401,7 +402,7 @@ export default function CreateBannerPage() {
         formDataToSend.append("image", formData.image)
       }
 
-      const response = await fetch("https://api.strapre.com/api/v1/payments/book-advert", {
+      const response = await fetch(ENDPOINTS.payBookAdvert, {
         method: "POST",
         headers: {
           Accept: "application/json",

@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
+import { ENDPOINTS } from "@/lib/api"
 
 interface UserProfile {
   id: string
@@ -119,7 +120,7 @@ export default function EditProductPage() {
     setLoadingCategories(true)
     const token = localStorage.getItem("auth_token")
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/categories", {
+      const response = await fetch(ENDPOINTS.categories, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -145,7 +146,7 @@ export default function EditProductPage() {
     setLoadingProduct(true)
     const token = localStorage.getItem("auth_token")
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/products/${productSlug}`, {
+      const response = await fetch(ENDPOINTS.productBySlug(productSlug), {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -337,9 +338,9 @@ export default function EditProductPage() {
 
       console.log("=== UPDATING PRODUCT ===")
       console.log("Token:", token)
-      console.log("Endpoint:", `https://api.strapre.com/api/v1/products/${slug}`)
+      console.log("Endpoint:", ENDPOINTS.productBySlug(slug))
 
-      const response = await fetch(`https://api.strapre.com/api/v1/products/${slug}`, {
+      const response = await fetch(ENDPOINTS.productBySlug(slug), {
         method: "POST", // Using POST with _method=PUT for file uploads
         headers: {
           Authorization: `Bearer ${token}`,

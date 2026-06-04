@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
 import Link from "next/link"
+import { ENDPOINTS, authHeaders } from "@/lib/api"
 
 interface UserProfile {
   id: string
@@ -23,6 +24,7 @@ interface UserProfile {
 }
 
 interface StoreResponse {
+  message?: string
   data: {
     id: string
     user_id: string
@@ -97,14 +99,11 @@ export default function MyStorePage() {
     try {
       console.log("=== FETCHING STORE DATA ===")
       console.log("Token:", token)
-      console.log("Endpoint:", "https://api.strapre.com/api/v1/mystore")
+      console.log("Endpoint:", ENDPOINTS.myStore)
 
-      const response = await fetch("https://api.strapre.com/api/v1/mystore", {
+      const response = await fetch(ENDPOINTS.myStore, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+        headers: authHeaders(token!),
       })
 
       const responseData: StoreResponse = await response.json()

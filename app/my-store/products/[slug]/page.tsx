@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
+import { ENDPOINTS } from "@/lib/api"
 
 interface UserProfile {
   id: string
@@ -51,6 +52,7 @@ interface Product {
 }
 
 interface ProductResponse {
+  message?: string
   data: Product
 }
 
@@ -104,9 +106,9 @@ export default function ProductDetailPage() {
     try {
       console.log("=== FETCHING PRODUCT DATA ===")
       console.log("Token:", token)
-      console.log("Endpoint:", `https://api.strapre.com/api/v1/products/${productSlug}`)
+      console.log("Endpoint:", ENDPOINTS.productBySlug(productSlug))
 
-      const response = await fetch(`https://api.strapre.com/api/v1/products/${productSlug}`, {
+      const response = await fetch(ENDPOINTS.productBySlug(productSlug), {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -142,9 +144,9 @@ export default function ProductDetailPage() {
     try {
       console.log("=== DELETING PRODUCT ===")
       console.log("Token:", token)
-      console.log("Endpoint:", `https://api.strapre.com/api/v1/products/${product.slug}`)
+      console.log("Endpoint:", ENDPOINTS.productBySlug(product.slug))
 
-      const response = await fetch(`https://api.strapre.com/api/v1/products/${product.slug}`, {
+      const response = await fetch(ENDPOINTS.productBySlug(product.slug), {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

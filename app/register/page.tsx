@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import type React from "react"
 
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff } from "lucide-react"
+import { ENDPOINTS } from "@/lib/api"
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
@@ -90,7 +91,7 @@ const handleRegister = async (e: React.FormEvent) => {
   }
 
   try {
-    const response = await fetch("https://api.strapre.com/api/v1/auth/register", {
+    const response = await fetch(ENDPOINTS.register, {
       method: "POST",
       mode: "cors",
       headers: {

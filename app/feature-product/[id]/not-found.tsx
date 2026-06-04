@@ -1,4 +1,4 @@
-// app/feature-product/[id]/not-found.tsx
+﻿// app/feature-product/[id]/not-found.tsx
 import Link from 'next/link'
 import { AlertCircle, ArrowLeft, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'

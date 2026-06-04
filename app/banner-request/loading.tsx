@@ -1,4 +1,4 @@
-export default function BannerRequestLoading() {
+﻿export default function BannerRequestLoading() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="animate-pulse space-y-6">

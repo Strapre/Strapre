@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
+import { ENDPOINTS } from "@/lib/api"
 import { useRouter } from "next/navigation"
 
 interface ProductImage {
@@ -119,7 +120,7 @@ export default function FeatureProductPage() {
   const fetchFeaturedPlans = async () => {
     setPlansLoading(true)
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/featured-plans")
+      const response = await fetch(ENDPOINTS.featuredPlans)
 
       if (response.ok) {
         const data: ApiResponse<FeaturedPlan> = await response.json()
@@ -136,7 +137,7 @@ export default function FeatureProductPage() {
     setSubscriptionsLoading(true)
     try {
       const token = localStorage.getItem("auth_token")
-      const response = await fetch("https://api.strapre.com/api/v1/featured-subscriptions/my-subscriptions", {
+      const response = await fetch(ENDPOINTS.myFeaturedSubscriptions, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -198,7 +199,7 @@ export default function FeatureProductPage() {
     setProcessing(true)
     try {
       const token = localStorage.getItem("auth_token")
-      const response = await fetch("https://api.strapre.com/api/v1/payments/feature-product", {
+      const response = await fetch(ENDPOINTS.payFeatureProduct, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -228,7 +229,7 @@ export default function FeatureProductPage() {
     setProcessing(true)
     try {
       const token = localStorage.getItem("auth_token")
-      const response = await fetch("https://api.strapre.com/api/v1/payments/feature-product", {
+      const response = await fetch(ENDPOINTS.payFeatureProduct, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -285,7 +286,7 @@ export default function FeatureProductPage() {
   const TIER_ORDER: PlanTier[] = ['Basic', 'Standard', 'Premium', 'Merchandise']
 
   const TIER_STYLES: Record<PlanTier, {
-    border: string; bg: string; badge: string; icon: JSX.Element; label: string
+    border: string; bg: string; badge: string; icon: React.ReactNode; label: string
   }> = {
     Basic: {
       border: 'border-blue-200',

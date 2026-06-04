@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import ProductPageClient from "./ProductPageClient"
+import { BASE_URL } from "@/lib/api"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -10,7 +11,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   try {
     // Fetch product data
-    const response = await fetch(`https://api.strapre.com/api/v1/products/${slug}`, {
+    const response = await fetch(`${BASE_URL}/products/${slug}`, {
       headers: {
         Accept: "application/json",
       },

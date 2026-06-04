@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
@@ -7,6 +7,7 @@ import { ArrowLeft, Calendar, ExternalLink, Plus, Star, TrendingUp, Eye } from "
 import { useRouter } from "next/navigation"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
+import { ENDPOINTS, authHeaders } from "@/lib/api"
 
 interface Banner {
   id: string
@@ -114,7 +115,7 @@ export default function BannerRequestPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/categories")
+      const response = await fetch(ENDPOINTS.categories)
       if (response.ok) {
         const data: ApiResponse<Category[]> = await response.json()
         setCategories(data.data)
@@ -126,10 +127,8 @@ export default function BannerRequestPage() {
 
   const fetchUserStore = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/mystore", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch(ENDPOINTS.myStore, {
+        headers: authHeaders(token),
       })
       if (response.ok) {
         const data = await response.json()
@@ -148,10 +147,8 @@ export default function BannerRequestPage() {
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch(ENDPOINTS.getProfile, {
+        headers: authHeaders(token),
       })
       const data = await response.json()
       if (response.ok) {
@@ -169,7 +166,7 @@ export default function BannerRequestPage() {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/states")
+      const response = await fetch(ENDPOINTS.states)
       if (response.ok) {
         const data: ApiResponse<State[]> = await response.json()
         // Sort states alphabetically by name
@@ -183,7 +180,7 @@ export default function BannerRequestPage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`)
+      const response = await fetch(ENDPOINTS.lgasByState(stateSlug))
       if (response.ok) {
         const data: ApiResponse<LGA[]> = await response.json()
         // Sort LGAs alphabetically by name
@@ -201,11 +198,11 @@ export default function BannerRequestPage() {
       if (!token) return
 
       const [myBannersResponse, allBannersResponse] = await Promise.all([
-        fetch("https://api.strapre.com/api/v1/my-adverts", {
-          headers: { Authorization: `Bearer ${token}` },
+        fetch(ENDPOINTS.myAdverts, {
+          headers: authHeaders(token),
         }),
-        fetch("https://api.strapre.com/api/v1/adverts", {
-          headers: { Authorization: `Bearer ${token}` },
+        fetch(ENDPOINTS.adverts, {
+          headers: authHeaders(token),
         }),
       ])
 

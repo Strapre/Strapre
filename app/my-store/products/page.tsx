@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
+import { ENDPOINTS } from "@/lib/api"
 import Link from "next/link"
 import {
   AlertDialog,
@@ -53,6 +54,7 @@ interface Product {
 }
 
 interface ProductsResponse {
+  message?: string
   data: Product[]
   links: {
     first: string
@@ -133,9 +135,9 @@ export default function MyProductsPage() {
     try {
       console.log("=== FETCHING PRODUCTS DATA ===")
       console.log("Token:", token)
-      console.log("Endpoint:", `https://api.strapre.com/api/v1/my-products?page=${page}`)
+      console.log("Endpoint:", `${ENDPOINTS.myProducts}?page=${page}`)
 
-      const response = await fetch(`https://api.strapre.com/api/v1/my-products?page=${page}`, {
+      const response = await fetch(`${ENDPOINTS.myProducts}?page=${page}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -200,7 +202,7 @@ export default function MyProductsPage() {
   const handleDeleteProduct = async (product: Product) => {
     const token = localStorage.getItem("auth_token")
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/products/${product.slug}`, {
+      const response = await fetch(ENDPOINTS.productBySlug(product.slug), {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

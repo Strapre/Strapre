@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
 import { useRouter } from "next/navigation"
+import { ENDPOINTS } from "@/lib/api"
 
 interface ProductImage {
   id: string
@@ -54,7 +55,7 @@ export default function AdInsightsPage() {
     setLoading(true)
     try {
       const token = localStorage.getItem("auth_token")
-      const response = await fetch("https://api.strapre.com/api/v1/my-featured", {
+      const response = await fetch(ENDPOINTS.myFeatured, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",

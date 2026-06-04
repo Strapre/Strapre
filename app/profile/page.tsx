@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from "react"
 import {
@@ -22,6 +22,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
+import { ENDPOINTS, authHeaders } from "@/lib/api"
 
 interface Category {
   id: string
@@ -121,11 +122,8 @@ function ProfilePage() {
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+      const response = await fetch(ENDPOINTS.getProfile, {
+        headers: authHeaders(token),
       })
       const data = await response.json()
       if (response.ok) {
@@ -141,11 +139,8 @@ function ProfilePage() {
 
   const fetchUserStore = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/mystore", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+      const response = await fetch(ENDPOINTS.myStore, {
+        headers: authHeaders(token),
       })
       if (response.ok) {
         const data = await response.json()
@@ -159,11 +154,8 @@ function ProfilePage() {
 
   const fetchWishlist = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+      const response = await fetch(ENDPOINTS.wishlist, {
+        headers: authHeaders(token),
       })
       if (response.ok) {
         const data = await response.json()
@@ -177,11 +169,7 @@ function ProfilePage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/categories", {
-        headers: {
-          Accept: "application/json",
-        },
-      })
+      const response = await fetch(ENDPOINTS.categories)
       const data: ApiResponse<Category> = await response.json()
       setCategories(data.data)
     } catch (error) {

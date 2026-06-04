@@ -8,6 +8,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ENDPOINTS, authHeaders, jsonHeaders } from "@/lib/api"
 
 export default function VerifyOTPPage() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""])
@@ -82,19 +83,19 @@ export default function VerifyOTPPage() {
     }
 
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/auth/verify-email", {
+      const requestBody = { code: otpCode }
+      console.log("[verify-otp] Request body:", requestBody)
+      console.log("[verify-otp] Endpoint:", ENDPOINTS.verifyOtp)
+
+      const response = await fetch(ENDPOINTS.verifyOtp, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          otp: otpCode,
-        }),
+        headers: { ...jsonHeaders, Authorization: `Bearer ${token}` },
+        body: JSON.stringify(requestBody),
       })
 
       const data = await response.json()
+      console.log("[verify-otp] Response status:", response.status)
+      console.log("[verify-otp] Response data:", data)
 
       if (response.ok) {
         // Store the token as auth token
@@ -121,12 +122,9 @@ export default function VerifyOTPPage() {
     }
 
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/auth/resend-otp", {
+      const response = await fetch(ENDPOINTS.resendOtp, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+        headers: authHeaders(token),
       })
 
       const data = await response.json()
@@ -216,7 +214,7 @@ export default function VerifyOTPPage() {
                 {otp.map((digit, index) => (
                   <Input
                     key={index}
-                    ref={(el) => (inputRefs.current[index] = el)}
+                    ref={(el) => { inputRefs.current[index] = el; }}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}

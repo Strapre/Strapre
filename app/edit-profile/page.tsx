@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
+import { ENDPOINTS } from "@/lib/api"
 
 interface UserProfile {
   id: string
@@ -144,7 +145,7 @@ export default function EditProfilePage() {
   const fetchStates = async () => {
     setLoadingStates(true)
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/states", {
+      const response = await fetch(ENDPOINTS.states, {
         headers: {
           Accept: "application/json",
         },
@@ -164,7 +165,7 @@ export default function EditProfilePage() {
   const fetchLGAs = async (stateSlug: string) => {
     setLoadingLGAs(true)
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`, {
+      const response = await fetch(ENDPOINTS.lgasByState(stateSlug), {
         headers: {
           Accept: "application/json",
         },
@@ -274,7 +275,7 @@ export default function EditProfilePage() {
       // Console log for debugging
       console.log("=== UPDATING PROFILE ===")
       console.log("Token:", token)
-      console.log("Endpoint:", "https://api.strapre.com/api/v1/auth/update-profile")
+      console.log("Endpoint:", ENDPOINTS.updateProfile)
       console.log("Form Data Contents:")
       for (const [key, value] of formData.entries()) {
         if (value instanceof File) {
@@ -288,7 +289,7 @@ export default function EditProfilePage() {
         }
       }
 
-      const response = await fetch("https://api.strapre.com/api/v1/auth/update-profile", {
+      const response = await fetch(ENDPOINTS.updateProfile, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -306,8 +307,9 @@ export default function EditProfilePage() {
       if (response.ok) {
         setSuccess("Profile updated successfully!")
         // Update localStorage with new profile data
-        const updatedProfile = {
-          ...userProfile,
+        const updatedProfile: UserProfile = {
+          id: userProfile?.id || "",
+          email: userProfile?.email || email,
           first_name: firstName,
           last_name: lastName,
           phone: phone,

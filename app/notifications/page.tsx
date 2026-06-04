@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import { ENDPOINTS, authHeaders } from "@/lib/api"
 
 interface NotificationData {
   subject?: string
@@ -106,11 +107,8 @@ export default function NotificationsPage() {
       if (!append) setLoading(true)
       setError(null)
 
-      const response = await fetch(`https://api.strapre.com/api/v1/notifications?page=${page}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+      const response = await fetch(`${ENDPOINTS.notifications}?page=${page}`, {
+        headers: authHeaders(token),
       })
 
       if (response.status === 401) {
@@ -155,12 +153,9 @@ export default function NotificationsPage() {
     setMarkingAsRead(prev => [...prev, notificationId])
 
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/notifications/${notificationId}/mark-as-read`, {
+      const response = await fetch(`${ENDPOINTS.notifications}/${notificationId}/mark-as-read`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+        headers: authHeaders(token),
       })
 
       if (response.ok) {
@@ -187,12 +182,9 @@ export default function NotificationsPage() {
     setMarkingAllAsRead(true)
 
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/notifications/mark-as-read", {
+      const response = await fetch(`${ENDPOINTS.notifications}/mark-as-read`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+        headers: authHeaders(token),
       })
 
       if (response.ok) {

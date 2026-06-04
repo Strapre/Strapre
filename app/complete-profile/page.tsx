@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ENDPOINTS } from "@/lib/api"
 
 interface State {
   id: string
@@ -78,7 +79,7 @@ export default function CompleteProfilePage() {
   // Update the fetchStates and fetchLGAs functions to sort alphabetically
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/states", {
+      const response = await fetch(ENDPOINTS.states, {
         headers: {
           Accept: "application/json",
         },
@@ -94,7 +95,7 @@ export default function CompleteProfilePage() {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`, {
+      const response = await fetch(ENDPOINTS.lgasByState(stateSlug), {
         headers: {
           Accept: "application/json",
         },
@@ -183,7 +184,7 @@ export default function CompleteProfilePage() {
         formData.append("profile_picture", profilePicture)
       }
 
-      const response = await fetch("https://api.strapre.com/api/v1/auth/complete-profile", {
+      const response = await fetch(ENDPOINTS.completeProfile, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -196,6 +197,13 @@ export default function CompleteProfilePage() {
 
       if (response.ok) {
         console.log("✅ Profile completed successfully!")
+        // Store userDetails in localStorage so it reflects immediately across the app
+        if (data.data) {
+          localStorage.setItem("userDetails", JSON.stringify(data.data))
+        } else if (data.user) {
+          // Fallback if returned differently
+          localStorage.setItem("userDetails", JSON.stringify(data.user))
+        }
         // Profile completed successfully, redirect to home
         router.push("/")
       } else {

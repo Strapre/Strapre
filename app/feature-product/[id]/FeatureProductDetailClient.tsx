@@ -29,6 +29,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
+import { ENDPOINTS } from "@/lib/api"
 
 interface SubscriptionPlan {
   id: string
@@ -52,6 +53,7 @@ interface UserSubscription {
 interface FeaturedProduct {
   id: string
   name: string
+  slug?: string
   price: string
   images: ProductImage[]
   is_featured: number
@@ -133,7 +135,7 @@ export default function FeatureProductDetailClient({ subscriptionId }: FeaturePr
     try {
       const token = localStorage.getItem("auth_token")
       
-      const response = await fetch(`https://api.strapre.com/api/v1/featured-subscriptions/${subscriptionId}`, {
+      const response = await fetch(ENDPOINTS.featuredSubscriptionById(subscriptionId), {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -169,7 +171,7 @@ export default function FeatureProductDetailClient({ subscriptionId }: FeaturePr
     try {
       const token = localStorage.getItem("auth_token")
       
-      const response = await fetch(`https://api.strapre.com/api/v1/featured-subscriptions/${subscriptionId}`, {
+      const response = await fetch(ENDPOINTS.featuredSubscriptionById(subscriptionId), {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -193,7 +195,7 @@ export default function FeatureProductDetailClient({ subscriptionId }: FeaturePr
     try {
       const token = localStorage.getItem("auth_token")
       
-      const response = await fetch("https://api.strapre.com/api/v1/my-products", {
+      const response = await fetch(ENDPOINTS.myProducts, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -218,7 +220,7 @@ export default function FeatureProductDetailClient({ subscriptionId }: FeaturePr
     try {
       const token = localStorage.getItem("auth_token")
       
-      const response = await fetch("https://api.strapre.com/api/v1/featured-subscriptions/add-products", {
+      const response = await fetch(ENDPOINTS.featuredSubscriptionAddProducts, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -251,7 +253,7 @@ export default function FeatureProductDetailClient({ subscriptionId }: FeaturePr
     try {
       const token = localStorage.getItem("auth_token")
       
-      const response = await fetch("https://api.strapre.com/api/v1/featured-subscriptions/remove-products", {
+      const response = await fetch(ENDPOINTS.featuredSubscriptionRemoveProducts, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',

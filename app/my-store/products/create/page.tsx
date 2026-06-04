@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import { ENDPOINTS } from "@/lib/api"
 
 interface UserProfile {
   id: string
@@ -36,6 +37,7 @@ interface CategoriesResponse {
 }
 
 interface ProductResponse {
+  message?: string
   data: {
     id: string
     name: string
@@ -89,13 +91,13 @@ export default function CreateProductPage() {
   const MAX_IMAGES = 5
 
     // ADD THESE HELPER FUNCTIONS HERE:
-  const formatNumberWithCommas = (value) => {
+  const formatNumberWithCommas = (value: string) => {
     if (!value) return ""
     const numericValue = value.replace(/\D/g, "")
     return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
   }
 
-  const removeCommas = (value) => {
+  const removeCommas = (value: string) => {
     return value.replace(/,/g, "")
   }
 
@@ -144,9 +146,9 @@ export default function CreateProductPage() {
     try {
       console.log("=== FETCHING CATEGORIES ===")
       console.log("Token:", token)
-      console.log("Endpoint:", "https://api.strapre.com/api/v1/categories")
+      console.log("Endpoint:", ENDPOINTS.categories)
 
-      const response = await fetch("https://api.strapre.com/api/v1/categories", {
+      const response = await fetch(ENDPOINTS.categories, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -423,7 +425,7 @@ export default function CreateProductPage() {
       })
 
 
-      const response = await fetch("https://api.strapre.com/api/v1/products", {
+      const response = await fetch(ENDPOINTS.products, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -540,7 +542,7 @@ export default function CreateProductPage() {
                       </div>
 
                       <input
-                        ref={(el) => (fileInputRefs.current[index] = el)}
+                        ref={(el) => { fileInputRefs.current[index] = el; }}
                         type="file"
                         accept="image/*"
                         multiple
@@ -564,7 +566,7 @@ export default function CreateProductPage() {
                       </div>
 
                       <input
-                        ref={(el) => (fileInputRefs.current[productImages.length] = el)}
+                        ref={(el) => { fileInputRefs.current[productImages.length] = el; }}
                         type="file"
                         accept="image/*"
                         multiple

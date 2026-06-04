@@ -1,4 +1,4 @@
-// app/feature-product/[id]/page.tsx (Server Component)
+﻿// app/feature-product/[id]/page.tsx (Server Component)
 import { notFound } from 'next/navigation'
 import FeatureProductDetailClient from './FeatureProductDetailClient'
 

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import type React from "react"
 import { useState } from "react"
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ENDPOINTS, jsonHeaders } from "@/lib/api"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -21,12 +22,9 @@ export default function ForgotPasswordPage() {
     setError("")
 
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/auth/forgot-password", {
+      const response = await fetch(ENDPOINTS.forgotPassword, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
+        headers: jsonHeaders,
         body: JSON.stringify({ email })
       })
 

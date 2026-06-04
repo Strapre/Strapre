@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import type React from "react"
 
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Footer from "@/components/footer"
 import { ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { ENDPOINTS, jsonHeaders } from "@/lib/api"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -38,16 +39,10 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/auth/login", {
+      const response = await fetch(ENDPOINTS.login, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+        headers: jsonHeaders,
+        body: JSON.stringify({ email, password }),
       })
 
       const data = await response.json()

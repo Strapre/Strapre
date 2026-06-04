@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import { ENDPOINTS } from "@/lib/api"
 
 interface UserProfile {
   id: string
@@ -219,7 +220,7 @@ export default function EditStoreRequestPage() {
   const fetchStates = async () => {
     setLoadingStates(true)
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/states", {
+      const response = await fetch(ENDPOINTS.states, {
         headers: {
           Accept: "application/json",
         },
@@ -239,7 +240,7 @@ export default function EditStoreRequestPage() {
   const fetchLGAs = async (stateSlug: string) => {
     setLoadingLGAs(true)
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`, {
+      const response = await fetch(ENDPOINTS.lgasByState(stateSlug), {
         headers: {
           Accept: "application/json",
         },
@@ -457,7 +458,7 @@ export default function EditStoreRequestPage() {
       // Console log for debugging
       console.log("=== REQUESTING STORE UPDATE ===")
       console.log("Token:", token)
-      console.log("Endpoint:", `https://api.strapre.com/api/v1/stores/${storeSlug}`)
+      console.log("Endpoint:", ENDPOINTS.editStore(storeSlug))
       console.log("Form Data Contents:")
       for (const [key, value] of formData.entries()) {
         if (value instanceof File) {
@@ -471,7 +472,7 @@ export default function EditStoreRequestPage() {
         }
       }
 
-      const response = await fetch(`https://api.strapre.com/api/v1/stores/${storeSlug}`, {
+      const response = await fetch(ENDPOINTS.editStore(storeSlug), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

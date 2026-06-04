@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
+import { ENDPOINTS, authHeaders, authJsonHeaders, IMAGE_BASE_URL } from "@/lib/api"
 
 interface ProductImage {
   id: string
@@ -232,11 +233,8 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   // Update the fetchUserStore function
   const fetchUserStore = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/mystore", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+      const response = await fetch(ENDPOINTS.myStore, {
+        headers: authHeaders(token),
       });
 
       if (response.ok) {
@@ -249,37 +247,30 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
             localStorage.setItem("userStore", JSON.stringify(data));
           }
         } else {
-          setIsMerchant(false); // Explicitly mark as not a merchant if empty
+          setIsMerchant(false);
         }
       } else {
-        // If request fails, user is not a merchant
         setIsMerchant(false);
       }
     } catch (error) {
       console.error("Error fetching user store:", error);
-      setIsMerchant(false); // Set to false on error
+      setIsMerchant(false);
     } finally {
-      // Mark merchant check as complete
       setMerchantCheckComplete(true);
     }
   }
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/auth/get-profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json"
-        },
+      const response = await fetch(ENDPOINTS.getProfile, {
+        headers: authHeaders(token),
       })
       const data = await response.json()
       if (response.ok) {
         setUserProfile(data.data)
-        // Store in localStorage
         if (typeof window !== "undefined") {
           localStorage.setItem("userDetails", JSON.stringify(data.data))
         }
-        // Check if profile is incomplete (first_name is null)
         if (!data.data.first_name) {
           router.push("/complete-profile")
           return
@@ -292,14 +283,9 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/states", {
-        headers: {
-          Accept: "application/json",
-        },
-      })
+      const response = await fetch(ENDPOINTS.states)
       if (response.ok) {
         const data: ApiResponse<State[]> = await response.json()
-        // Sort states alphabetically by name
         const sortedStates = data.data.sort((a, b) => a.name.localeCompare(b.name))
         setStates(sortedStates)
       }
@@ -310,14 +296,9 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
   const fetchLGAs = async (stateSlug: string) => {
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/states/${stateSlug}/lgas`, {
-        headers: {
-          Accept: "application/json",
-        },
-      })
+      const response = await fetch(ENDPOINTS.lgasByState(stateSlug))
       if (response.ok) {
         const data: ApiResponse<LGA[]> = await response.json()
-        // Sort LGAs alphabetically by name
         const sortedLGAs = data.data.sort((a, b) => a.name.localeCompare(b.name))
         setLgas(sortedLGAs)
       }
@@ -329,20 +310,14 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   const fetchProduct = async (slug: string) => {
     setLoading(true)
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/products/${slug}`, {
-        headers: {
-          Accept: "application/json",
-        },
-      })
+      const response = await fetch(ENDPOINTS.productBySlug(slug))
 
       if (response.ok) {
         const data: ApiResponse<Product> = await response.json()
         setProduct(data.data)
-        // Set reviews if available
         if (data.data.reviews) {
           setReviews(data.data.reviews)
         }
-        // Fetch similar products
         fetchSimilarProducts(data.data.name, data.data.id)
       } else {
         setError("Product not found")
@@ -357,20 +332,10 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   const fetchSimilarProducts = async (productName: string, currentProductId: string) => {
     setSimilarProductsLoading(true)
     try {
-      // Create search parameters
-      const params = new URLSearchParams({
-        search: productName,
-        limit: '6' // Get 6 to exclude current product and show 5
-      })
-
-      const response = await fetch(`https://api.strapre.com/api/v1/products/search?${params.toString()}`, {
-        headers: {
-          Accept: "application/json",
-        },
-      })
+      const params = new URLSearchParams({ search: productName, limit: '6' })
+      const response = await fetch(`${ENDPOINTS.searchProducts}?${params.toString()}`)
       if (response.ok) {
         const data: SimilarProductsResponse = await response.json()
-        // Filter out the current product and limit to 5
         const filteredProducts = data.data
           .filter(product => product.id !== currentProductId)
           .slice(0, 5)
@@ -385,15 +350,11 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
   const fetchWishlist = async (token: string) => {
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+      const response = await fetch(ENDPOINTS.wishlist, {
+        headers: authHeaders(token),
       })
       if (response.ok) {
         const data = await response.json()
-        // Assuming the API returns an array of wishlist items with product_id
         const productIds = data.data?.map((item: any) => item.product_id) || []
         setWishlistItems(productIds)
       }
@@ -411,13 +372,9 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
     setWishlistLoading((prev) => [...prev, productId])
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/wishlist", {
+      const response = await fetch(ENDPOINTS.wishlist, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
+        headers: authJsonHeaders(token),
         body: JSON.stringify({ product_id: productId }),
       })
       if (response.ok) {
@@ -436,12 +393,9 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
     setWishlistLoading((prev) => [...prev, productId])
     try {
-      const response = await fetch(`https://api.strapre.com/api/v1/wishlist/${productId}`, {
+      const response = await fetch(ENDPOINTS.removeWishlist(productId), {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
+        headers: authHeaders(token),
       })
       if (response.ok) {
         setWishlistItems((prev) => prev.filter((id) => id !== productId))
@@ -466,13 +420,9 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
     setReviewLoading(true)
     try {
-      const response = await fetch("https://api.strapre.com/api/v1/reviews", {
+      const response = await fetch(ENDPOINTS.reviews(product.id), {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
+        headers: authJsonHeaders(token),
         body: JSON.stringify({
           product_id: product.id,
           rating: reviewRating,
@@ -540,7 +490,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   const getCorrectImageUrl = (url: string) => {
     if (!url) return "/placeholder.svg"
     const cleanUrl = String(url).trim()
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.strapre.com"
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || IMAGE_BASE_URL
 
     if (/^https?:\/\//i.test(cleanUrl)) {
       if (cleanUrl.includes("www.api.strapre.com")) {
@@ -609,6 +559,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   }
 
   const handleShare = async () => {
+    if (!product) return
     const shareData = {
       title: product.name,
       text: `Check out this ${product.name} on Strapre`,
@@ -631,6 +582,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   }
 
   const shareToSocial = (platform: string) => {
+    if (!product) return
     const currentUrl = typeof window !== "undefined" ? window.location.href : ""
     const shareText = `Check out this ${product.name} on Strapre`
 
