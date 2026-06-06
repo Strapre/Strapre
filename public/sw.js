@@ -6,6 +6,11 @@ self.addEventListener("install", (event) => {
 })
 
 self.addEventListener("fetch", (event) => {
+  // Only intercept GET requests to the same origin
+  if (event.request.method !== "GET" || !event.request.url.startsWith(self.location.origin)) {
+    return
+  }
+
   event.respondWith(
     caches.match(event.request).then((response) => {
       if (response) {
