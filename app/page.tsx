@@ -238,7 +238,7 @@ function HomePage() {
   const fetchAdverts = async () => {
     try {
       setAdvertsLoading(true)
-      const response = await fetch("/adverts/dummy", {
+      const response = await fetch(ENDPOINTS.advertsDummy, {
         headers: {
           Accept: "application/json",
         },
