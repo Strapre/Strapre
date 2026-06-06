@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -9,29 +9,39 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
 }
 
+declare global {
+  interface Window {
+    deferredPrompt?: BeforeInstallPromptEvent | null
+  }
+}
+
 export default function InstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showInstallPrompt, setShowInstallPrompt] = useState(false)
 
   useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault()
-      setDeferredPrompt(e as BeforeInstallPromptEvent)
+    // Check if the prompt is already deferred globally
+    if (window.deferredPrompt) {
       setShowInstallPrompt(true)
     }
 
-    window.addEventListener("beforeinstallprompt", handler)
+    const handler = () => {
+      setShowInstallPrompt(true)
+    }
+
+    // Listen to the custom event dispatched by the head script
+    window.addEventListener("pwa-install-prompt-available", handler)
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handler)
+      window.removeEventListener("pwa-install-prompt-available", handler)
     }
   }, [])
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return
+    const promptEvent = window.deferredPrompt
+    if (!promptEvent) return
 
-    deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
+    promptEvent.prompt()
+    const { outcome } = await promptEvent.userChoice
 
     if (outcome === "accepted") {
       console.log("User accepted the install prompt")
@@ -39,7 +49,7 @@ export default function InstallPrompt() {
       console.log("User dismissed the install prompt")
     }
 
-    setDeferredPrompt(null)
+    window.deferredPrompt = null
     setShowInstallPrompt(false)
   }
 

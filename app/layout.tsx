@@ -1,7 +1,9 @@
-﻿import type React from "react"
+import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import RegisterSW from "./register-sw"
+import InstallPrompt from "./install-prompt"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -60,8 +62,23 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
         <meta name="msapplication-TileColor" content="#dc2626" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                window.deferredPrompt = e;
+                window.dispatchEvent(new CustomEvent('pwa-install-prompt-available'));
+              });
+            `,
+          }}
+        />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+        <RegisterSW />
+        <InstallPrompt />
+      </body>
     </html>
   )
 }

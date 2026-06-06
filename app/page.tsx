@@ -10,8 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
-import RegisterSW from "./register-sw"
-import InstallPrompt from "./install-prompt"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ENDPOINTS, authHeaders, authJsonHeaders, IMAGE_BASE_URL, getCorrectImageUrl } from "@/lib/api"
@@ -100,8 +98,9 @@ interface Advert {
   link: string
   starts_at: string
   ends_at: string
-  image_media_url: string
-  is_dummy: number
+  image_media_url?: string
+  image_url?: string | null
+  is_dummy?: number
 }
 
 interface ApiResponse<T> {
@@ -664,7 +663,7 @@ function HomePage() {
     return (
       <div
         className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[145px] md:h-[400px] transition-all duration-500 cursor-pointer"
-        style={{ backgroundImage: `url(${getCorrectImageUrl(currentAdvert.image_media_url)})` }}
+        style={{ backgroundImage: `url(${getCorrectImageUrl(currentAdvert.image_media_url || currentAdvert.image_url)})` }}
         onClick={() => handleAdvertClick(currentAdvert)}
       >
         {/* Black overlay */}
@@ -1129,11 +1128,5 @@ function HomePage() {
 }
 
 export default function Page() {
-  return (
-    <>
-      <HomePage />
-      <RegisterSW />
-      <InstallPrompt />
-    </>
-  )
+  return <HomePage />
 }
