@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
 import Link from "next/link"
-import { ENDPOINTS, authHeaders } from "@/lib/api"
+import { ENDPOINTS, authHeaders, getCorrectImageUrl } from "@/lib/api"
 
 interface UserProfile {
   id: string
@@ -235,7 +235,7 @@ export default function MyStorePage() {
                     <div className="w-40 h-40 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-lg ring-4 ring-white">
                       {storeData.store_image ? (
                         <img
-                          src={storeData.store_image || "/placeholder.svg"}
+                          src={getCorrectImageUrl(storeData.store_image)}
                           alt={storeData.store_name}
                           className="w-full h-full object-cover"
                         />

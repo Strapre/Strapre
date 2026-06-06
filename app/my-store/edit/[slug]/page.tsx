@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
-import { ENDPOINTS } from "@/lib/api"
+import { ENDPOINTS, getCorrectImageUrl } from "@/lib/api"
 
 interface UserProfile {
   id: string
@@ -586,7 +586,7 @@ export default function EditStoreRequestPage() {
                         />
                       ) : currentStoreImageUrl ? (
                         <img
-                          src={currentStoreImageUrl || "/placeholder.svg"}
+                          src={getCorrectImageUrl(currentStoreImageUrl)}
                           alt="Current store image"
                           className="h-full w-full object-cover rounded-full opacity-75"
                         />

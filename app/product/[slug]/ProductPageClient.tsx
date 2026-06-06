@@ -1041,7 +1041,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 <Avatar className="h-14 w-14 ring-2 ring-gray-100">
                   {product.store.store_image ? (
                     <Image
-                      src={product.store.store_image || "/placeholder.svg"}
+                      src={getCorrectImageUrl(product.store.store_image)}
                       alt={product.store.name}
                       width={56}
                       height={56}
