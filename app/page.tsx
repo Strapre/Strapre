@@ -666,14 +666,7 @@ function HomePage() {
         style={{ backgroundImage: `url(${getCorrectImageUrl(currentAdvert.image_media_url || currentAdvert.image_url)})` }}
         onClick={() => handleAdvertClick(currentAdvert)}
       >
-        {/* Black overlay */}
-        <div className="absolute inset-0 bg-black/10 z-0"></div>
 
-        {/* Content */}
-        <div className="relative z-10 mt-4">
-          <h1 className="text-white text-xl md:text-4xl font-bold mb-2">{currentAdvert.title}</h1>
-
-        </div>
 
         {/* Navigation Arrows */}
         {adverts && adverts.length > 1 && (
