@@ -99,7 +99,11 @@ export default function VerifyOTPPage() {
 
       if (response.ok) {
         // Store the token as auth token
-        localStorage.setItem("auth_token", token)
+        if (data.token) {
+          localStorage.setItem("auth_token", data.token)
+        } else {
+          localStorage.setItem("auth_token", token)
+        }
         // Redirect to home page
         router.push("/complete-profile")
       } else {
