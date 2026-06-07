@@ -521,14 +521,18 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
         return cleanPhone
       }
 
-      const formattedPhoneNumber = formatPhoneForWhatsApp(product.store.phone_number)
+      const formattedPhoneNumber = product.store?.phone_number 
+        ? formatPhoneForWhatsApp(product.store.phone_number) 
+        : ""
 
       // Create WhatsApp URL with message and page URL
       const messageWithPageUrl = `${message}\n\n${currentPageUrl}`
       const whatsappUrl = `https://wa.me/${formattedPhoneNumber}?text=${encodeURIComponent(messageWithPageUrl)}`
 
-      window.open(whatsappUrl, "_blank")
-    } else if (action === "call") {
+      if (formattedPhoneNumber) {
+        window.open(whatsappUrl, "_blank")
+      }
+    } else if (action === "call" && product.store?.phone_number) {
       window.location.href = `tel:${product.store.phone_number}`
     }
   }
@@ -785,9 +789,9 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
           </h3>
 
           <div className="flex items-center space-x-1 text-xs text-gray-500">
-            <span>{product.store.store_lga}</span>
+            <span>{product.store?.store_lga || "N/A"}</span>
             <span>•</span>
-            <span>{product.store.store_state}</span>
+            <span>{product.store?.store_state || "N/A"}</span>
           </div>
 
           <div className="space-y-1">
@@ -798,21 +802,21 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
           <div className="flex items-center space-x-2">
             <Avatar className="h-6 w-6">
-              {product.store.store_image ? (
+              {product.store?.store_image ? (
                 <Image
                   src={getCorrectImageUrl(product.store.store_image)}
-                  alt={product.store.name}
+                  alt={product.store.name || "Store"}
                   width={24}
                   height={24}
                   className="object-cover"
                 />
               ) : (
                 <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                  {product.store.name.charAt(0)}
+                  {product.store?.name?.charAt(0) || "S"}
                 </AvatarFallback>
               )}
             </Avatar>
-            <span className="text-xs text-gray-600 truncate">{product.store.name}</span>
+            <span className="text-xs text-gray-600 truncate">{product.store?.name || "N/A"}</span>
           </div>
         </div>
       </div>
@@ -1001,7 +1005,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                   </span>
                   <span>•</span>
                   <span>
-                    {product.store.store_lga}, {product.store.store_state}
+                    {product.store?.store_lga || "N/A"}, {product.store?.store_state || "N/A"}
                   </span>
                 </div>
 
@@ -1039,27 +1043,27 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
               <div className="flex items-start space-x-4">
                 <Avatar className="h-14 w-14 ring-2 ring-gray-100">
-                  {product.store.store_image ? (
+                  {product.store?.store_image ? (
                     <Image
                       src={getCorrectImageUrl(product.store.store_image)}
-                      alt={product.store.name}
+                      alt={product.store.name || "Store"}
                       width={56}
                       height={56}
                       className="object-cover"
                     />
                   ) : (
                     <AvatarFallback className="bg-red-100 text-red-600 text-lg font-semibold">
-                      {product.store.name.charAt(0)}
+                      {product.store?.name?.charAt(0) || "S"}
                     </AvatarFallback>
                   )}
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
-                    <h3 className="text-lg font-semibold text-gray-900 truncate">{product.store.name}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 truncate">{product.store?.name || "N/A"}</h3>
                     <div className="h-2 w-2 bg-green-400 rounded-full"></div>
                   </div>
                   <p className="text-sm text-gray-500 mb-2">
-                    📍 {product.store.store_lga}, {product.store.store_state}
+                    📍 {product.store?.store_lga || "N/A"}, {product.store?.store_state || "N/A"}
                   </p>
                 </div>
               </div>

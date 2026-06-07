@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
@@ -384,7 +384,7 @@ export default function WishlistPage() {
                               </div>
                               <p className="text-gray-500 text-xs flex items-center">
                                 <MapPin className="h-3 w-3 mr-1" />
-                                {item.product.store.store_lga || "N/A"}, {item.product.store.store_state || "N/A"}
+                                {item.product.store?.store_lga || "N/A"}, {item.product.store?.store_state || "N/A"}
                               </p>
                             </CardContent>
                           </Card>

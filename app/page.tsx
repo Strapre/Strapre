@@ -835,7 +835,7 @@ function HomePage() {
                             </div>
                             <p className="text-gray-500 text-xs flex items-center">
                               <MapPin className="h-3 w-3 mr-1" />
-                              {product.store.store_lga || "N/A"}, {product.store.store_state || "N/A"}
+                              {product.store?.store_lga || "N/A"}, {product.store?.store_state || "N/A"}
                             </p>
                             <div className="flex items-center gap-0 mt-2">
                               {Array.from({ length: 5 }, (_, i) => {
@@ -858,7 +858,7 @@ function HomePage() {
                             </div>
                             <p className="text-gray-500 text-xs flex items-center mt-2 space-x-1">
                               <span>Store:</span>
-                              <span>{product.store.name || "N/A"}</span>
+                              <span>{product.store?.name || "N/A"}</span>
                             </p>
                           </CardContent>
                         </Card>

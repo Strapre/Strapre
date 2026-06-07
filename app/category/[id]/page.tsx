@@ -875,7 +875,7 @@ export default function CategoryPage() {
                         </div>
                         <p className="text-gray-500 text-xs flex items-center">
                           <MapPin className="h-3 w-3 mr-1" />
-                          {product.store.store_lga || "N/A"}, {product.store.store_state || "N/A"}
+                          {product.store?.store_lga || "N/A"}, {product.store?.store_state || "N/A"}
                         </p>
                       </CardContent>
                     </Card>

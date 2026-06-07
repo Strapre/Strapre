@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const productPrice = formatPrice(product.price)
     const productImage = product.images[0]?.url || "/placeholder.svg"
-    const storeLocation = `${product.store.store_lga}, ${product.store.store_state}`
+    const storeLocation = `${product.store?.store_lga || ""}, ${product.store?.store_state || ""}`
     const description = `${product.description.substring(0, 200)}... Available in ${storeLocation}`
 
     return {
