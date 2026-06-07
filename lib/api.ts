@@ -135,14 +135,21 @@ export function getCorrectImageUrl(url: string | null | undefined): string {
   if (!url) return "/placeholder.svg"
   const cleanUrl = String(url).trim()
 
+  if (cleanUrl.startsWith("data:")) return cleanUrl
+
   const isInternal = /^(https?:\/\/)?(www\.)?(api\.strapre\.com|localhost:5000|127\.0\.0\.1:5000)/i.test(cleanUrl)
   const isRelative = !/^https?:\/\//i.test(cleanUrl)
 
+  let finalUrl = cleanUrl
   if (isInternal || isRelative) {
     const path = cleanUrl.replace(/^(https?:\/\/)?(www\.)?(api\.strapre\.com|localhost:5000|127\.0\.0\.1:5000)/i, "")
     const normalizedPath = path.startsWith("/") ? path : `/${path}`
-    return `${IMAGE_BASE_URL}${normalizedPath}`
+    finalUrl = `${IMAGE_BASE_URL}${normalizedPath}`
   }
 
-  return cleanUrl
+  // Add a version query parameter to bust any browser-cached CORS/CORP errors from previous server states
+  if (finalUrl.includes("?")) {
+    return `${finalUrl}&v=2`
+  }
+  return `${finalUrl}?v=2`
 }
