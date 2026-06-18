@@ -13,6 +13,8 @@ import {
   Settings,
   User,
   LogOut,
+  ChevronRight,
+  Store,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -72,10 +74,21 @@ function ProfilePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [wishlistItems, setWishlistItems] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
 
   // Helper function to get userStore data from localStorage
   const getUserStoreData = () => {
+    if (typeof window === "undefined") return null
     const storedUserStore = localStorage.getItem("userStore")
     if (!storedUserStore) return null
     
@@ -211,10 +224,164 @@ function ProfilePage() {
     // Placeholder function for LGA change
   }
 
-  if (loading) {
+  if (isMobile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#CB0207] border-t-transparent"></div>
+      <div className="min-h-screen bg-slate-50 flex flex-col pb-8">
+        {/* Modern mobile header */}
+        <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 py-4 flex items-center justify-between shadow-sm">
+          <button onClick={() => router.push("/")} className="text-gray-700 hover:text-gray-900 transition-colors">
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <h1 className="text-base font-bold text-gray-900 tracking-tight">My Profile</h1>
+          <button onClick={() => router.push("/edit-profile")} className="text-gray-700 hover:text-[#CB0207] transition-colors">
+            <Settings className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Scrollable Container */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+          {/* User Hero section */}
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
+            {/* Red accent glow */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#CB0207] to-[#A50206]" />
+
+            <Avatar className="h-20 w-20 ring-4 ring-red-50 hover:scale-105 transition-transform duration-300">
+              <AvatarImage src={getCorrectImageUrl(userProfile?.profile_picture)} />
+              <AvatarFallback className="bg-gradient-to-br from-[#CB0207] to-[#A50206] text-white font-bold text-xl">
+                {getUserInitials()}
+              </AvatarFallback>
+            </Avatar>
+
+            <h2 className="text-xl font-extrabold text-gray-900 mt-4 tracking-tight">
+              {userProfile?.first_name} {userProfile?.last_name}
+            </h2>
+            <p className="text-sm text-gray-500 font-medium mt-1">{userProfile?.email}</p>
+
+            {hasUserStoreData() ? (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-[#CB0207] border border-red-100 mt-3">
+                <Store className="h-3.5 w-3.5 mr-1" />
+                Merchant Partner
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-50 text-gray-600 border border-gray-200 mt-3">
+                <User className="h-3.5 w-3.5 mr-1" />
+                Customer
+              </span>
+            )}
+
+            {/* Quick stats grid */}
+            <div className="grid grid-cols-3 gap-2 w-full mt-6 pt-5 border-t border-gray-100">
+              <div className="flex flex-col items-center">
+                <Heart className="h-4.5 w-4.5 text-[#CB0207] mb-1" />
+                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Wishlist</span>
+                <span className="text-xs font-bold text-gray-800 mt-0.5">{wishlistItems.length} items</span>
+              </div>
+              <div className="flex flex-col items-center border-x border-gray-100">
+                <Calendar className="h-4.5 w-4.5 text-blue-500 mb-1" />
+                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Joined</span>
+                <span className="text-xs font-bold text-gray-800 mt-0.5">
+                  {userProfile?.created_at ? new Date(userProfile.created_at).getFullYear() : "N/A"}
+                </span>
+              </div>
+              <div className="flex flex-col items-center">
+                <Settings className="h-4.5 w-4.5 text-green-500 mb-1" />
+                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Status</span>
+                <span className="text-xs font-bold text-green-600 mt-0.5">Active</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Settings list */}
+          <div className="space-y-2">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">Quick Actions</h3>
+            <div className="bg-white border border-gray-100 rounded-3xl p-2 shadow-sm space-y-0.5">
+              <button
+                onClick={() => router.push("/edit-profile")}
+                className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center space-x-3 text-gray-700">
+                  <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center text-[#CB0207]">
+                    <Edit className="h-4.5 w-4.5" />
+                  </div>
+                  <span className="text-sm font-semibold">Edit Profile</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </button>
+
+              <button
+                onClick={() => {
+                  if (hasUserStoreData()) {
+                    router.push("/my-store")
+                  } else {
+                    router.push("/create-store")
+                  }
+                }}
+                className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center space-x-3 text-gray-700">
+                  <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
+                    <Store className="h-4.5 w-4.5" />
+                  </div>
+                  <span className="text-sm font-semibold">
+                    {hasUserStoreData() ? "My Store Hub" : "Become a Merchant"}
+                  </span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </button>
+
+              <button
+                onClick={() => router.push("/wishlist")}
+                className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center space-x-3 text-gray-700">
+                  <div className="w-8 h-8 rounded-xl bg-pink-50 flex items-center justify-center text-pink-600">
+                    <Heart className="h-4.5 w-4.5" />
+                  </div>
+                  <span className="text-sm font-semibold">My Wishlist</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {wishlistItems.length > 0 && (
+                    <span className="bg-pink-100 text-pink-600 text-xs font-bold px-2 py-0.5 rounded-full">
+                      {wishlistItems.length}
+                    </span>
+                  )}
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                </div>
+              </button>
+
+              <button
+                onClick={handleContactSupport}
+                className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center space-x-3 text-gray-700">
+                  <div className="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
+                    <MessageCircle className="h-4.5 w-4.5" />
+                  </div>
+                  <span className="text-sm font-semibold">Contact WhatsApp Support</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </button>
+            </div>
+          </div>
+
+          {/* Log Out button */}
+          <div className="pt-2">
+            <button
+              onClick={() => {
+                localStorage.clear()
+                setIsAuthenticated(false)
+                setUserProfile(null)
+                setUserStore(null)
+                setWishlistItems([])
+                router.push("/login")
+              }}
+              className="w-full flex items-center justify-center space-x-2 py-4 bg-red-50 active:bg-red-100 text-red-600 hover:text-red-700 font-semibold rounded-2xl border border-red-100 shadow-sm transition-all duration-200"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Log Out</span>
+            </button>
+          </div>
+        </div>
       </div>
     )
   }

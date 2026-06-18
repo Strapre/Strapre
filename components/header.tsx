@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Search, Menu, ChevronDown, ChevronRight, Heart, User, LogOut, WifiOff, X, Bell } from "lucide-react"
+import { Search, Menu, ChevronDown, ChevronRight, Heart, User, LogOut, WifiOff, X, Bell, Play, LayoutGrid } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -76,6 +76,8 @@ interface HeaderProps {
   selectedLGA?: LGA | null
   onStateChange?: (state: State | null) => void
   onLGAChange?: (lga: LGA | null) => void
+  viewMode?: "feed" | "grid" | null
+  onViewModeChange?: (mode: "feed" | "grid") => void
 }
 
 // Network Error Popup Component
@@ -128,6 +130,8 @@ export default function Header({
   selectedLGA = null,
   onStateChange,
   onLGAChange,
+  viewMode = null,
+  onViewModeChange,
 }: HeaderProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [states, setStates] = useState<State[]>([])
@@ -678,8 +682,23 @@ export default function Header({
           </div>
 
           {/* Mobile Search Bar */}
-          <div className="md:hidden pb-4">
-            <div className="relative">
+          <div className="md:hidden pb-4 flex items-center space-x-2">
+            {onViewModeChange && viewMode !== null && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => onViewModeChange(viewMode === "feed" ? "grid" : "feed")}
+                className="h-10 w-10 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-700 active:scale-95 transition-all shadow-sm"
+                title={viewMode === "feed" ? "Classic Grid view" : "TikTok Feed view"}
+              >
+                {viewMode === "feed" ? (
+                  <LayoutGrid className="h-4.5 w-4.5 text-[#CB0207]" />
+                ) : (
+                  <Play className="h-4.5 w-4.5 text-[#CB0207] fill-[#CB0207]" />
+                )}
+              </Button>
+            )}
+            <div className="relative flex-1">
               <Input
                 type="text"
                 placeholder="What are you looking for?"

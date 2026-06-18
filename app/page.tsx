@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
-import { Filter, ChevronRight, Heart, X, MapPin, DollarSign, Star, ChevronLeft } from "lucide-react"
+import { Filter, ChevronRight, Heart, X, MapPin, DollarSign, Star, ChevronLeft, Share2, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -56,6 +56,7 @@ interface Product {
   price: string
   wholesale_price: string
   images: ProductImage[]
+  video_url?: string | null
   store: ProductStore
   created_at: string
   is_featured: number
@@ -126,6 +127,36 @@ interface ApiResponse<T> {
   }
 }
 
+interface TikTokVideoPlayerProps {
+  src: string
+  isActive: boolean
+}
+
+function TikTokVideoPlayer({ src, isActive }: TikTokVideoPlayerProps) {
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+
+  useEffect(() => {
+    if (!videoRef.current) return
+    if (isActive) {
+      videoRef.current.play().catch((err) => console.log("Autoplay blocked:", err))
+    } else {
+      videoRef.current.pause()
+      videoRef.current.currentTime = 0
+    }
+  }, [isActive])
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      muted
+      loop
+      playsInline
+      className="w-full h-full object-contain"
+    />
+  )
+}
+
 function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
@@ -161,6 +192,60 @@ function HomePage() {
   const [wishlistLoading, setWishlistLoading] = useState<string[]>([])
   const [adverts, setAdverts] = useState<Advert[]>([])
   const [advertsLoading, setAdvertsLoading] = useState(true)
+
+  // Mobile/Feed states
+  const [isMobile, setIsMobile] = useState(false)
+  const [viewMode, setViewMode] = useState<"feed" | "grid" | null>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [activeImageIndices, setActiveImageIndices] = useState<Record<string, number>>({})
+  const touchStartRef = useRef({ x: 0, y: 0 })
+  const isHorizontalSwipeRef = useRef(false)
+
+  const handleHorizontalScroll = (productId: string, e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget
+    const index = Math.round(container.scrollLeft / container.clientWidth)
+    setActiveImageIndices((prev) => ({ ...prev, [productId]: index }))
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    }
+    isHorizontalSwipeRef.current = false
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const diffX = e.touches[0].clientX - touchStartRef.current.x
+    const diffY = e.touches[0].clientY - touchStartRef.current.y
+
+    if (isHorizontalSwipeRef.current || Math.abs(diffX) > Math.abs(diffY) + 5) {
+      isHorizontalSwipeRef.current = true
+      e.stopPropagation()
+    }
+  }
+
+  const showToastMessage = (message: string) => {
+    setToastMessage(message)
+    setTimeout(() => {
+      setToastMessage(null)
+    }, 2500)
+  }
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  useEffect(() => {
+    setViewMode(isMobile ? "feed" : "grid")
+  }, [isMobile])
 
 
 
@@ -501,6 +586,9 @@ function HomePage() {
     } = {},
   ) => {
     setLoading(true)
+    if (page === 1) {
+      setActiveIndex(0)
+    }
     try {
       const params = new URLSearchParams()
       params.append("page", page.toString())
@@ -512,6 +600,7 @@ function HomePage() {
       const url = `${ENDPOINTS.searchProducts}?${params.toString()}`
       const response = await fetch(url)
       const data: ApiResponse<Product> = await response.json()
+      console.log("=== SEARCH PRODUCTS RESPONSE ===", data)
       setProducts(Array.isArray(data.data) ? data.data : [])
       if (data.meta) {
         setCurrentPage(data.meta.current_page)
@@ -527,6 +616,9 @@ function HomePage() {
 
   const fetchProducts = async (page = 1) => {
     setLoading(true)
+    if (page === 1) {
+      setActiveIndex(0)
+    }
     try {
       const params = new URLSearchParams({ page: page.toString() })
       if (selectedState) params.append("state_id", selectedState.id)
@@ -534,6 +626,7 @@ function HomePage() {
 
       const response = await fetch(`${ENDPOINTS.products}?${params.toString()}`)
       const data: ApiResponse<Product> = await response.json()
+      console.log("=== FETCH PRODUCTS RESPONSE ===", data)
       setProducts(Array.isArray(data.data) ? data.data : [])
       if (data.meta) {
         setCurrentPage(data.meta.current_page)
@@ -544,6 +637,62 @@ function HomePage() {
       console.error("Error fetching products:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadNextPage = async () => {
+    if (loadingMore || currentPage >= totalPages) return
+    setLoadingMore(true)
+    try {
+      const nextPage = currentPage + 1
+      const params = new URLSearchParams({ page: nextPage.toString() })
+      
+      let url = ""
+      if (isSearchActive) {
+        if (searchQuery.trim()) params.append("search", searchQuery.trim())
+        if (minAmount) params.append("min_price", minAmount)
+        if (maxAmount) params.append("max_price", maxAmount)
+        if (isAuthenticated && useUserLocation && userProfile?.state_id) {
+          params.append("state_id", userProfile.state_id)
+        } else if (filterState) {
+          params.append("state_id", filterState)
+        }
+        url = `${ENDPOINTS.searchProducts}?${params.toString()}`
+      } else {
+        if (selectedState) params.append("state_id", selectedState.id)
+        if (selectedLGA) params.append("lga_id", selectedLGA.id)
+        url = `${ENDPOINTS.products}?${params.toString()}`
+      }
+
+      const response = await fetch(url)
+      if (response.ok) {
+        const data: ApiResponse<Product> = await response.json()
+        console.log("=== LOAD NEXT PAGE RESPONSE ===", data)
+        const newProducts = Array.isArray(data.data) ? data.data : []
+        if (newProducts.length > 0) {
+          setProducts((prev) => [...prev, ...newProducts])
+        }
+        if (data.meta) {
+          setCurrentPage(data.meta.current_page)
+        }
+      }
+    } catch (error) {
+      console.error("Error loading next page for TikTok feed:", error)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
+  const handleTikTokScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget
+    const index = Math.round(container.scrollTop / container.clientHeight)
+    if (index !== activeIndex) {
+      setActiveIndex(index)
+    }
+    
+    const threshold = container.scrollHeight - container.clientHeight * 1.5
+    if (container.scrollTop >= threshold && currentPage < totalPages && !loadingMore) {
+      loadNextPage()
     }
   }
 
@@ -713,7 +862,9 @@ function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className={`bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col relative ${
+      isMobile && viewMode === "feed" ? "h-dvh overflow-hidden" : "min-h-screen"
+    }`}>
       {/* Header Component */}
       <Header
         searchQuery={searchQuery}
@@ -724,236 +875,502 @@ function HomePage() {
         selectedLGA={selectedLGA}
         onStateChange={handleStateChange}
         onLGAChange={handleLGAChange}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
-      <div
-        className={`${isAuthenticated ? "w-full md:w-[90%] md:max-w-[1750px]" : "w-full md:w-[90%] md:max-w-[1750px]"
-          } mx-auto px-2 sm:px-6 lg:px-8 py-6`}
-      >
-        <div className="flex gap-6">
-          {/* Sidebar - Desktop Only */}
-          <aside className="hidden md:block w-72">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-24">
-              <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
-              <div className="space-y-1">
-                {(categories || []).slice(0, 20).map((category) => (
-                  <Link
-                    key={category.id}
-                    href={`/category/${category.id}`}
-                    className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
+
+      {/* Toast Message notification popup */}
+      {toastMessage && (
+        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[9999] bg-black/85 text-white px-4 py-2 rounded-xl text-sm shadow-xl animate-in fade-in slide-in-from-top-4 duration-300">
+          {toastMessage}
+        </div>
+      )}
+
+      {/* Main Content Layout */}
+      {isMobile && viewMode === "feed" ? (
+        /* TikTok style feed on Mobile */
+        <div 
+          className="w-full bg-black relative overflow-hidden flex-1" 
+          style={{ height: "calc(100dvh - 7.5rem)" }}
+        >
+
+          {loading && products.length === 0 ? (
+            <div className="flex h-full items-center justify-center bg-gray-950">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#CB0207] border-t-transparent"></div>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="flex h-full items-center justify-center bg-gray-950 text-gray-400 px-4 text-center">
+              <div>
+                <p className="text-lg font-semibold mb-2">No products found</p>
+                <p className="text-sm mb-4">Try clearing filters or checking other states.</p>
+                {isSearchActive && (
+                  <Button
+                    variant="outline"
+                    className="border-[#CB0207] text-[#CB0207] hover:bg-[#CB0207] hover:text-white"
+                    onClick={returnToAllProducts}
                   >
-                    <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
-                      {category.name}
-                    </span>
-                    <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
-                  </Link>
-                ))}
-                {categories.length > 20 && (
-                  <div className="py-3 px-4 text-sm text-[#CB0207] cursor-pointer font-medium hover:bg-gray-50 rounded-xl transition-all duration-200">
-                    See More
-                  </div>
+                    Reset Search
+                  </Button>
                 )}
               </div>
             </div>
-          </aside>
-          {/* Main Content */}
-          <main className="flex-1">
-            {/* Hero Section */}
-            {renderHeroSection()}
-
-            {/* Products Section */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 md:p-8">
-              <div className="flex items-center justify-between mb-4 md:mb-8">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-                    {isAuthenticated ? "Products" : "🔥 Hot Sales"}
-                  </h2>
-                  {isSearchActive && (
-                    <Button
-                      variant="outline"
-                      className="flex items-center gap-2 border-2 border-[#CB0207] text-[8px] md:text-[12px] text-[#CB0207] hover:bg-[#CB0207] hover:text-white rounded-xl px-2 py-2 font-medium transition-all duration-300 bg-transparent"
-                      onClick={returnToAllProducts}
-                    >
-                      <ChevronLeft className="h-[5px] md:h-4 w-[5px] md:w-4" />
-                      Back to All Products
-                    </Button>
-                  )}
-                </div>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2 border-[2] border-gray-60 text-black hover:bg-[#CB0207] hover:text-white rounded-xl px-3 py-2 font-medium transition-all duration-300 bg-transparent"
-                  onClick={() => setShowFilterDialog(true)}
+          ) : (
+            <div 
+              className="h-full w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth hide-scrollbar"
+              onScroll={handleTikTokScroll}
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {products.map((product, idx) => (
+                <div 
+                  key={`${product.id}-${idx}`}
+                  className="snap-start snap-always w-full relative overflow-hidden flex flex-col justify-between bg-gray-950"
+                  style={{ height: "calc(100dvh - 7.5rem)" }}
                 >
-                  <Filter className="h-2 w-4" />
-                </Button>
-              </div>
-              {/* Loading State */}
-              {loading && (
-                <div className="flex justify-center items-center py-16">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#CB0207] border-t-transparent"></div>
-                </div>
-              )}
-              {/* Products Grid */}
-              {!loading && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 pb-2">
-                  {(products || []).map((product) => (
-                    <div key={product.id} className="relative">
-                      <Link href={`/product/${product.slug}`}>
-                        <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border-0 shadow-lg card-hover rounded-xl">
-                          <div className="bg-gradient-to-br from-gray-50 to-gray-100 h-32 md:h-48 relative">
-                            {product.images.length > 0 ? (
-                              <Image
-                                src={getCorrectImageUrl(product.images[0].url)}
-                                alt={product.name}
-                                fill
-                                className="object-cover"
-                                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                                quality={50}
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement
-                                  target.src = "/placeholder.svg?height=200&width=200"
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                                <span className="text-gray-400 text-xs">No Image</span>
-                              </div>
-                            )}
-                          </div>
-                          <CardContent className="p-2">
-                            <h3 className="font-semibold text-xs md:text-sm mb-1 md:mb-3 line-clamp-2 text-gray-800">
-                              {product.name}
-                            </h3>
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="font-bold text-[12px] md:text-lg text-[#CB0207]">
-                                {formatPrice(product.price)}
-                              </span>
-                              {product.is_featured === 1 && (
-                                <span className="bg-[#CB0207] text-white text-xs px-2 py-1 rounded-lg font-medium">
-                                  Ad
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-gray-500 text-xs flex items-center">
-                              <MapPin className="h-3 w-3 mr-1" />
-                              {product.store?.store_lga || "N/A"}, {product.store?.store_state || "N/A"}
-                            </p>
-                            <div className="flex items-center gap-0 mt-2">
-                              {Array.from({ length: 5 }, (_, i) => {
-                                const rating = product.average_rating || 0
-                                const fullStar = i < Math.floor(rating)
-                                const halfStar = i < rating && i >= Math.floor(rating)
-                                return (
-                                  <span key={i} className="text-yellow-400">
-                                    {fullStar ? (
-                                      <Star className="w-3 h-3 fill-yellow-400 stroke-yellow-400" />
-                                    ) : halfStar ? (
-                                      <Star className="w-3 h-3 fill-yellow-400 stroke-yellow-400 opacity-50" />
-                                    ) : (
-                                      <Star className="w-3 h-3 stroke-gray-300" />
-                                    )}
-                                  </span>
-                                )
-                              })}
-                              <span className="text-xs text-gray-600 ml-1">({product.average_rating || 0})</span>
-                            </div>
-                            <p className="text-gray-500 text-xs flex items-center mt-2 space-x-1">
-                              <span>Store:</span>
-                              <span>{product.store?.name || "N/A"}</span>
-                            </p>
-                          </CardContent>
-                        </Card>
+                  {/* Media Content - Play video if available, else show horizontal images swiper */}
+                  {product.video_url ? (
+                    <div className="absolute inset-0 w-full h-full z-10 flex items-center justify-center bg-black">
+                      <Link
+                        href={`/product/${product.slug}`}
+                        className="w-full h-full flex items-center justify-center"
+                      >
+                        <TikTokVideoPlayer src={product.video_url} isActive={idx === activeIndex} />
                       </Link>
-                      {/* Wishlist Heart Button - Only for logged in users */}
-                      {isAuthenticated && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={`absolute top-2 right-2 z-10 rounded-full w-8 h-8 ${wishlistItems.includes(product.id)
-                            ? "bg-red-500 hover:bg-red-600 text-white"
-                            : "bg-white/80 hover:bg-white text-gray-600"
-                            } shadow-lg transition-all duration-200`}
+                    </div>
+                  ) : product.images.length > 0 ? (
+                    <div className="absolute inset-0 w-full h-full z-10">
+                      <div
+                        className="flex w-full h-full overflow-x-scroll snap-x snap-mandatory scroll-smooth hide-scrollbar touch-pan-x"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', touchAction: 'pan-x pan-y' }}
+                        onScroll={(e) => handleHorizontalScroll(product.id, e)}
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                      >
+                        {product.images.map((image, imgIdx) => (
+                          <div
+                            key={image.id || imgIdx}
+                            className="w-full h-full flex-shrink-0 snap-start snap-always flex items-center justify-center bg-black"
+                          >
+                            <Link
+                              href={`/product/${product.slug}`}
+                              className="w-full h-full flex items-center justify-center"
+                            >
+                              <img
+                                src={getCorrectImageUrl(image.url)}
+                                alt={`${product.name} - Image ${imgIdx + 1}`}
+                                className="w-full h-full object-contain transition-transform duration-300 active:scale-95 pointer-events-none select-none"
+                                draggable="false"
+                              />
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Image Horizontal Slide Indicators (Dots) */}
+                      {product.images.length > 1 && (
+                        <div className="absolute bottom-36 left-1/2 transform -translate-x-1/2 z-20 flex space-x-1.5 bg-black/35 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/5">
+                          {product.images.map((_, imgIdx) => {
+                            const isActive = (activeImageIndices[product.id] || 0) === imgIdx
+                            return (
+                              <span
+                                key={imgIdx}
+                                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                                  isActive ? "bg-[#CB0207] w-3" : "bg-white/50"
+                                }`}
+                              />
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 w-full h-full z-10 flex items-center justify-center bg-black text-gray-500">
+                      No Image
+                    </div>
+                  )}
+
+                  {/* Vignette Overlay for TikTok readability */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 z-5 pointer-events-none" />
+
+                  {/* Floating Action Buttons (Right Side) */}
+                  <div className="absolute right-4 bottom-32 z-20 flex flex-col items-center space-y-4">
+                    {/* Wishlist Button */}
+                    {isAuthenticated && (
+                      <div className="flex flex-col items-center">
+                        <button
                           onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
                             toggleWishlist(product.id)
                           }}
                           disabled={wishlistLoading.includes(product.id)}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border border-white/10 shadow-lg transition-all active:scale-90 ${
+                            wishlistItems.includes(product.id)
+                              ? "bg-red-500 text-white border-red-400"
+                              : "bg-black/45 text-white"
+                          }`}
                         >
                           {wishlistLoading.includes(product.id) ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
                           ) : (
-                            <Heart className={`h-4 w-4 ${wishlistItems.includes(product.id) ? "fill-current" : ""}`} />
+                            <Heart className={`h-5 w-5 ${wishlistItems.includes(product.id) ? "fill-current" : ""}`} />
                           )}
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Smart Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center items-center space-x-2 mt-12">
-                  {/* Previous Button - Icon Only */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage === 1}
-                    onClick={() => handleSmartPageChange(currentPage - 1)}
-                    className="rounded-xl border-2 border-gray-200 font-medium bg-transparent hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed p-2"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-
-                  {/* Smart Page Numbers */}
-                  {generateSmartPagination().map((page, index) => {
-                    if (page === '...') {
-                      return (
-                        <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-400 font-medium select-none">
-                          ...
+                        </button>
+                        <span className="text-white text-[9px] font-semibold mt-1 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] text-center max-w-[65px] leading-tight select-none">
+                          Add to wishlist
                         </span>
-                      )
-                    }
+                      </div>
+                    )}
 
-                    return (
-                      <Button
-                        key={page}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSmartPageChange(Number(page))}
-                        className={`rounded-xl border-2 font-medium min-w-[40px] transition-all duration-200 ${currentPage === Number(page)
-                          ? "bg-[#CB0207] text-white border-[#CB0207] shadow-md"
-                          : "border-gray-200 bg-transparent hover:bg-gray-50 hover:border-gray-300"
-                          }`}
+                    {/* WhatsApp Support Button */}
+                    <div className="flex flex-col items-center">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          const phone = product.store?.phone || "2348129769093"
+                          const text = encodeURIComponent(`Hello, I'm interested in purchasing your product: "${product.name}" listed on Strapre. Link: https://strapre.com/product/${product.slug}`)
+                          const url = `https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=${text}`
+                          window.open(url, "_blank")
+                        }}
+                        className="w-10 h-10 rounded-full bg-black/45 text-green-400 hover:text-green-300 border border-white/10 backdrop-blur-md flex items-center justify-center shadow-lg transition-all active:scale-90"
                       >
-                        {page}
-                      </Button>
-                    )
-                  })}
+                        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.86.002-2.637-1.019-5.115-2.875-6.973-1.857-1.859-4.325-2.883-6.963-2.885-5.437 0-9.86 4.42-9.865 9.86-.001 1.772.482 3.502 1.398 5.027l-.95 3.473 3.566-.936zm10.748-6.195c-.3-.15-1.774-.875-2.049-.976-.275-.1-.475-.15-.675.15-.2.3-.775.976-.95 1.176-.175.2-.35.225-.65.075-.3-.15-1.267-.467-2.414-1.492-.893-.797-1.496-1.782-1.671-2.082-.175-.3-.019-.462.13-.61l.448-.522c.15-.175.2-.3.3-.5s.05-.375-.025-.525C8.908 6.84 8.243 5.2 7.968 4.525c-.267-.643-.538-.556-.738-.566-.19-.009-.408-.01-.627-.01-.219 0-.575.083-.875.409-.3.325-1.15 1.125-1.15 2.741 0 1.617 1.175 3.178 1.338 3.4.162.223 2.312 3.53 5.6 4.95.782.338 1.39.54 1.868.692.788.25 1.503.214 2.07.129.631-.095 1.775-.725 2.025-1.425.25-.7.25-1.3 0-1.425-.075-.125-.275-.2-.575-.35z" />
+                        </svg>
+                      </button>
+                      <span className="text-white text-[9px] font-semibold mt-1 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] text-center select-none">
+                        Chat
+                      </span>
+                    </div>
 
-                  {/* Next Button - Icon Only */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage === totalPages}
-                    onClick={() => handleSmartPageChange(currentPage + 1)}
-                    className="rounded-xl border-2 border-gray-200 font-medium bg-transparent hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed p-2"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                    {/* Share Button */}
+                    <div className="flex flex-col items-center">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          const productUrl = `${window.location.origin}/product/${product.slug}`
+                          if (navigator.share) {
+                            navigator.share({
+                              title: product.name,
+                              text: `Check out ${product.name} on Strapre!`,
+                              url: productUrl,
+                            }).catch((err) => console.log(err))
+                          } else {
+                            navigator.clipboard.writeText(productUrl)
+                            showToastMessage("Product link copied!")
+                          }
+                        }}
+                        className="w-10 h-10 rounded-full bg-black/45 text-white border border-white/10 backdrop-blur-md flex items-center justify-center shadow-lg transition-all active:scale-90"
+                      >
+                        <Share2 className="h-5 w-5" />
+                      </button>
+                      <span className="text-white text-[9px] font-semibold mt-1 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] text-center select-none">
+                        Share
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bottom Product Details Overlay */}
+                  <div className="w-full bg-gradient-to-t from-black via-black/80 to-transparent pt-8 pb-1.5 px-3 z-20 absolute bottom-0 left-0 right-0">
+                    <div className="max-w-xl space-y-1.5">
+                      {/* Store Profile & Location */}
+                      <div className="flex items-center space-x-2">
+                        <div className="w-7 h-7 rounded-full bg-[#CB0207] text-white font-bold flex items-center justify-center shadow-md border border-white/10 text-xs">
+                          {product.store?.name?.substring(0, 2).toUpperCase() || "ST"}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-white text-xs hover:underline cursor-pointer">
+                            {product.store?.name || "Anonymous Store"}
+                          </p>
+                          <p className="text-gray-300 text-[10px] flex items-center">
+                            <MapPin className="h-2.5 w-2.5 mr-0.5 text-red-500" />
+                            {product.store?.store_lga || "N/A"}, {product.store?.store_state || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Product Name */}
+                      <h2 className="text-white text-xs font-normal line-clamp-1 leading-tight">
+                        {product.name}
+                      </h2>
+
+                      {/* Rating and Price */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-0.5">
+                          {Array.from({ length: 5 }, (_, i) => {
+                            const rating = product.average_rating || 0
+                            return (
+                              <Star 
+                                key={i} 
+                                className={`w-3.5 h-3.5 ${
+                                  i < Math.floor(rating) 
+                                    ? "fill-yellow-400 stroke-yellow-400" 
+                                    : "stroke-gray-400"
+                                }`} 
+                              />
+                            )
+                          })}
+                          <span className="text-gray-300 text-[10px] ml-1">({product.average_rating || 0})</span>
+                        </div>
+                        <span className="text-base font-bold text-yellow-400">
+                          {formatPrice(product.price)}
+                        </span>
+                      </div>
+
+                      {/* Call-to-action button */}
+                      <Link href={`/product/${product.slug}`} className="block pt-0.5">
+                        <Button className="w-full h-8 bg-[#CB0207] hover:bg-[#A50206] text-white rounded-lg font-semibold shadow-lg transition-all active:scale-95 text-xs py-1">
+                          View Details
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-              )}
+              ))}
 
-              {/* No Products Message */}
-              {!loading && products.length === 0 && (
-                <div className="text-center py-16">
-                  <p className="text-gray-500 text-lg">No products found</p>
+              {/* Endless Scroll Loading Indicator */}
+              {loadingMore && (
+                <div className="snap-start snap-always h-full w-full bg-gray-950 flex flex-col items-center justify-center text-gray-400">
+                  <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#CB0207] border-t-transparent mb-3" />
+                  <p className="text-sm font-medium">Loading more products...</p>
                 </div>
               )}
             </div>
-          </main>
+          )}
         </div>
-      </div>
+      ) : (
+        /* Render Classic Grid or Desktop Layout */
+        <div
+          className={`${isAuthenticated ? "w-full md:w-[90%] md:max-w-[1750px]" : "w-full md:w-[90%] md:max-w-[1750px]"
+            } mx-auto px-2 sm:px-6 lg:px-8 py-6`}
+        >
+          <div className="flex gap-6">
+            {/* Sidebar - Desktop Only */}
+            <aside className="hidden md:block w-72">
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-24">
+                <h3 className="font-bold text-xl mb-6 text-gray-800">All Categories</h3>
+                <div className="space-y-1">
+                  {(categories || []).slice(0, 20).map((category) => (
+                    <Link
+                      key={category.id}
+                      href={`/category/${category.id}`}
+                      className="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
+                    >
+                      <span className="text-sm font-medium truncate pr-2 flex-1 group-hover:text-[#CB0207]">
+                        {category.name}
+                      </span>
+                      <ChevronRight className="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-[#CB0207]" />
+                    </Link>
+                  ))}
+                  {categories.length > 20 && (
+                    <div className="py-3 px-4 text-sm text-[#CB0207] cursor-pointer font-medium hover:bg-gray-50 rounded-xl transition-all duration-200">
+                      See More
+                    </div>
+                  )}
+                </div>
+              </div>
+            </aside>
+            {/* Main Content */}
+            <main className="flex-1">
+              {/* Hero Section */}
+              {renderHeroSection()}
+
+              {/* Products Section */}
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 md:p-8">
+                <div className="flex items-center justify-between mb-4 md:mb-8">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+                      {isAuthenticated ? "Products" : "🔥 Hot Sales"}
+                    </h2>
+                    {isSearchActive && (
+                      <Button
+                        variant="outline"
+                        className="flex items-center gap-2 border-2 border-[#CB0207] text-[8px] md:text-[12px] text-[#CB0207] hover:bg-[#CB0207] hover:text-white rounded-xl px-2 py-2 font-medium transition-all duration-300 bg-transparent"
+                        onClick={returnToAllProducts}
+                      >
+                        <ChevronLeft className="h-[5px] md:h-4 w-[5px] md:w-4" />
+                        Back to All Products
+                      </Button>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 border-[2] border-gray-60 text-black hover:bg-[#CB0207] hover:text-white rounded-xl px-3 py-2 font-medium transition-all duration-300 bg-transparent"
+                    onClick={() => setShowFilterDialog(true)}
+                  >
+                    <Filter className="h-2 w-4" />
+                  </Button>
+                </div>
+                {/* Loading State */}
+                {loading && (
+                  <div className="flex justify-center items-center py-16">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#CB0207] border-t-transparent"></div>
+                  </div>
+                )}
+                {/* Products Grid */}
+                {!loading && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 pb-2">
+                    {(products || []).map((product) => (
+                      <div key={product.id} className="relative">
+                        <Link href={`/product/${product.slug}`}>
+                          <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer border-0 shadow-lg card-hover rounded-xl">
+                            <div className="bg-gradient-to-br from-gray-50 to-gray-100 h-32 md:h-48 relative">
+                              {product.images.length > 0 ? (
+                                <Image
+                                  src={getCorrectImageUrl(product.images[0].url)}
+                                  alt={product.name}
+                                  fill
+                                  className="object-cover"
+                                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                                  quality={50}
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement
+                                    target.src = "/placeholder.svg?height=200&width=200"
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                  <span className="text-gray-400 text-xs">No Image</span>
+                                </div>
+                              )}
+                            </div>
+                            <CardContent className="p-2">
+                              <h3 className="font-semibold text-xs md:text-sm mb-1 md:mb-3 line-clamp-2 text-gray-800">
+                                {product.name}
+                              </h3>
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-bold text-[12px] md:text-lg text-[#CB0207]">
+                                  {formatPrice(product.price)}
+                                </span>
+                                {product.is_featured === 1 && (
+                                  <span className="bg-[#CB0207] text-white text-xs px-2 py-1 rounded-lg font-medium">
+                                    Ad
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-gray-500 text-xs flex items-center">
+                                <MapPin className="h-3 w-3 mr-1" />
+                                {product.store?.store_lga || "N/A"}, {product.store?.store_state || "N/A"}
+                              </p>
+                              <div className="flex items-center gap-0 mt-2">
+                                {Array.from({ length: 5 }, (_, i) => {
+                                  const rating = product.average_rating || 0
+                                  const fullStar = i < Math.floor(rating)
+                                  const halfStar = i < rating && i >= Math.floor(rating)
+                                  return (
+                                    <span key={i} className="text-yellow-400">
+                                      {fullStar ? (
+                                        <Star className="w-3 h-3 fill-yellow-400 stroke-yellow-400" />
+                                      ) : halfStar ? (
+                                        <Star className="w-3 h-3 fill-yellow-400 stroke-yellow-400 opacity-50" />
+                                      ) : (
+                                        <Star className="w-3 h-3 stroke-gray-300" />
+                                      )}
+                                    </span>
+                                  )
+                                })}
+                                <span className="text-xs text-gray-600 ml-1">({product.average_rating || 0})</span>
+                              </div>
+                              <p className="text-gray-500 text-xs flex items-center mt-2 space-x-1">
+                                <span>Store:</span>
+                                <span>{product.store?.name || "N/A"}</span>
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                        {/* Wishlist Heart Button - Only for logged in users */}
+                        {isAuthenticated && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`absolute top-2 right-2 z-10 rounded-full w-8 h-8 ${wishlistItems.includes(product.id)
+                              ? "bg-red-500 hover:bg-red-600 text-white"
+                              : "bg-white/80 hover:bg-white text-gray-600"
+                              } shadow-lg transition-all duration-200`}
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              toggleWishlist(product.id)
+                            }}
+                            disabled={wishlistLoading.includes(product.id)}
+                          >
+                            {wishlistLoading.includes(product.id) ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                            ) : (
+                              <Heart className={`h-4 w-4 ${wishlistItems.includes(product.id) ? "fill-current" : ""}`} />
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Smart Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center space-x-2 mt-12">
+                    {/* Previous Button - Icon Only */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === 1}
+                      onClick={() => handleSmartPageChange(currentPage - 1)}
+                      className="rounded-xl border-2 border-gray-200 font-medium bg-transparent hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed p-2"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+
+                    {/* Smart Page Numbers */}
+                    {generateSmartPagination().map((page, index) => {
+                      if (page === '...') {
+                        return (
+                          <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-400 font-medium select-none">
+                            ...
+                          </span>
+                        )
+                      }
+
+                      return (
+                        <Button
+                          key={page}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSmartPageChange(Number(page))}
+                          className={`rounded-xl border-2 font-medium min-w-[40px] transition-all duration-200 ${currentPage === Number(page)
+                            ? "bg-[#CB0207] text-white border-[#CB0207] shadow-md"
+                            : "border-gray-200 bg-transparent hover:bg-gray-50 hover:border-gray-300"
+                            }`}
+                        >
+                          {page}
+                        </Button>
+                      )
+                    })}
+
+                    {/* Next Button - Icon Only */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === totalPages}
+                      onClick={() => handleSmartPageChange(currentPage + 1)}
+                      className="rounded-xl border-2 border-gray-200 font-medium bg-transparent hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed p-2"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+
+                {/* No Products Message */}
+                {!loading && products.length === 0 && (
+                  <div className="text-center py-16">
+                    <p className="text-gray-500 text-lg">No products found</p>
+                  </div>
+                )}
+              </div>
+            </main>
+          </div>
+        </div>
+      )}
 
       {/* Modern Filter Dialog */}
       <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
@@ -1115,7 +1532,7 @@ function HomePage() {
       </Dialog>
 
       {/* Footer */}
-      <Footer />
+      {!(isMobile && viewMode === "feed") && <Footer />}
     </div>
   )
 }

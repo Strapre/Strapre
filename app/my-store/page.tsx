@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Store, Plus, Star, MapPin, Phone, Mail, Calendar, Edit, AlertTriangle, BarChart3 } from "lucide-react"
+import { ArrowLeft, Store, Plus, Star, MapPin, Phone, Mail, Calendar, Edit, AlertTriangle, BarChart3, ChevronRight, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -58,6 +58,16 @@ export default function MyStorePage() {
   const [error, setError] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
   const [categories] = useState<Category[]>([
     { id: "1", name: "Electronics" },
     { id: "2", name: "Fashion" },
@@ -173,6 +183,254 @@ export default function MyStorePage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CB0207] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your store...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col pb-8">
+        {/* Sticky App Header */}
+        <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 py-4 flex items-center justify-between shadow-sm">
+          <button onClick={handleBackToHome} className="text-gray-700 hover:text-gray-900 transition-colors">
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <h1 className="text-base font-bold text-gray-900 tracking-tight">My Store Hub</h1>
+          {storeData && !isStorePending() ? (
+            <Link href={`/my-store/edit/${storeData.slug}`} className="text-gray-700 hover:text-[#CB0207] transition-colors">
+              <Settings className="h-5 w-5" />
+            </Link>
+          ) : (
+            <div className="w-5" />
+          )}
+        </div>
+
+        {/* Scrollable Container */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+          {/* Alerts */}
+          {isStorePending() && (
+            <Alert className="border-orange-200 bg-orange-50 rounded-2xl shadow-sm">
+              <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0" />
+              <AlertDescription className="text-orange-800 text-xs font-semibold ml-2">
+                Store is currently under review. Functions are disabled until review completes.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {error && (
+            <Alert className="border-red-200 bg-red-50 rounded-2xl shadow-sm">
+              <AlertDescription className="text-red-600 text-xs font-semibold">{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {storeData && (
+            <>
+              {/* Store Logo & Banner Section */}
+              <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 to-red-600" />
+                
+                <div className="w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center shadow-md ring-4 ring-red-50/50">
+                  {storeData.store_image ? (
+                    <img
+                      src={getCorrectImageUrl(storeData.store_image)}
+                      alt={storeData.store_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Store className="h-12 w-12 text-gray-400" />
+                  )}
+                </div>
+
+                <h2 className="text-2xl font-extrabold text-gray-900 mt-4 tracking-tight">
+                  {storeData.store_name}
+                </h2>
+                <p className="text-sm text-gray-500 mt-2 leading-relaxed px-2">
+                  {storeData.store_description}
+                </p>
+
+                {/* Status Badges */}
+                <div className="flex items-center space-x-2 mt-4">
+                  {isStorePending() ? (
+                    <Badge variant="secondary" className="px-3 py-1 text-xs font-semibold bg-orange-100 text-orange-800 border-orange-200">
+                      🔍 Under Review
+                    </Badge>
+                  ) : (
+                    <Badge variant="default" className="px-3 py-1 text-xs font-semibold bg-green-100 text-green-800 border-green-200">
+                      ✅ Approved
+                    </Badge>
+                  )}
+
+                  <Badge
+                    variant={storeData.is_active === 1 ? "default" : "secondary"}
+                    className={`px-3 py-1 text-xs font-semibold ${
+                      storeData.is_active === 1
+                        ? "bg-green-100 text-green-800 border-green-200"
+                        : "bg-gray-100 text-gray-600 border-gray-200"
+                    }`}
+                  >
+                    {storeData.is_active === 1 ? "🟢 Active" : "⚫ Inactive"}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Action Buttons list */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">Store Actions</h3>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  {/* Manage Products */}
+                  {isStorePending() ? (
+                    <div className="bg-gray-50 border border-gray-100 rounded-3xl p-5 shadow-sm opacity-60 flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gray-200 flex items-center justify-center text-gray-400">
+                          <Plus className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-bold text-gray-700">Manage Products</h4>
+                          <p className="text-xs text-gray-500 mt-0.5">Disabled under review</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Link href="/my-store/products">
+                      <div className="bg-white border border-red-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-between cursor-pointer group">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-[#CB0207] group-hover:scale-105 transition-transform">
+                            <Plus className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h4 className="text-base font-bold text-gray-900">Manage Products</h4>
+                            <p className="text-xs text-gray-500 mt-0.5">Add, edit, or remove your items</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                      </div>
+                    </Link>
+                  )}
+
+                  {/* Featured Products */}
+                  {isStorePending() ? (
+                    <div className="bg-gray-50 border border-gray-100 rounded-3xl p-5 shadow-sm opacity-60 flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gray-200 flex items-center justify-center text-gray-400">
+                          <Star className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-bold text-gray-700">Featured Products</h4>
+                          <p className="text-xs text-gray-500 mt-0.5">Disabled under review</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Link href="/feature-product">
+                      <div className="bg-white border border-yellow-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-between cursor-pointer group">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 rounded-2xl bg-yellow-50 flex items-center justify-center text-yellow-600 group-hover:scale-105 transition-transform">
+                            <Star className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h4 className="text-base font-bold text-gray-900">Featured Products</h4>
+                            <p className="text-xs text-gray-500 mt-0.5">Promote and boost your best items</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                      </div>
+                    </Link>
+                  )}
+
+                  {/* Ad Insights */}
+                  {isStorePending() ? (
+                    <div className="bg-gray-50 border border-gray-100 rounded-3xl p-5 shadow-sm opacity-60 flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gray-200 flex items-center justify-center text-gray-400">
+                          <BarChart3 className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-bold text-gray-700">Ad Insights</h4>
+                          <p className="text-xs text-gray-500 mt-0.5">Disabled under review</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Link href="/ad-insights">
+                      <div className="bg-white border border-blue-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-between cursor-pointer group">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-105 transition-transform">
+                            <BarChart3 className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h4 className="text-base font-bold text-gray-900">Ad Insights</h4>
+                            <p className="text-xs text-gray-500 mt-0.5">View analytics and ad metrics</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                      </div>
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {/* Store Details section */}
+              <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Store details</h3>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3 pb-3 border-b border-gray-50">
+                    <MapPin className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Address</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-0.5 leading-normal">{storeData.address}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 pb-3 border-b border-gray-50">
+                    <Phone className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Phone number</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-0.5">{storeData.phone}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 pb-3 border-b border-gray-50">
+                    <Mail className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Email address</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-0.5 truncate max-w-[220px]">{storeData.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 pb-3 border-b border-gray-50">
+                    <Calendar className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Date Created</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-0.5">{formatDate(storeData.created_at)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <Edit className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Last Updated</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-0.5">{formatDate(storeData.updated_at)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Edit Store Action at bottom */}
+              {storeData && !isStorePending() && (
+                <div className="pt-2">
+                  <Link href={`/my-store/edit/${storeData.slug}`} className="w-full">
+                    <button className="w-full flex items-center justify-center space-x-2 py-4 bg-[#CB0207] hover:bg-[#A50206] text-white font-semibold rounded-2xl shadow-md transition-all active:scale-[0.98]">
+                      <Edit className="h-5 w-5" />
+                      <span>Edit Store Information</span>
+                    </button>
+                  </Link>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     )
@@ -529,6 +787,5 @@ export default function MyStorePage() {
       <Footer />
     </div>
   )
-
 }
 
