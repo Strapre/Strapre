@@ -76,6 +76,7 @@ interface Product {
   category_id: string
   name: string
   slug: string
+  short_description?: string
   description: string
   specifications: string[]
   brand: string
@@ -1008,6 +1009,12 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                     {product.store?.store_lga || "N/A"}, {product.store?.store_state || "N/A"}
                   </span>
                 </div>
+
+                {product.short_description && (
+                  <p className="text-gray-600 text-base leading-relaxed mt-3 italic border-l-4 border-[#CB0207] pl-3">
+                    {product.short_description}
+                  </p>
+                )}
 
                 {/* Rating Display */}
                 {product.average_rating && (

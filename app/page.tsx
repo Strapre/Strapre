@@ -43,6 +43,7 @@ interface ProductStore {
   slug: string
   store_state?: string
   store_lga?: string
+  phone?: string
 }
 
 interface Product {
@@ -50,6 +51,7 @@ interface Product {
   category_id: string
   name: string
   slug: string
+  short_description?: string
   description: string
   specifications: string[]
   brand: string

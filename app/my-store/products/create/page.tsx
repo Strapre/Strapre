@@ -42,6 +42,7 @@ interface ProductResponse {
     id: string
     name: string
     slug: string
+    short_description?: string
     description: string
     price: string
     wholesale_price: string
@@ -57,6 +58,7 @@ interface ProductResponse {
 
 export default function CreateProductPage() {
   const [productName, setProductName] = useState("")
+  const [shortDescription, setShortDescription] = useState("")
   const [description, setDescription] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("")
   const [price, setPrice] = useState("")
@@ -511,6 +513,12 @@ export default function CreateProductPage() {
       return
     }
 
+    if (!shortDescription.trim()) {
+      setError("Product short description is required.")
+      setLoading(false)
+      return
+    }
+
     if (!description.trim()) {
       setError("Product description is required.")
       setLoading(false)
@@ -585,6 +593,7 @@ export default function CreateProductPage() {
 
       const formData = new FormData()
       formData.append("name", productName.trim())
+      formData.append("short_description", shortDescription.trim())
       formData.append("description", description.trim())
       formData.append("category_id", selectedCategory)
       formData.append("price", price.trim())
@@ -918,6 +927,20 @@ export default function CreateProductPage() {
                     onChange={(e) => setProductName(e.target.value)}
                     placeholder="Enter product name"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CB0207] focus:border-[#CB0207]"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="shortDescription" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Product Short Description *
+                  </Label>
+                  <Textarea
+                    id="shortDescription"
+                    value={shortDescription}
+                    onChange={(e) => setShortDescription(e.target.value)}
+                    placeholder="Enter a brief summary of the product (displayed on card lists)."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#CB0207] focus:border-[#CB0207] min-h-[80px]"
                     required
                   />
                 </div>
