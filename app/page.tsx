@@ -242,30 +242,29 @@ function ProductImageSlider({ product, activeIndex, onIndexChange }: ProductImag
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Slides Container */}
-      <div
-        className="flex flex-row flex-nowrap w-full h-full transition-transform duration-300 ease-out"
-        style={{ transform: `translateX(-${activeIndex * 100}%)` }}
-      >
-        {product.images.map((image, imgIdx) => (
-          <div
-            key={image.id || imgIdx}
-            className="w-full h-full flex-shrink-0 flex items-center justify-center bg-black"
+      {product.images.map((image, imgIdx) => (
+        <div
+          key={image.id || imgIdx}
+          className="absolute inset-0 w-full h-full flex items-center justify-center bg-black transition-transform duration-300 ease-out"
+          style={{ transform: `translateX(${(imgIdx - activeIndex) * 100}%)` }}
+        >
+          <Link
+            href={`/product/${product.slug}`}
+            className="absolute inset-0 w-full h-full flex items-center justify-center"
           >
-            <Link
-              href={`/product/${product.slug}`}
-              className="w-full h-full flex items-center justify-center"
-            >
-              <img
-                src={getCorrectImageUrl(image.url)}
-                alt={`${product.name} - Image ${imgIdx + 1}`}
-                className="w-full h-full object-contain pointer-events-none select-none"
-                draggable="false"
-              />
-            </Link>
-          </div>
-        ))}
-      </div>
+            <img
+              src={getCorrectImageUrl(image.url)}
+              alt={`${product.name} - Image ${imgIdx + 1}`}
+              className="w-full h-full object-contain pointer-events-none select-none"
+              draggable="false"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement
+                target.src = "/placeholder.svg?height=400&width=400"
+              }}
+            />
+          </Link>
+        </div>
+      ))}
 
       {/* Navigation Arrows */}
       {product.images.length > 1 && (

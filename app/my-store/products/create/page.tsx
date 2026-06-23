@@ -91,6 +91,7 @@ export default function CreateProductPage() {
   const [videoThumbnailUrl, setVideoThumbnailUrl] = useState("")
   const [videoThumbnailFile, setVideoThumbnailFile] = useState<File | null>(null)
   const videoInputRef = useRef<HTMLInputElement | null>(null)
+  const coverImageInputRef = useRef<HTMLInputElement | null>(null)
 
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([])
   const router = useRouter()
@@ -381,51 +382,6 @@ export default function CreateProductPage() {
     })
   }
 
-  const extractVideoThumbnail = (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      const video = document.createElement("video")
-      video.preload = "metadata"
-      video.muted = true
-      video.playsInline = true
-      video.src = URL.createObjectURL(file)
-
-      video.onloadeddata = () => {
-        video.currentTime = Math.min(1.0, video.duration / 2)
-      }
-
-      video.onseeked = () => {
-        try {
-          const canvas = document.createElement("canvas")
-          canvas.width = video.videoWidth || 640
-          canvas.height = video.videoHeight || 360
-          const ctx = canvas.getContext("2d")
-          ctx?.drawImage(video, 0, 0, canvas.width, canvas.height)
-          
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const thumbnailFile = new File([blob], "thumbnail.jpg", {
-                type: "image/jpeg",
-                lastModified: Date.now(),
-              })
-              resolve(thumbnailFile)
-            } else {
-              reject(new Error("Canvas toBlob failed"))
-            }
-          }, "image/jpeg", 0.8)
-        } catch (err) {
-          reject(err)
-        } finally {
-          URL.revokeObjectURL(video.src)
-        }
-      }
-
-      video.onerror = (err) => {
-        URL.revokeObjectURL(video.src)
-        reject(err)
-      }
-    })
-  }
-
   const handleVideoSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -457,16 +413,6 @@ export default function CreateProductPage() {
       setVideoDuration(duration)
       const previewUrl = URL.createObjectURL(file)
       setVideoPreviewUrl(previewUrl)
-
-      // Also generate and preview thumbnail instantly for premium polish
-      try {
-        const thumbnailFile = await extractVideoThumbnail(file)
-        setVideoThumbnailFile(thumbnailFile)
-        const thumbUrl = URL.createObjectURL(thumbnailFile)
-        setVideoThumbnailUrl(thumbUrl)
-      } catch (thumbErr) {
-        console.error("Failed to generate preview thumbnail:", thumbErr)
-      }
       
       setLoading(false)
     } catch (err) {
@@ -490,6 +436,54 @@ export default function CreateProductPage() {
     setVideoDuration(null)
     if (videoInputRef.current) {
       videoInputRef.current.value = ""
+    }
+    if (coverImageInputRef.current) {
+      coverImageInputRef.current.value = ""
+    }
+  }
+
+  const handleCoverImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setError("")
+
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`Cover image is too large (${(file.size / (1024 * 1024)).toFixed(2)}MB). Maximum size is 5MB.`)
+      return
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select a valid image file for the cover.")
+      return
+    }
+
+    try {
+      setLoading(true)
+      const resizedFile = await resizeImage(file)
+      setVideoThumbnailFile(resizedFile)
+      
+      if (videoThumbnailUrl && videoThumbnailUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(videoThumbnailUrl)
+      }
+      const thumbUrl = URL.createObjectURL(resizedFile)
+      setVideoThumbnailUrl(thumbUrl)
+      setLoading(false)
+    } catch (err) {
+      setLoading(false)
+      console.error("Error processing cover image:", err)
+      setError("Failed to process cover image. Please try again.")
+    }
+  }
+
+  const removeCoverImage = () => {
+    if (videoThumbnailUrl && videoThumbnailUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(videoThumbnailUrl)
+    }
+    setVideoThumbnailUrl("")
+    setVideoThumbnailFile(null)
+    if (coverImageInputRef.current) {
+      coverImageInputRef.current.value = ""
     }
   }
 
@@ -573,21 +567,17 @@ export default function CreateProductPage() {
       return
     }
 
+    if (uploadMode === "video" && !videoThumbnailFile) {
+      setError("A product cover image is required for video products.")
+      setLoading(false)
+      return
+    }
+
     try {
       let finalImages = [...productImages]
       if (uploadMode === "video" && productVideo) {
         if (videoThumbnailFile) {
           finalImages = [videoThumbnailFile]
-        } else {
-          try {
-            const thumbnail = await extractVideoThumbnail(productVideo)
-            finalImages = [thumbnail]
-          } catch (err) {
-            console.error("Failed to generate video thumbnail:", err)
-            setError("Failed to process video thumbnail. Please try another video.")
-            setLoading(false)
-            return
-          }
         }
       }
 
@@ -855,33 +845,49 @@ export default function CreateProductPage() {
                             </button>
                           </div>
 
-                          {/* Generated Thumbnail Card */}
+                          {/* Manual Cover Image Card */}
                           <div className="flex flex-col justify-center">
                             <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-4">
                               <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
                                 <span className="w-2 h-2 rounded-full bg-[#CB0207]"></span>
-                                Auto-generated Product Thumbnail
+                                Product Cover Image *
                               </div>
                               <p className="text-xs text-gray-500 leading-relaxed">
-                                Our platform automatically extracts a thumbnail from your video to display as the cover image on traditional grids and search results.
+                                Select a cover image to display for this video product on traditional grids and search results.
                               </p>
                               
                               {videoThumbnailUrl ? (
                                 <div className="relative aspect-square max-w-[150px] rounded-xl overflow-hidden border border-gray-200/80 shadow-sm group">
                                   <img
                                     src={videoThumbnailUrl}
-                                    alt="Auto-generated thumbnail"
+                                    alt="Cover image preview"
                                     className="w-full h-full object-cover"
                                   />
-                                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    <span className="text-white text-[10px] font-semibold">Video Cover</span>
-                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={removeCoverImage}
+                                    className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md border border-white transition-all duration-200"
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                  </button>
                                 </div>
                               ) : (
-                                <div className="aspect-square max-w-[150px] rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center bg-white">
-                                  <span className="text-[10px] text-gray-400 font-medium">Extracting...</span>
+                                <div
+                                  onClick={() => coverImageInputRef.current?.click()}
+                                  className="aspect-square max-w-[150px] rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center bg-white cursor-pointer hover:border-[#CB0207] hover:bg-red-50/10 transition-all duration-200"
+                                >
+                                  <Plus className="h-6 w-6 text-gray-400 mb-1" />
+                                  <span className="text-[10px] text-gray-500 font-medium">Add Cover</span>
                                 </div>
                               )}
+
+                              <input
+                                ref={coverImageInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleCoverImageSelect}
+                                className="hidden"
+                              />
                             </div>
                           </div>
                         </div>
