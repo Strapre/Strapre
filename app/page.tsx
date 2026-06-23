@@ -203,6 +203,7 @@ function HomePage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [selectedDescProduct, setSelectedDescProduct] = useState<Product | null>(null)
   const [activeImageIndices, setActiveImageIndices] = useState<Record<string, number>>({})
+  const feedContainerRef = useRef<HTMLDivElement | null>(null)
   const touchStartRef = useRef({ x: 0, y: 0 })
   const isHorizontalSwipeRef = useRef(false)
 
@@ -226,7 +227,17 @@ function HomePage() {
 
     if (isHorizontalSwipeRef.current || Math.abs(diffX) > Math.abs(diffY) + 5) {
       isHorizontalSwipeRef.current = true
+      if (feedContainerRef.current) {
+        feedContainerRef.current.style.overflowY = 'hidden'
+      }
       e.stopPropagation()
+    }
+  }
+
+  const handleTouchEnd = () => {
+    isHorizontalSwipeRef.current = false
+    if (feedContainerRef.current) {
+      feedContainerRef.current.style.overflowY = 'scroll'
     }
   }
 
@@ -919,6 +930,7 @@ function HomePage() {
             </div>
           ) : (
             <div 
+              ref={feedContainerRef}
               className="h-full w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth hide-scrollbar"
               onScroll={handleTikTokScroll}
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -947,6 +959,8 @@ function HomePage() {
                         onScroll={(e) => handleHorizontalScroll(product.id, e)}
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                        onTouchCancel={handleTouchEnd}
                       >
                         {product.images.map((image, imgIdx) => (
                           <div
