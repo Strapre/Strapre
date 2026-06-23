@@ -201,6 +201,7 @@ function HomePage() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [loadingMore, setLoadingMore] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [selectedDescProduct, setSelectedDescProduct] = useState<Product | null>(null)
   const [activeImageIndices, setActiveImageIndices] = useState<Record<string, number>>({})
   const touchStartRef = useRef({ x: 0, y: 0 })
   const isHorizontalSwipeRef = useRef(false)
@@ -1034,7 +1035,7 @@ function HomePage() {
                           const url = `https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=${text}`
                           window.open(url, "_blank")
                         }}
-                        className="w-10 h-10 rounded-full bg-black/45 text-green-400 hover:text-green-300 border border-white/10 backdrop-blur-md flex items-center justify-center shadow-lg transition-all active:scale-90"
+                        className="w-10 h-10 rounded-full bg-black/45 text-white hover:text-gray-200 border border-white/10 backdrop-blur-md flex items-center justify-center shadow-lg transition-all active:scale-90"
                       >
                         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                           <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.86.002-2.637-1.019-5.115-2.875-6.973-1.857-1.859-4.325-2.883-6.963-2.885-5.437 0-9.86 4.42-9.865 9.86-.001 1.772.482 3.502 1.398 5.027l-.95 3.473 3.566-.936zm10.748-6.195c-.3-.15-1.774-.875-2.049-.976-.275-.1-.475-.15-.675.15-.2.3-.775.976-.95 1.176-.175.2-.35.225-.65.075-.3-.15-1.267-.467-2.414-1.492-.893-.797-1.496-1.782-1.671-2.082-.175-.3-.019-.462.13-.61l.448-.522c.15-.175.2-.3.3-.5s.05-.375-.025-.525C8.908 6.84 8.243 5.2 7.968 4.525c-.267-.643-.538-.556-.738-.566-.19-.009-.408-.01-.627-.01-.219 0-.575.083-.875.409-.3.325-1.15 1.125-1.15 2.741 0 1.617 1.175 3.178 1.338 3.4.162.223 2.312 3.53 5.6 4.95.782.338 1.39.54 1.868.692.788.25 1.503.214 2.07.129.631-.095 1.775-.725 2.025-1.425.25-.7.25-1.3 0-1.425-.075-.125-.275-.2-.575-.35z" />
@@ -1096,6 +1097,20 @@ function HomePage() {
                       <h2 className="text-white text-xs font-normal line-clamp-1 leading-tight">
                         {product.name}
                       </h2>
+
+                      {/* Short Description */}
+                      {product.short_description && (
+                        <p 
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setSelectedDescProduct(product)
+                          }}
+                          className="text-gray-300 text-[11px] line-clamp-2 leading-snug cursor-pointer hover:text-white transition-colors underline decoration-dotted decoration-white/30"
+                        >
+                          {product.short_description}
+                        </p>
+                      )}
 
                       {/* Rating and Price */}
                       <div className="flex items-center justify-between">
@@ -1528,6 +1543,43 @@ function HomePage() {
               >
                 Clear All
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Product Description Modal */}
+      <Dialog open={!!selectedDescProduct} onOpenChange={(open) => !open && setSelectedDescProduct(null)}>
+        <DialogContent className="sm:max-w-lg rounded-2xl border-0 shadow-2xl bg-white text-gray-900">
+          <DialogHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl font-bold text-gray-800">
+                {selectedDescProduct?.name}
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSelectedDescProduct(null)}
+                className="rounded-xl hover:bg-gray-100"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-4">
+            {selectedDescProduct?.short_description && (
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Short Description</h4>
+                <p className="text-sm text-gray-700 leading-relaxed italic">
+                  {selectedDescProduct.short_description}
+                </p>
+              </div>
+            )}
+            <div>
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Full Description</h4>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                {selectedDescProduct?.description}
+              </p>
             </div>
           </div>
         </DialogContent>
