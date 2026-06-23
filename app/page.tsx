@@ -159,6 +159,86 @@ function TikTokVideoPlayer({ src, isActive }: TikTokVideoPlayerProps) {
   )
 }
 
+interface ProductImageSliderProps {
+  product: Product
+  activeImageIndices: Record<string, number>
+  handleHorizontalScroll: (productId: string, e: React.UIEvent<HTMLDivElement>) => void
+}
+
+function ProductImageSlider({ product, activeImageIndices, handleHorizontalScroll }: ProductImageSliderProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const touchStartRef = useRef({ x: 0, y: 0 })
+  const isHorizontalSwipeRef = useRef(false)
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      }
+      isHorizontalSwipeRef.current = false
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const diffX = e.touches[0].clientX - touchStartRef.current.x
+      const diffY = e.touches[0].clientY - touchStartRef.current.y
+
+      if (isHorizontalSwipeRef.current || Math.abs(diffX) > Math.abs(diffY) + 5) {
+        isHorizontalSwipeRef.current = true
+        // Stop touch move from reaching the parent vertical feed container
+        e.stopPropagation()
+      }
+    }
+
+    const handleTouchEnd = () => {
+      isHorizontalSwipeRef.current = false
+    }
+
+    container.addEventListener("touchstart", handleTouchStart, { passive: true })
+    container.addEventListener("touchmove", handleTouchMove, { passive: true })
+    container.addEventListener("touchend", handleTouchEnd, { passive: true })
+    container.addEventListener("touchcancel", handleTouchEnd, { passive: true })
+
+    return () => {
+      container.removeEventListener("touchstart", handleTouchStart)
+      container.removeEventListener("touchmove", handleTouchMove)
+      container.removeEventListener("touchend", handleTouchEnd)
+      container.removeEventListener("touchcancel", handleTouchEnd)
+    }
+  }, [])
+
+  return (
+    <div
+      ref={containerRef}
+      className="flex flex-row flex-nowrap w-full h-full overflow-x-scroll snap-x snap-mandatory scroll-smooth hide-scrollbar touch-pan-x"
+      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      onScroll={(e) => handleHorizontalScroll(product.id, e)}
+    >
+      {product.images.map((image, imgIdx) => (
+        <div
+          key={image.id || imgIdx}
+          className="w-full h-full flex-shrink-0 snap-start snap-always flex items-center justify-center bg-black"
+        >
+          <Link
+            href={`/product/${product.slug}`}
+            className="w-full h-full flex items-center justify-center"
+          >
+            <img
+              src={getCorrectImageUrl(image.url)}
+              alt={`${product.name} - Image ${imgIdx + 1}`}
+              className="w-full h-full object-contain transition-transform duration-300 active:scale-95 pointer-events-none select-none"
+              draggable="false"
+            />
+          </Link>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
@@ -204,41 +284,10 @@ function HomePage() {
   const [selectedDescProduct, setSelectedDescProduct] = useState<Product | null>(null)
   const [activeImageIndices, setActiveImageIndices] = useState<Record<string, number>>({})
   const feedContainerRef = useRef<HTMLDivElement | null>(null)
-  const touchStartRef = useRef({ x: 0, y: 0 })
-  const isHorizontalSwipeRef = useRef(false)
-
   const handleHorizontalScroll = (productId: string, e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget
     const index = Math.round(container.scrollLeft / container.clientWidth)
     setActiveImageIndices((prev) => ({ ...prev, [productId]: index }))
-  }
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartRef.current = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY,
-    }
-    isHorizontalSwipeRef.current = false
-  }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    const diffX = e.touches[0].clientX - touchStartRef.current.x
-    const diffY = e.touches[0].clientY - touchStartRef.current.y
-
-    if (isHorizontalSwipeRef.current || Math.abs(diffX) > Math.abs(diffY) + 5) {
-      isHorizontalSwipeRef.current = true
-      if (feedContainerRef.current) {
-        feedContainerRef.current.style.overflowY = 'hidden'
-      }
-      e.stopPropagation()
-    }
-  }
-
-  const handleTouchEnd = () => {
-    isHorizontalSwipeRef.current = false
-    if (feedContainerRef.current) {
-      feedContainerRef.current.style.overflowY = 'scroll'
-    }
   }
 
   const showToastMessage = (message: string) => {
@@ -953,34 +1002,11 @@ function HomePage() {
                     </div>
                   ) : product.images.length > 0 ? (
                     <div className="absolute inset-0 w-full h-full z-10">
-                      <div
-                        className="flex w-full h-full overflow-x-scroll snap-x snap-mandatory scroll-smooth hide-scrollbar touch-pan-x"
-                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', touchAction: 'pan-x pan-y' }}
-                        onScroll={(e) => handleHorizontalScroll(product.id, e)}
-                        onTouchStart={handleTouchStart}
-                        onTouchMove={handleTouchMove}
-                        onTouchEnd={handleTouchEnd}
-                        onTouchCancel={handleTouchEnd}
-                      >
-                        {product.images.map((image, imgIdx) => (
-                          <div
-                            key={image.id || imgIdx}
-                            className="w-full h-full flex-shrink-0 snap-start snap-always flex items-center justify-center bg-black"
-                          >
-                            <Link
-                              href={`/product/${product.slug}`}
-                              className="w-full h-full flex items-center justify-center"
-                            >
-                              <img
-                                src={getCorrectImageUrl(image.url)}
-                                alt={`${product.name} - Image ${imgIdx + 1}`}
-                                className="w-full h-full object-contain transition-transform duration-300 active:scale-95 pointer-events-none select-none"
-                                draggable="false"
-                              />
-                            </Link>
-                          </div>
-                        ))}
-                      </div>
+                      <ProductImageSlider
+                        product={product}
+                        activeImageIndices={activeImageIndices}
+                        handleHorizontalScroll={handleHorizontalScroll}
+                      />
 
                       {/* Image Horizontal Slide Indicators (Dots) */}
                       {product.images.length > 1 && (
