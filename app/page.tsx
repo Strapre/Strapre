@@ -161,80 +161,133 @@ function TikTokVideoPlayer({ src, isActive }: TikTokVideoPlayerProps) {
 
 interface ProductImageSliderProps {
   product: Product
-  activeImageIndices: Record<string, number>
-  handleHorizontalScroll: (productId: string, e: React.UIEvent<HTMLDivElement>) => void
+  activeIndex: number
+  onIndexChange: (index: number) => void
 }
 
-function ProductImageSlider({ product, activeImageIndices, handleHorizontalScroll }: ProductImageSliderProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null)
+function ProductImageSlider({ product, activeIndex, onIndexChange }: ProductImageSliderProps) {
   const touchStartRef = useRef({ x: 0, y: 0 })
-  const isHorizontalSwipeRef = useRef(false)
+  const isHorizontalSwipeRef = useRef<boolean | null>(null)
 
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartRef.current = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-      }
-      isHorizontalSwipeRef.current = false
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
     }
+    isHorizontalSwipeRef.current = null
+  }
 
-    const handleTouchMove = (e: TouchEvent) => {
-      const diffX = e.touches[0].clientX - touchStartRef.current.x
-      const diffY = e.touches[0].clientY - touchStartRef.current.y
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isHorizontalSwipeRef.current === false) return
 
-      if (isHorizontalSwipeRef.current || Math.abs(diffX) > Math.abs(diffY) + 5) {
+    const diffX = e.touches[0].clientX - touchStartRef.current.x
+    const diffY = e.touches[0].clientY - touchStartRef.current.y
+
+    if (isHorizontalSwipeRef.current === null) {
+      if (Math.abs(diffX) > Math.abs(diffY) + 5) {
         isHorizontalSwipeRef.current = true
-        // Stop touch move from reaching the parent vertical feed container
-        e.stopPropagation()
+      } else if (Math.abs(diffY) > Math.abs(diffX) + 5) {
+        isHorizontalSwipeRef.current = false
       }
     }
 
-    const handleTouchEnd = () => {
-      isHorizontalSwipeRef.current = false
+    if (isHorizontalSwipeRef.current) {
+      // Prevent browser default vertical scroll (stops the feed from sliding vertically)
+      if (e.cancelable) {
+        e.preventDefault()
+      }
     }
+  }
 
-    container.addEventListener("touchstart", handleTouchStart, { passive: true })
-    container.addEventListener("touchmove", handleTouchMove, { passive: true })
-    container.addEventListener("touchend", handleTouchEnd, { passive: true })
-    container.addEventListener("touchcancel", handleTouchEnd, { passive: true })
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (isHorizontalSwipeRef.current) {
+      const diffX = e.changedTouches[0].clientX - touchStartRef.current.x
+      const swipeThreshold = 50 // minimum pixels to trigger swipe
 
-    return () => {
-      container.removeEventListener("touchstart", handleTouchStart)
-      container.removeEventListener("touchmove", handleTouchMove)
-      container.removeEventListener("touchend", handleTouchEnd)
-      container.removeEventListener("touchcancel", handleTouchEnd)
+      if (diffX < -swipeThreshold) {
+        // Swipe Left -> Next Image
+        if (activeIndex < product.images.length - 1) {
+          onIndexChange(activeIndex + 1)
+        }
+      } else if (diffX > swipeThreshold) {
+        // Swipe Right -> Previous Image
+        if (activeIndex > 0) {
+          onIndexChange(activeIndex - 1)
+        }
+      }
     }
-  }, [])
+    isHorizontalSwipeRef.current = null
+  }
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (activeIndex > 0) {
+      onIndexChange(activeIndex - 1)
+    }
+  }
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (activeIndex < product.images.length - 1) {
+      onIndexChange(activeIndex + 1)
+    }
+  }
 
   return (
     <div
-      ref={containerRef}
-      className="flex flex-row flex-nowrap w-full h-full overflow-x-scroll snap-x snap-mandatory scroll-smooth hide-scrollbar touch-pan-x"
-      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      onScroll={(e) => handleHorizontalScroll(product.id, e)}
+      className="w-full h-full overflow-hidden relative bg-black select-none"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
-      {product.images.map((image, imgIdx) => (
-        <div
-          key={image.id || imgIdx}
-          className="w-full h-full flex-shrink-0 snap-start snap-always flex items-center justify-center bg-black"
-        >
-          <Link
-            href={`/product/${product.slug}`}
-            className="w-full h-full flex items-center justify-center"
+      {/* Slides Container */}
+      <div
+        className="flex flex-row flex-nowrap w-full h-full transition-transform duration-300 ease-out"
+        style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+      >
+        {product.images.map((image, imgIdx) => (
+          <div
+            key={image.id || imgIdx}
+            className="w-full h-full flex-shrink-0 flex items-center justify-center bg-black"
           >
-            <img
-              src={getCorrectImageUrl(image.url)}
-              alt={`${product.name} - Image ${imgIdx + 1}`}
-              className="w-full h-full object-contain transition-transform duration-300 active:scale-95 pointer-events-none select-none"
-              draggable="false"
-            />
-          </Link>
-        </div>
-      ))}
+            <Link
+              href={`/product/${product.slug}`}
+              className="w-full h-full flex items-center justify-center"
+            >
+              <img
+                src={getCorrectImageUrl(image.url)}
+                alt={`${product.name} - Image ${imgIdx + 1}`}
+                className="w-full h-full object-contain pointer-events-none select-none"
+                draggable="false"
+              />
+            </Link>
+          </div>
+        ))}
+      </div>
+
+      {/* Navigation Arrows */}
+      {product.images.length > 1 && (
+        <>
+          {activeIndex > 0 && (
+            <button
+              onClick={handlePrev}
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 z-30 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 transition-all backdrop-blur-sm active:scale-90"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
+          {activeIndex < product.images.length - 1 && (
+            <button
+              onClick={handleNext}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 z-30 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 transition-all backdrop-blur-sm active:scale-90"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          )}
+        </>
+      )}
     </div>
   )
 }
@@ -1004,8 +1057,10 @@ function HomePage() {
                     <div className="absolute inset-0 w-full h-full z-10">
                       <ProductImageSlider
                         product={product}
-                        activeImageIndices={activeImageIndices}
-                        handleHorizontalScroll={handleHorizontalScroll}
+                        activeIndex={activeImageIndices[product.id] || 0}
+                        onIndexChange={(index) => {
+                          setActiveImageIndices((prev) => ({ ...prev, [product.id]: index }))
+                        }}
                       />
 
                       {/* Image Horizontal Slide Indicators (Dots) */}
