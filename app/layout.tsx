@@ -57,6 +57,13 @@ export default function RootLayout({
                   }
                 });
               }
+              if ('caches' in window) {
+                caches.keys().then(function(names) {
+                  for (var name of names) {
+                    caches.delete(name);
+                  }
+                });
+              }
             `,
           }}
         />
