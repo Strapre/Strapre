@@ -132,9 +132,10 @@ interface ApiResponse<T> {
 interface TikTokVideoPlayerProps {
   src: string
   isActive: boolean
+  shouldPreload: boolean
 }
 
-function TikTokVideoPlayer({ src, isActive }: TikTokVideoPlayerProps) {
+function TikTokVideoPlayer({ src, isActive, shouldPreload }: TikTokVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
 
   useEffect(() => {
@@ -154,6 +155,7 @@ function TikTokVideoPlayer({ src, isActive }: TikTokVideoPlayerProps) {
       muted
       loop
       playsInline
+      preload={shouldPreload ? "auto" : "none"}
       className="w-full h-full object-contain"
     />
   )
@@ -164,9 +166,10 @@ interface ProductMediaSliderProps {
   activeIndex: number
   onIndexChange: (index: number) => void
   isParentActive: boolean
+  shouldPreload: boolean
 }
 
-function ProductMediaSlider({ product, activeIndex, onIndexChange, isParentActive }: ProductMediaSliderProps) {
+function ProductMediaSlider({ product, activeIndex, onIndexChange, isParentActive, shouldPreload }: ProductMediaSliderProps) {
   const hasVideo = !!product.video_url
   const totalSlides = (hasVideo ? 1 : 0) + product.images.length
 
@@ -256,6 +259,7 @@ function ProductMediaSlider({ product, activeIndex, onIndexChange, isParentActiv
             <TikTokVideoPlayer
               src={getCorrectImageUrl(product.video_url)}
               isActive={isParentActive && activeIndex === 0}
+              shouldPreload={shouldPreload}
             />
           </Link>
         </div>
@@ -1075,6 +1079,7 @@ function HomePage() {
                           setActiveImageIndices((prev) => ({ ...prev, [product.id]: index }))
                         }}
                         isParentActive={idx === activeIndex}
+                        shouldPreload={idx === activeIndex || idx === activeIndex + 1}
                       />
 
                       {/* Horizontal Slide Indicators (Dots) */}
