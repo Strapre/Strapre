@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Header from "@/components/header"
 import Footer from '@/components/footer'
-import { ENDPOINTS } from "@/lib/api"
+import { ENDPOINTS, getCorrectImageUrl } from "@/lib/api"
 
 interface UserProfile {
   id: string
@@ -53,6 +53,7 @@ interface Product {
   is_featured: number
   images: ProductImage[]
   created_at: string
+  video_url?: string | null
 }
 
 interface ProductResponse {
@@ -69,6 +70,12 @@ export default function EditProductPage() {
   const [productImages, setProductImages] = useState<File[]>([])
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([])
   const [existingImages, setExistingImages] = useState<ProductImage[]>([])
+  const [productVideo, setProductVideo] = useState<File | null>(null)
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState("")
+  const [videoDuration, setVideoDuration] = useState<number | null>(null)
+  const [existingVideoUrl, setExistingVideoUrl] = useState<string | null>(null)
+  const videoInputRef = useRef<HTMLInputElement | null>(null)
+
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingCategories, setLoadingCategories] = useState(false)
@@ -105,6 +112,15 @@ export default function EditProductPage() {
       fetchProduct(slug)
     }
   }, [router, slug])
+
+  // Clean up video preview URL when it changes
+  useEffect(() => {
+    return () => {
+      if (videoPreviewUrl && videoPreviewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(videoPreviewUrl)
+      }
+    }
+  }, [videoPreviewUrl])
 
   const loadProfileData = () => {
     try {
@@ -165,6 +181,7 @@ export default function EditProductPage() {
         setPrice(product.price)
         setWholesalePrice(product.wholesale_price)
         setExistingImages(product.images)
+        setExistingVideoUrl(product.video_url || null)
       } else {
         setError("Failed to load product data")
       }
@@ -187,6 +204,75 @@ export default function EditProductPage() {
 
   const handleLGAChange = () => {
     // Not needed for this page
+  }
+
+  const checkVideoDuration = (file: File): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video")
+      video.preload = "metadata"
+      video.src = URL.createObjectURL(file)
+      video.onloadedmetadata = () => {
+        URL.revokeObjectURL(video.src)
+        resolve(video.duration)
+      }
+      video.onerror = (err) => {
+        URL.revokeObjectURL(video.src)
+        reject(err)
+      }
+    })
+  }
+
+  const handleVideoSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setError("")
+
+    const MAX_VIDEO_SIZE = 20 * 1024 * 1024
+    if (file.size > MAX_VIDEO_SIZE) {
+      setError(`Video is too large (${(file.size / (1024 * 1024)).toFixed(2)}MB). Maximum size is 20MB.`)
+      return
+    }
+
+    if (!file.type.startsWith("video/")) {
+      setError("Please select a valid video file.")
+      return
+    }
+
+    try {
+      setLoading(true)
+      const duration = await checkVideoDuration(file)
+
+      if (duration > 10.5) {
+        setError(`The video duration (${duration.toFixed(1)}s) exceeds the maximum limit of 10 seconds.`)
+        setLoading(false)
+        return
+      }
+
+      setProductVideo(file)
+      setVideoDuration(duration)
+      const previewUrl = URL.createObjectURL(file)
+      setVideoPreviewUrl(previewUrl)
+      setExistingVideoUrl(null)
+      setLoading(false)
+    } catch (err) {
+      setLoading(false)
+      console.error("Error reading video metadata:", err)
+      setError("Failed to read video file. Please try another video.")
+    }
+  }
+
+  const removeVideo = () => {
+    if (videoPreviewUrl) {
+      URL.revokeObjectURL(videoPreviewUrl)
+    }
+    setProductVideo(null)
+    setVideoPreviewUrl("")
+    setVideoDuration(null)
+    setExistingVideoUrl(null)
+    if (videoInputRef.current) {
+      videoInputRef.current.value = ""
+    }
   }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -331,6 +417,12 @@ export default function EditProductPage() {
       return
     }
 
+    if (!productVideo && !existingVideoUrl) {
+      setError("A product video file is required.")
+      setLoading(false)
+      return
+    }
+
     try {
       const formData = new FormData()
       formData.append("name", productName.trim())
@@ -346,6 +438,11 @@ export default function EditProductPage() {
       productImages.forEach((image, index) => {
         formData.append(`images[${index}]`, image)
       })
+
+      // Append video if present
+      if (productVideo) {
+        formData.append("video", productVideo)
+      }
 
       console.log("=== UPDATING PRODUCT ===")
       console.log("Token:", token)
@@ -456,98 +553,170 @@ export default function EditProductPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="p-8">
             <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Product Images Section */}
-              <div className="border-b border-gray-200 pb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Product Images</h3>
-                {/* Image Upload Area */}
-                <div className="mb-6">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-4">
-                    {/* Existing Images */}
-                    {existingImages.map((image, index) => (
-                      <div key={image.id} className="relative group">
-                        <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200">
-                          <img
-                            src={image.url || "/placeholder.svg"}
-                            alt={`Existing ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
+              {/* Media Attachments Section */}
+              <div className="border-b border-gray-200 pb-8 space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Product Media</h3>
+                  <p className="text-sm text-gray-500 mt-1">Manage your product video and image gallery</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Video Section */}
+                  <div className="md:col-span-1 space-y-3">
+                    <Label className="text-sm font-semibold text-gray-700 block">
+                      Product Video *
+                    </Label>
+
+                    {existingVideoUrl || productVideo ? (
+                      <div className="relative bg-gray-900 rounded-2xl overflow-hidden shadow-lg border border-gray-800 aspect-[9/16] max-h-[350px] flex items-center justify-center">
+                        <video
+                          src={existingVideoUrl ? getCorrectImageUrl(existingVideoUrl) : videoPreviewUrl}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-semibold text-white flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
+                          {existingVideoUrl ? "Current Video" : "New Video Feed"}
                         </div>
-                        <Button
+                        {videoDuration && (
+                          <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-md text-xs font-medium text-white">
+                            Duration: {videoDuration.toFixed(1)}s
+                          </div>
+                        )}
+                        <button
                           type="button"
-                          onClick={() => removeExistingImage(index)}
-                          className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={removeVideo}
+                          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md hover:bg-red-600 text-white flex items-center justify-center transition-all duration-200"
                         >
-                          <X className="h-3 w-3" />
-                        </Button>
-                        <div className="absolute bottom-1 left-1 bg-blue-500 text-white text-xs px-1 rounded">
-                          Current
-                        </div>
+                          <X className="h-4 w-4" />
+                        </button>
                       </div>
-                    ))}
-                    {/* New Images */}
-                    {imagePreviewUrls.map((url, index) => (
-                      <div key={`new-${index}`} className="relative group">
-                        <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 border-green-200">
-                          <img
-                            src={url || "/placeholder.svg"}
-                            alt={`New ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
+                    ) : (
+                      <div
+                        onClick={() => videoInputRef.current?.click()}
+                        className="border-2 border-dashed border-gray-300 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-[#CB0207] hover:bg-red-50/10 transition-all duration-300 aspect-[9/16] max-h-[350px] group"
+                      >
+                        <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110">
+                          <Upload className="h-6 w-6 text-[#CB0207]" />
                         </div>
-                        <Button
-                          type="button"
-                          onClick={() => removeNewImage(index)}
-                          className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                        <div className="absolute bottom-1 left-1 bg-green-500 text-white text-xs px-1 rounded">New</div>
-                      </div>
-                    ))}
-                    {/* Add Image Button */}
-                    {totalImages < 5 && (
-                      <div className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div className="text-center">
-                          <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-xs text-gray-500">Add Image</p>
-                        </div>
+                        <span className="text-sm font-semibold text-gray-800 text-center">Upload product video</span>
+                        <span className="text-[10px] text-gray-500 mt-2 text-center leading-relaxed">
+                          9:16 vertical video. Max 10s. Max 20MB.
+                        </span>
+                        
+                        <input
+                          ref={videoInputRef}
+                          type="file"
+                          accept="video/*"
+                          onChange={handleVideoSelect}
+                          className="hidden"
+                        />
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                      type="button"
-                      onClick={handleTakePhoto}
-                      disabled={totalImages >= 5}
-                      className="bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center justify-center space-x-2 disabled:opacity-50"
-                    >
-                      <Camera className="h-4 w-4" />
-                      <span>Take Photos</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleUploadFromGallery}
-                      disabled={totalImages >= 5}
-                      variant="outline"
-                      className="border-gray-300 hover:border-[#CB0207] hover:text-[#CB0207] flex items-center justify-center space-x-2 bg-transparent disabled:opacity-50"
-                    >
-                      <Upload className="h-4 w-4" />
-                      <span>Upload Images</span>
-                    </Button>
+
+                  {/* Images Section */}
+                  <div className="md:col-span-2 space-y-3">
+                    <Label className="text-sm font-semibold text-gray-700 block">
+                      Product Images (1 to 5 images) *
+                    </Label>
+                    
+                    {/* Image Upload Area */}
+                    <div className="mb-6">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+                        {/* Existing Images */}
+                        {existingImages.map((image, index) => (
+                          <div key={image.id} className="relative group aspect-square">
+                            <div className="w-full h-full rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200">
+                              <img
+                                src={getCorrectImageUrl(image.url)}
+                                alt={`Existing ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              onClick={() => removeExistingImage(index)}
+                              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white p-0 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                            <div className="absolute bottom-1 left-1 bg-blue-500 text-white text-[9px] px-1.5 py-0.5 rounded font-medium">
+                              Current
+                            </div>
+                          </div>
+                        ))}
+                        {/* New Images */}
+                        {imagePreviewUrls.map((url, index) => (
+                          <div key={`new-${index}`} className="relative group aspect-square">
+                            <div className="w-full h-full rounded-lg overflow-hidden bg-gray-100 border-2 border-green-200">
+                              <img
+                                src={url || "/placeholder.svg"}
+                                alt={`New ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              onClick={() => removeNewImage(index)}
+                              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white p-0 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                            <div className="absolute bottom-1 left-1 bg-green-500 text-white text-[9px] px-1.5 py-0.5 rounded font-medium">New</div>
+                          </div>
+                        ))}
+                        {/* Add Image Button */}
+                        {totalImages < 5 && (
+                          <div 
+                            onClick={handleUploadFromGallery}
+                            className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                          >
+                            <Plus className="h-8 w-8 text-gray-400 mb-1" />
+                            <p className="text-[10px] text-gray-500 font-medium">Add Image</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                          type="button"
+                          onClick={handleTakePhoto}
+                          disabled={totalImages >= 5}
+                          className="bg-[#CB0207] hover:bg-[#A50206] text-white flex items-center justify-center space-x-2 disabled:opacity-50 py-2.5 rounded-xl h-11 text-xs"
+                        >
+                          <Camera className="h-4 w-4" />
+                          <span>Take Photos</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={handleUploadFromGallery}
+                          disabled={totalImages >= 5}
+                          variant="outline"
+                          className="border-gray-300 hover:border-[#CB0207] hover:text-[#CB0207] flex items-center justify-center space-x-2 bg-transparent disabled:opacity-50 py-2.5 rounded-xl h-11 text-xs"
+                        >
+                          <Upload className="h-4 w-4" />
+                          <span>Upload Images</span>
+                        </Button>
+                      </div>
+                      <p className="text-[11px] text-gray-500 mt-3 pl-1 leading-relaxed">
+                        • Upload up to 5 images total. Maximum 5MB per image.<br/>
+                        • Blue tag = current images, Green tag = new images.
+                      </p>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Upload up to 5 images total. Maximum 2MB per image. Blue border = current images, Green border = new
-                    images.
-                  </p>
                 </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
               </div>
 
               {/* Product Information */}
