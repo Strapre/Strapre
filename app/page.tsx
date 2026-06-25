@@ -254,7 +254,7 @@ function ProductMediaSlider({ product, activeIndex, onIndexChange, isParentActiv
             className="absolute inset-0 w-full h-full flex items-center justify-center"
           >
             <TikTokVideoPlayer
-              src={product.video_url!}
+              src={getCorrectImageUrl(product.video_url)}
               isActive={isParentActive && activeIndex === 0}
             />
           </Link>
