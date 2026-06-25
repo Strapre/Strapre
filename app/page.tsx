@@ -159,13 +159,17 @@ function TikTokVideoPlayer({ src, isActive }: TikTokVideoPlayerProps) {
   )
 }
 
-interface ProductImageSliderProps {
+interface ProductMediaSliderProps {
   product: Product
   activeIndex: number
   onIndexChange: (index: number) => void
+  isParentActive: boolean
 }
 
-function ProductImageSlider({ product, activeIndex, onIndexChange }: ProductImageSliderProps) {
+function ProductMediaSlider({ product, activeIndex, onIndexChange, isParentActive }: ProductMediaSliderProps) {
+  const hasVideo = !!product.video_url
+  const totalSlides = (hasVideo ? 1 : 0) + product.images.length
+
   const touchStartRef = useRef({ x: 0, y: 0 })
   const isHorizontalSwipeRef = useRef<boolean | null>(null)
 
@@ -192,7 +196,6 @@ function ProductImageSlider({ product, activeIndex, onIndexChange }: ProductImag
     }
 
     if (isHorizontalSwipeRef.current) {
-      // Prevent browser default vertical scroll (stops the feed from sliding vertically)
       if (e.cancelable) {
         e.preventDefault()
       }
@@ -202,15 +205,13 @@ function ProductImageSlider({ product, activeIndex, onIndexChange }: ProductImag
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (isHorizontalSwipeRef.current) {
       const diffX = e.changedTouches[0].clientX - touchStartRef.current.x
-      const swipeThreshold = 50 // minimum pixels to trigger swipe
+      const swipeThreshold = 50
 
       if (diffX < -swipeThreshold) {
-        // Swipe Left -> Next Image
-        if (activeIndex < product.images.length - 1) {
+        if (activeIndex < totalSlides - 1) {
           onIndexChange(activeIndex + 1)
         }
       } else if (diffX > swipeThreshold) {
-        // Swipe Right -> Previous Image
         if (activeIndex > 0) {
           onIndexChange(activeIndex - 1)
         }
@@ -230,7 +231,7 @@ function ProductImageSlider({ product, activeIndex, onIndexChange }: ProductImag
   const handleNext = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (activeIndex < product.images.length - 1) {
+    if (activeIndex < totalSlides - 1) {
       onIndexChange(activeIndex + 1)
     }
   }
@@ -242,32 +243,54 @@ function ProductImageSlider({ product, activeIndex, onIndexChange }: ProductImag
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {product.images.map((image, imgIdx) => (
+      {/* 1. Video Slide (if present, rendered at index 0) */}
+      {hasVideo && (
         <div
-          key={image.id || imgIdx}
           className="absolute inset-0 w-full h-full flex items-center justify-center bg-black transition-transform duration-300 ease-out"
-          style={{ transform: `translateX(${(imgIdx - activeIndex) * 100}%)` }}
+          style={{ transform: `translateX(${-activeIndex * 100}%)` }}
         >
           <Link
             href={`/product/${product.slug}`}
             className="absolute inset-0 w-full h-full flex items-center justify-center"
           >
-            <img
-              src={getCorrectImageUrl(image.url)}
-              alt={`${product.name} - Image ${imgIdx + 1}`}
-              className="w-full h-full object-contain pointer-events-none select-none"
-              draggable="false"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.src = "/placeholder.svg?height=400&width=400"
-              }}
+            <TikTokVideoPlayer
+              src={product.video_url!}
+              isActive={isParentActive && activeIndex === 0}
             />
           </Link>
         </div>
-      ))}
+      )}
+
+      {/* 2. Image Slides */}
+      {product.images.map((image, imgIdx) => {
+        const slideIndex = hasVideo ? imgIdx + 1 : imgIdx
+        return (
+          <div
+            key={image.id || imgIdx}
+            className="absolute inset-0 w-full h-full flex items-center justify-center bg-black transition-transform duration-300 ease-out"
+            style={{ transform: `translateX(${(slideIndex - activeIndex) * 100}%)` }}
+          >
+            <Link
+              href={`/product/${product.slug}`}
+              className="absolute inset-0 w-full h-full flex items-center justify-center"
+            >
+              <img
+                src={getCorrectImageUrl(image.url)}
+                alt={`${product.name} - Image ${imgIdx + 1}`}
+                className="w-full h-full object-contain pointer-events-none select-none"
+                draggable="false"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = "/placeholder.svg?height=400&width=400"
+                }}
+              />
+            </Link>
+          </div>
+        )
+      })}
 
       {/* Navigation Arrows */}
-      {product.images.length > 1 && (
+      {totalSlides > 1 && (
         <>
           {activeIndex > 0 && (
             <button
@@ -277,7 +300,7 @@ function ProductImageSlider({ product, activeIndex, onIndexChange }: ProductImag
               <ChevronLeft className="h-5 w-5" />
             </button>
           )}
-          {activeIndex < product.images.length - 1 && (
+          {activeIndex < totalSlides - 1 && (
             <button
               onClick={handleNext}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 z-30 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 transition-all backdrop-blur-sm active:scale-90"
@@ -1042,34 +1065,26 @@ function HomePage() {
                   className="snap-start snap-always w-full relative overflow-hidden flex flex-col justify-between bg-gray-950"
                   style={{ height: "calc(100dvh - 7.5rem)" }}
                 >
-                  {/* Media Content - Play video if available, else show horizontal images swiper */}
-                  {product.video_url ? (
-                    <div className="absolute inset-0 w-full h-full z-10 flex items-center justify-center bg-black">
-                      <Link
-                        href={`/product/${product.slug}`}
-                        className="w-full h-full flex items-center justify-center"
-                      >
-                        <TikTokVideoPlayer src={product.video_url} isActive={idx === activeIndex} />
-                      </Link>
-                    </div>
-                  ) : product.images.length > 0 ? (
+                  {/* Media Content - Play video and/or show image gallery in a unified swiper */}
+                  {product.video_url || product.images.length > 0 ? (
                     <div className="absolute inset-0 w-full h-full z-10">
-                      <ProductImageSlider
+                      <ProductMediaSlider
                         product={product}
                         activeIndex={activeImageIndices[product.id] || 0}
                         onIndexChange={(index) => {
                           setActiveImageIndices((prev) => ({ ...prev, [product.id]: index }))
                         }}
+                        isParentActive={idx === activeIndex}
                       />
 
-                      {/* Image Horizontal Slide Indicators (Dots) */}
-                      {product.images.length > 1 && (
+                      {/* Horizontal Slide Indicators (Dots) */}
+                      {((product.video_url ? 1 : 0) + product.images.length) > 1 && (
                         <div className="absolute bottom-36 left-1/2 transform -translate-x-1/2 z-20 flex space-x-1.5 bg-black/35 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/5">
-                          {product.images.map((_, imgIdx) => {
-                            const isActive = (activeImageIndices[product.id] || 0) === imgIdx
+                          {Array.from({ length: (product.video_url ? 1 : 0) + product.images.length }).map((_, slideIdx) => {
+                            const isActive = (activeImageIndices[product.id] || 0) === slideIdx
                             return (
                               <span
-                                key={imgIdx}
+                                key={slideIdx}
                                 className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                                   isActive ? "bg-[#CB0207] w-3" : "bg-white/50"
                                 }`}

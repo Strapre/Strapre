@@ -340,6 +340,7 @@ export default function EditProductPage() {
       formData.append("price", price.trim())
       formData.append("wholesale_price", wholesalePrice.trim())
       formData.append("_method", "PUT")
+      formData.append("existing_images", JSON.stringify(existingImages))
 
       // Append new images as array
       productImages.forEach((image, index) => {

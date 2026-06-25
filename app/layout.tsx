@@ -2,20 +2,12 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import RegisterSW from "./register-sw"
-import InstallPrompt from "./install-prompt"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Strapre - Multi-Vendor Marketplace | B2B & B2C Platform",
   description: "Strapre connects vendors to vendors and customers worldwide. Join our online marketplace to buy, sell, network, and grow your business today.",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Strapre",
-  },
   formatDetection: {
     telephone: false,
   },
@@ -55,30 +47,24 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="apple-touch-icon" href="/android/android-launchericon-192-192.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Strapre" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-config" content="/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#dc2626" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                window.deferredPrompt = e;
-                window.dispatchEvent(new CustomEvent('pwa-install-prompt-available'));
-              });
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for (var registration of registrations) {
+                    registration.unregister();
+                  }
+                });
+              }
             `,
           }}
         />
       </head>
       <body className={inter.className}>
         {children}
-        <RegisterSW />
-        <InstallPrompt />
       </body>
     </html>
   )
 }
+

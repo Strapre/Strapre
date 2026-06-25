@@ -83,15 +83,10 @@ export default function CreateProductPage() {
   const [displayPrice, setDisplayPrice] = useState("")
   const [displayWholesalePrice, setDisplayWholesalePrice] = useState("")
 
-  // New media upload mode state
-  const [uploadMode, setUploadMode] = useState<"image" | "video">("image")
   const [productVideo, setProductVideo] = useState<File | null>(null)
   const [videoPreviewUrl, setVideoPreviewUrl] = useState("")
   const [videoDuration, setVideoDuration] = useState<number | null>(null)
-  const [videoThumbnailUrl, setVideoThumbnailUrl] = useState("")
-  const [videoThumbnailFile, setVideoThumbnailFile] = useState<File | null>(null)
   const videoInputRef = useRef<HTMLInputElement | null>(null)
-  const coverImageInputRef = useRef<HTMLInputElement | null>(null)
 
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([])
   const router = useRouter()
@@ -138,17 +133,14 @@ export default function CreateProductPage() {
     }
   }, [imagePreviewUrls])
 
-  // Clean up video preview and thumbnail URLs when they change
+  // Clean up video preview URL when it changes
   useEffect(() => {
     return () => {
       if (videoPreviewUrl && videoPreviewUrl.startsWith('blob:')) {
         URL.revokeObjectURL(videoPreviewUrl)
       }
-      if (videoThumbnailUrl && videoThumbnailUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(videoThumbnailUrl)
-      }
     }
-  }, [videoPreviewUrl, videoThumbnailUrl])
+  }, [videoPreviewUrl])
 
   const loadProfileData = () => {
     try {
@@ -426,64 +418,11 @@ export default function CreateProductPage() {
     if (videoPreviewUrl) {
       URL.revokeObjectURL(videoPreviewUrl)
     }
-    if (videoThumbnailUrl) {
-      URL.revokeObjectURL(videoThumbnailUrl)
-    }
     setProductVideo(null)
     setVideoPreviewUrl("")
-    setVideoThumbnailUrl("")
-    setVideoThumbnailFile(null)
     setVideoDuration(null)
     if (videoInputRef.current) {
       videoInputRef.current.value = ""
-    }
-    if (coverImageInputRef.current) {
-      coverImageInputRef.current.value = ""
-    }
-  }
-
-  const handleCoverImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    setError("")
-
-    if (file.size > MAX_FILE_SIZE) {
-      setError(`Cover image is too large (${(file.size / (1024 * 1024)).toFixed(2)}MB). Maximum size is 5MB.`)
-      return
-    }
-
-    if (!file.type.startsWith("image/")) {
-      setError("Please select a valid image file for the cover.")
-      return
-    }
-
-    try {
-      setLoading(true)
-      const resizedFile = await resizeImage(file)
-      setVideoThumbnailFile(resizedFile)
-      
-      if (videoThumbnailUrl && videoThumbnailUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(videoThumbnailUrl)
-      }
-      const thumbUrl = URL.createObjectURL(resizedFile)
-      setVideoThumbnailUrl(thumbUrl)
-      setLoading(false)
-    } catch (err) {
-      setLoading(false)
-      console.error("Error processing cover image:", err)
-      setError("Failed to process cover image. Please try again.")
-    }
-  }
-
-  const removeCoverImage = () => {
-    if (videoThumbnailUrl && videoThumbnailUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(videoThumbnailUrl)
-    }
-    setVideoThumbnailUrl("")
-    setVideoThumbnailFile(null)
-    if (coverImageInputRef.current) {
-      coverImageInputRef.current.value = ""
     }
   }
 
@@ -555,32 +494,19 @@ export default function CreateProductPage() {
       return
     }
 
-    if (uploadMode === "image" && productImages.length === 0) {
-      setError("At least one product image is required.")
-      setLoading(false)
-      return
-    }
-
-    if (uploadMode === "video" && !productVideo) {
+    if (!productVideo) {
       setError("A product video file is required.")
       setLoading(false)
       return
     }
 
-    if (uploadMode === "video" && !videoThumbnailFile) {
-      setError("A product cover image is required for video products.")
+    if (productImages.length < 2) {
+      setError("At least 2 product images are required with the video.")
       setLoading(false)
       return
     }
 
     try {
-      let finalImages = [...productImages]
-      if (uploadMode === "video" && productVideo) {
-        if (videoThumbnailFile) {
-          finalImages = [videoThumbnailFile]
-        }
-      }
-
       const formData = new FormData()
       formData.append("name", productName.trim())
       formData.append("short_description", shortDescription.trim())
@@ -590,14 +516,12 @@ export default function CreateProductPage() {
       formData.append("wholesale_price", wholesalePrice.trim())
 
       // Append images as array
-      finalImages.forEach((image, index) => {
+      productImages.forEach((image, index) => {
         formData.append(`images[${index}]`, image)
       })
 
-      // Append video if present (only when in video upload mode)
-      if (uploadMode === "video" && productVideo) {
-        formData.append("video", productVideo)
-      }
+      // Append video
+      formData.append("video", productVideo)
 
       const response = await fetch(ENDPOINTS.products, {
         method: "POST",
@@ -681,64 +605,88 @@ export default function CreateProductPage() {
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Media Attachments Section */}
               <div className="border-b border-gray-200 pb-8 space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Product Media</h3>
-                    <p className="text-sm text-gray-500 mt-1">Select how you want to showcase your product</p>
-                  </div>
-                  
-                  {/* Premium Mode Toggler */}
-                  <div className="flex p-1 bg-gray-100 rounded-xl border border-gray-200/50 self-start sm:self-center">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUploadMode("image")
-                        removeVideo()
-                      }}
-                      className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                        uploadMode === "image"
-                          ? "bg-white text-gray-900 shadow-sm"
-                          : "text-gray-500 hover:text-gray-900"
-                      }`}
-                    >
-                      <ImageIcon className="h-4 w-4 text-[#CB0207]" />
-                      Images
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUploadMode("video")
-                        setProductImages([])
-                        setImagePreviewUrls([])
-                      }}
-                      className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                        uploadMode === "video"
-                          ? "bg-white text-gray-900 shadow-sm"
-                          : "text-gray-500 hover:text-gray-900"
-                      }`}
-                    >
-                      <Film className="h-4 w-4 text-[#CB0207]" />
-                      Video
-                    </button>
-                  </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Product Media</h3>
+                  <p className="text-sm text-gray-500 mt-1">Upload a product showcase video and at least 2 images (the first will be your cover image)</p>
                 </div>
 
-                {/* IMAGE MODE VIEW */}
-                {uploadMode === "image" && (
-                  <div className="space-y-6">
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700 mb-3 block">
-                        Product Images (1 to 5 images) *
-                      </Label>
-                      
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                        {productImages.map((_, index) => (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Video Section */}
+                  <div className="md:col-span-1 space-y-3">
+                    <Label className="text-sm font-semibold text-gray-700 block">
+                      Product Video *
+                    </Label>
+
+                    {productVideo ? (
+                      <div className="relative bg-gray-900 rounded-2xl overflow-hidden shadow-lg border border-gray-800 aspect-[9/16] max-h-[350px] flex items-center justify-center">
+                        <video
+                          src={videoPreviewUrl}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-semibold text-white flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
+                          Video Feed
+                        </div>
+                        <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-md text-xs font-medium text-white">
+                          Duration: {videoDuration ? `${videoDuration.toFixed(1)}s` : "--"}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={removeVideo}
+                          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md hover:bg-red-600 text-white flex items-center justify-center transition-all duration-200"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => videoInputRef.current?.click()}
+                        className="border-2 border-dashed border-gray-300 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-[#CB0207] hover:bg-red-50/10 transition-all duration-300 aspect-[9/16] max-h-[350px] group"
+                      >
+                        <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110">
+                          <UploadCloud className="h-6 w-6 text-[#CB0207]" />
+                        </div>
+                        <span className="text-sm font-semibold text-gray-800 text-center">Upload product video</span>
+                        <span className="text-[10px] text-gray-500 mt-2 text-center leading-relaxed">
+                          9:16 vertical video. Max 10s. Max 20MB.
+                        </span>
+                        
+                        <input
+                          ref={videoInputRef}
+                          type="file"
+                          accept="video/*"
+                          onChange={handleVideoSelect}
+                          className="hidden"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Images Section */}
+                  <div className="md:col-span-2 space-y-3">
+                    <Label className="text-sm font-semibold text-gray-700 block">
+                      Product Images (2 to 5 images) *
+                    </Label>
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {Array.from({ length: MAX_IMAGES }).map((_, index) => {
+                        const hasImage = !!imagePreviewUrls[index];
+                        const isSlotClickable = index <= productImages.length;
+                        const shouldShow = hasImage || isSlotClickable || index < 2;
+
+                        if (!shouldShow) return null;
+
+                        return (
                           <div key={index} className="relative aspect-square">
                             <div
-                              className="w-full h-full rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50/50 cursor-pointer hover:border-[#CB0207] hover:bg-gray-50 transition-all duration-200"
+                              className="w-full h-full rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden bg-gray-50/50 cursor-pointer hover:border-[#CB0207] hover:bg-gray-50 transition-all duration-200"
                               onClick={() => fileInputRefs.current[index]?.click()}
                             >
-                              {imagePreviewUrls[index] ? (
+                              {hasImage ? (
                                 <div className="relative w-full h-full group">
                                   <img
                                     src={imagePreviewUrls[index]}
@@ -750,11 +698,16 @@ export default function CreateProductPage() {
                                   </div>
                                 </div>
                               ) : (
-                                <Plus className="h-6 w-6 text-gray-400" />
+                                <div className="flex flex-col items-center justify-center p-2 text-center">
+                                  <Plus className="h-5 w-5 text-gray-400 mb-1" />
+                                  <span className="text-[10px] text-gray-500 font-medium">
+                                    {index === 0 ? "Cover Image *" : index === 1 ? "Image 2 *" : `Image ${index + 1}`}
+                                  </span>
+                                </div>
                               )}
                             </div>
                             
-                            {imagePreviewUrls[index] && (
+                            {hasImage && (
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -776,146 +729,17 @@ export default function CreateProductPage() {
                               className="hidden"
                             />
                           </div>
-                        ))}
+                        )
+                      })}
+                    </div>
 
-                        {/* Show one more empty box if under the limit */}
-                        {productImages.length < MAX_IMAGES && (
-                          <div className="relative aspect-square">
-                            <div
-                              className="w-full h-full rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden bg-gray-50 cursor-pointer hover:border-[#CB0207] hover:bg-red-50/30 transition-all duration-200"
-                              onClick={() => fileInputRefs.current[productImages.length]?.click()}
-                            >
-                              <Plus className="h-8 w-8 text-gray-400 mb-1" />
-                              <span className="text-xs text-gray-500 font-medium">Add Image</span>
-                            </div>
-
-                            <input
-                              ref={(el) => { fileInputRefs.current[productImages.length] = el; }}
-                              type="file"
-                              accept="image/*"
-                              multiple
-                              onChange={(e) => handleFileSelect(e, productImages.length)}
-                              className="hidden"
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="mt-3 text-xs text-gray-500 flex flex-col gap-1 pl-1">
-                        <span>• Maximum size 5MB per image.</span>
-                        <span>• Upload up to 5 images. You can select multiple at once.</span>
-                      </div>
+                    <div className="text-xs text-gray-500 flex flex-col gap-1 pt-2">
+                      <span>• First image will be used as the product cover image.</span>
+                      <span>• Minimum 2 images are required, maximum 5.</span>
+                      <span>• Maximum size 5MB per image.</span>
                     </div>
                   </div>
-                )}
-
-                {/* VIDEO MODE VIEW */}
-                {uploadMode === "video" && (
-                  <div className="space-y-6">
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700 mb-3 block">
-                        Product Video (Required) *
-                      </Label>
-
-                      {productVideo ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
-                          {/* Video Player */}
-                          <div className="relative bg-gray-900 rounded-2xl overflow-hidden shadow-lg border border-gray-800 aspect-[9/16] max-h-[350px] flex items-center justify-center">
-                            <video
-                              src={videoPreviewUrl}
-                              autoPlay
-                              muted
-                              loop
-                              playsInline
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-semibold text-white flex items-center gap-2">
-                              <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
-                              Video Feed
-                            </div>
-                            <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-md text-xs font-medium text-white">
-                              Duration: {videoDuration ? `${videoDuration.toFixed(1)}s` : "--"}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={removeVideo}
-                              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md hover:bg-red-600 text-white flex items-center justify-center transition-all duration-200"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-
-                          {/* Manual Cover Image Card */}
-                          <div className="flex flex-col justify-center">
-                            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-4">
-                              <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                                <span className="w-2 h-2 rounded-full bg-[#CB0207]"></span>
-                                Product Cover Image *
-                              </div>
-                              <p className="text-xs text-gray-500 leading-relaxed">
-                                Select a cover image to display for this video product on traditional grids and search results.
-                              </p>
-                              
-                              {videoThumbnailUrl ? (
-                                <div className="relative aspect-square max-w-[150px] rounded-xl overflow-hidden border border-gray-200/80 shadow-sm group">
-                                  <img
-                                    src={videoThumbnailUrl}
-                                    alt="Cover image preview"
-                                    className="w-full h-full object-cover"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={removeCoverImage}
-                                    className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md border border-white transition-all duration-200"
-                                  >
-                                    <X className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <div
-                                  onClick={() => coverImageInputRef.current?.click()}
-                                  className="aspect-square max-w-[150px] rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center bg-white cursor-pointer hover:border-[#CB0207] hover:bg-red-50/10 transition-all duration-200"
-                                >
-                                  <Plus className="h-6 w-6 text-gray-400 mb-1" />
-                                  <span className="text-[10px] text-gray-500 font-medium">Add Cover</span>
-                                </div>
-                              )}
-
-                              <input
-                                ref={coverImageInputRef}
-                                type="file"
-                                accept="image/*"
-                                onChange={handleCoverImageSelect}
-                                className="hidden"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          onClick={() => videoInputRef.current?.click()}
-                          className="border-2 border-dashed border-gray-300 rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer hover:border-[#CB0207] hover:bg-red-50/10 transition-all duration-300 group"
-                        >
-                          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110">
-                            <UploadCloud className="h-8 w-8 text-[#CB0207]" />
-                          </div>
-                          <span className="text-base font-semibold text-gray-800">Upload product video</span>
-                          <span className="text-xs text-gray-500 mt-2 max-w-xs text-center leading-relaxed">
-                            Recommended format: 9:16 vertical video. Max duration: 10 seconds. Max size: 20MB.
-                          </span>
-                          
-                          <input
-                            ref={videoInputRef}
-                            type="file"
-                            accept="video/*"
-                            onChange={handleVideoSelect}
-                            className="hidden"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
 
               {/* Product Information */}

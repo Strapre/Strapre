@@ -183,15 +183,6 @@
 }
 
 @layer utilities {
-  /* PWA specific styles */
-  @media (display-mode: standalone) {
-    body {
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-  }
-
   /* iOS Safari specific fixes */
   @supports (-webkit-touch-callout: none) {
     .min-h-screen {
