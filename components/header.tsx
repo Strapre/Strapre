@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Search, Menu, ChevronDown, ChevronRight, Heart, User, LogOut, WifiOff, X, Bell, Play, LayoutGrid } from "lucide-react"
+import { Search, Menu, ChevronDown, ChevronRight, Heart, User, LogOut, WifiOff, X, Bell, Play, LayoutGrid, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -406,6 +406,19 @@ export default function Header({
                     )}
                     {/* Scrollable content */}
                     <div className="flex-1 overflow-y-auto">
+                      {/* Home Page Link */}
+                      <div className="mb-6">
+                        <Link
+                          href="/"
+                          className="flex items-center space-x-3 py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
+                        >
+                          <Home className="h-5 w-5 text-gray-500 group-hover:text-[#CB0207] transition-colors" />
+                          <span className="text-sm font-medium text-gray-700 group-hover:text-[#CB0207] transition-colors">
+                            Home Page
+                          </span>
+                        </Link>
+                      </div>
+
                       {/* State/LGA Selectors - Mobile */}
                       {showStateSelectors && (
                         <div className="mb-6 space-y-3">
