@@ -598,12 +598,7 @@ function HomePage() {
     }
   }, [adverts?.length])
 
-  // Helper function to handle advert clicks
-  const handleAdvertClick = (advert: Advert) => {
-    if (advert.link && advert.link !== "#" && advert.link !== "https://strapre.com") {
-      window.open(advert.link, "_blank")
-    }
-  }
+
 
   const fetchUserStore = async (token: string) => {
     try {
@@ -953,9 +948,8 @@ function HomePage() {
 
     return (
       <div
-        className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[145px] md:h-[400px] transition-all duration-500 cursor-pointer"
+        className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[145px] md:h-[400px] transition-all duration-500"
         style={{ backgroundImage: `url(${getCorrectImageUrl(currentAdvert.image_media_url || currentAdvert.image_url)})` }}
-        onClick={() => handleAdvertClick(currentAdvert)}
       >
 
 
