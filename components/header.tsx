@@ -384,7 +384,7 @@ export default function Header({
                     <Menu className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-80 bg-white overflow-y-auto">
+                <SheetContent side="left" className="w-80 bg-white overflow-y-auto hide-scrollbar">
                   <div className="py-6 h-full flex flex-col">
                     {/* User Profile Section */}
                     {userProfile && (
@@ -405,7 +405,7 @@ export default function Header({
                       </div>
                     )}
                     {/* Scrollable content */}
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="flex-1 overflow-y-auto hide-scrollbar">
                       {/* Home Page Link */}
                       <div className="mb-6">
                         <Link

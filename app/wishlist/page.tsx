@@ -185,7 +185,9 @@ export default function WishlistPage() {
       })
       if (response.ok) {
         const data = await response.json()
-        setWishlistItems(data.data || [])
+        // Filter out any entries where the product has been deleted (product is null/undefined)
+        const validItems = (data.data || []).filter((item: WishlistItem) => !!item.product)
+        setWishlistItems(validItems)
       }
     } catch (error) {
       console.error("Error fetching wishlist:", error)
@@ -208,7 +210,7 @@ export default function WishlistPage() {
 
       if (response.ok) {
         // Remove item from local state
-        setWishlistItems((prev) => prev.filter((item) => item.product.id !== productId))
+        setWishlistItems((prev) => prev.filter((item) => item.product?.id !== productId))
       }
     } catch (error) {
       console.error("Error removing from wishlist:", error)
@@ -343,7 +345,7 @@ export default function WishlistPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 pb-2">
                   {wishlistItems
                     .filter((item) =>
-                      searchQuery === "" ? true : item.product.name.toLowerCase().includes(searchQuery.toLowerCase()),
+                      searchQuery === "" ? true : item.product?.name?.toLowerCase().includes(searchQuery.toLowerCase()),
                     )
                     .map((item) => (
                       <div key={item.id} className="relative">
@@ -415,7 +417,7 @@ export default function WishlistPage() {
               {/* No Search Results */}
               {!loading &&
                 wishlistItems.length > 0 &&
-                wishlistItems.filter((item) => item.product.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                wishlistItems.filter((item) => item.product?.name?.toLowerCase().includes(searchQuery.toLowerCase()))
                   .length === 0 && (
                   <div className="text-center py-16">
                     <Search className="h-16 w-16 text-gray-300 mx-auto mb-4" />
