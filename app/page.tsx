@@ -1187,18 +1187,20 @@ function HomePage() {
                     <div className="max-w-xl space-y-1.5">
                       {/* Store Profile & Location */}
                       <div className="flex items-center space-x-2">
-                        <div className="w-7 h-7 rounded-full bg-[#CB0207] text-white font-bold flex items-center justify-center shadow-md border border-white/10 text-xs">
-                          {product.store?.name?.substring(0, 2).toUpperCase() || "ST"}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-white text-xs hover:underline cursor-pointer">
-                            {product.store?.name || "Anonymous Store"}
-                          </p>
-                          <p className="text-gray-300 text-[10px] flex items-center">
-                            <MapPin className="h-2.5 w-2.5 mr-0.5 text-red-500" />
-                            {product.store?.store_lga || "N/A"}, {product.store?.store_state || "N/A"}
-                          </p>
-                        </div>
+                        <Link href={`/store/${product.store?.slug}`} className="flex items-center space-x-2 z-30 group">
+                          <div className="w-7 h-7 rounded-full bg-[#CB0207] text-white font-bold flex items-center justify-center shadow-md border border-white/10 text-xs group-hover:opacity-90 transition-opacity">
+                            {product.store?.name?.substring(0, 2).toUpperCase() || "ST"}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-white text-xs group-hover:underline cursor-pointer">
+                              {product.store?.name || "Anonymous Store"}
+                            </p>
+                            <p className="text-gray-300 text-[10px] flex items-center">
+                              <MapPin className="h-2.5 w-2.5 mr-0.5 text-red-500" />
+                              {product.store?.store_lga || "N/A"}, {product.store?.store_state || "N/A"}
+                            </p>
+                          </div>
+                        </Link>
                       </div>
 
                       {/* Product Name */}

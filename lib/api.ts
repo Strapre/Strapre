@@ -27,6 +27,7 @@ export const ENDPOINTS = {
   myStore:         `${BASE_URL}/mystore`,
   stores:          `${BASE_URL}/stores`,
   storeBySlug:     (slug: string) => `${BASE_URL}/stores/${slug}`,
+  storeProducts:   (slug: string) => `${BASE_URL}/stores/${slug}/products`,
   createStore:     `${BASE_URL}/stores`,
   editStore:       (slug: string) => `${BASE_URL}/stores/${slug}`,
   storeCompleteProfile: `${BASE_URL}/stores/complete-profile`,

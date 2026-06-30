@@ -801,8 +801,15 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
             </p>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Avatar className="h-6 w-6">
+          <div 
+            className="flex items-center space-x-2 cursor-pointer z-10 group"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              router.push(`/store/${product.store?.slug}`)
+            }}
+          >
+            <Avatar className="h-6 w-6 group-hover:opacity-90 transition-opacity">
               {product.store?.store_image ? (
                 <Image
                   src={getCorrectImageUrl(product.store.store_image)}
@@ -817,7 +824,9 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 </AvatarFallback>
               )}
             </Avatar>
-            <span className="text-xs text-gray-600 truncate">{product.store?.name || "N/A"}</span>
+            <span className="text-xs text-gray-600 truncate group-hover:text-[#CB0207] group-hover:underline transition-colors">
+              {product.store?.name || "N/A"}
+            </span>
           </div>
         </div>
       </div>
@@ -1048,8 +1057,8 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
             {/* Store Information */}
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <div className="flex items-start space-x-4">
-                <Avatar className="h-14 w-14 ring-2 ring-gray-100">
+              <Link href={`/store/${product.store?.slug}`} className="flex items-start space-x-4 group">
+                <Avatar className="h-14 w-14 ring-2 ring-gray-100 group-hover:opacity-90 transition-opacity">
                   {product.store?.store_image ? (
                     <Image
                       src={getCorrectImageUrl(product.store.store_image)}
@@ -1066,14 +1075,14 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
-                    <h3 className="text-lg font-semibold text-gray-900 truncate">{product.store?.name || "N/A"}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-[#CB0207] group-hover:underline transition-colors">{product.store?.name || "N/A"}</h3>
                     <div className="h-2 w-2 bg-green-400 rounded-full"></div>
                   </div>
                   <p className="text-sm text-gray-500 mb-2">
                     📍 {product.store?.store_lga || "N/A"}, {product.store?.store_state || "N/A"}
                   </p>
                 </div>
-              </div>
+              </Link>
             </div>
 
             {/* Safety Tips */}
