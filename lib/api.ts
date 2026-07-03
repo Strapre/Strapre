@@ -154,3 +154,89 @@ export function getCorrectImageUrl(url: string | null | undefined): string {
   }
   return `${finalUrl}?v=2`
 }
+
+// ── Global Fetch Interceptor for JWT Refresh ─────────────────────
+if (typeof window !== "undefined") {
+  const originalFetch = window.fetch
+  let isRefreshing = false
+  let refreshSubscribers: ((token: string) => void)[] = []
+
+  const subscribeTokenRefresh = (cb: (token: string) => void) => {
+    refreshSubscribers.push(cb)
+  }
+
+  const onRefreshed = (token: string) => {
+    refreshSubscribers.forEach((cb) => cb(token))
+    refreshSubscribers = []
+  }
+
+  window.fetch = async function (url, options) {
+    // Perform the original request
+    const response = await originalFetch(url, options)
+
+    // If 401 Unauthorized, intercept and attempt token refresh
+    const urlStr = String(url)
+    if (
+      response.status === 401 &&
+      !urlStr.includes("/auth/refresh") &&
+      !urlStr.includes("/auth/login") &&
+      !urlStr.includes("/auth/admin-login")
+    ) {
+      const refreshToken = localStorage.getItem("refresh_token")
+      if (!refreshToken) {
+        return response // No refresh token available, let the 401 fail
+      }
+
+      if (!isRefreshing) {
+        isRefreshing = true
+        try {
+          const refreshRes = await originalFetch(`${BASE_URL}/auth/refresh`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+          })
+
+          if (refreshRes.ok) {
+            const refreshData = await refreshRes.json()
+            const newAccessToken = refreshData.token
+            const newRefreshToken = refreshData.refresh_token
+
+            localStorage.setItem("auth_token", newAccessToken)
+            if (newRefreshToken) {
+              localStorage.setItem("refresh_token", newRefreshToken)
+            }
+
+            isRefreshing = false
+            onRefreshed(newAccessToken)
+          } else {
+            // Refresh token has expired/revoked: clear storage and redirect
+            localStorage.removeItem("auth_token")
+            localStorage.removeItem("refresh_token")
+            isRefreshing = false
+            window.location.href = "/login"
+            return response
+          }
+        } catch (err) {
+          isRefreshing = false
+          return response
+        }
+      }
+
+      // Queue concurrent requests and resolve them with the new token
+      return new Promise((resolve) => {
+        subscribeTokenRefresh((newToken) => {
+          const newOptions = { ...options }
+          const headers = new Headers(newOptions.headers as HeadersInit)
+          headers.set("Authorization", `Bearer ${newToken}`)
+          newOptions.headers = headers
+          resolve(originalFetch(url, newOptions))
+        })
+      })
+    }
+
+    return response
+  }
+}

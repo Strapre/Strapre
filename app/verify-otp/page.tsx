@@ -104,6 +104,9 @@ export default function VerifyOTPPage() {
         } else {
           localStorage.setItem("auth_token", token)
         }
+        if (data.refresh_token) {
+          localStorage.setItem("refresh_token", data.refresh_token)
+        }
         // Redirect to home page
         router.push("/complete-profile")
       } else {

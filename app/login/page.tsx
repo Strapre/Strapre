@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import type React from "react"
 
@@ -50,6 +50,9 @@ export default function LoginPage() {
       if (response.ok) {
         // Store token in localStorage
         localStorage.setItem("auth_token", data.token)
+        if (data.refresh_token) {
+          localStorage.setItem("refresh_token", data.refresh_token)
+        }
 
         // Check if there's a redirect URL stored
         const redirectUrl = localStorage.getItem("redirect_after_login")

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
-import { ENDPOINTS, authHeaders } from "@/lib/api"
+import { ENDPOINTS, authHeaders, getCorrectImageUrl } from "@/lib/api"
 
 interface Category {
   id: string
@@ -28,7 +28,9 @@ interface Advert {
   link: string
   starts_at: string
   ends_at: string
-  image: string
+  image?: string
+  image_url?: string
+  image_media_url?: string
   is_dummy: number
 }
 
@@ -99,6 +101,7 @@ interface Product {
   images: ProductImage[]
   store: ProductStore
   created_at: string
+  is_featured?: number
 }
 
 interface ApiResponse<T> {
@@ -149,13 +152,9 @@ export default function CategoryPage() {
   const [useUserLocation, setUseUserLocation] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [paginationLinks, setPaginationLinks] = useState<
-    Array<{
-      url: string | null
-      label: string
-      active: boolean
-    }>
-  >([])
+  const [isSearchActive, setIsSearchActive] = useState(false)
+
+
 
   // Wishlist state
   const [wishlistItems, setWishlistItems] = useState<string[]>([])
@@ -242,11 +241,6 @@ export default function CategoryPage() {
     fetchCategories()
     fetchStates()
     fetchAdverts()
-
-    // Fetch category products
-    if (params.id) {
-      fetchCategoryProducts(params.id as string)
-    }
   }, [params.id])
 
   // Check authentication and fetch user data
@@ -271,11 +265,11 @@ export default function CategoryPage() {
   }, [selectedState])
 
   useEffect(() => {
-    // Refetch products when filters change
     if (params.id) {
-      fetchCategoryProducts(params.id as string, currentPage)
+      setIsSearchActive(false)
+      fetchCategoryProducts(params.id as string, 1)
     }
-  }, [selectedState, selectedLGA, currentPage, params.id])
+  }, [selectedState, selectedLGA, params.id])
 
   const fetchUserProfile = async (token: string) => {
     try {
@@ -485,7 +479,6 @@ export default function CategoryPage() {
         if (data.meta) {
           setTotalPages(data.meta.last_page)
           setCurrentPage(data.meta.current_page)
-          setPaginationLinks(data.meta.links)
         }
       } else {
         setError("Failed to load products")
@@ -509,23 +502,35 @@ export default function CategoryPage() {
   ) => {
     setLoading(true)
     try {
-      const params = new URLSearchParams()
-      params.append("page", page.toString())
+      const searchUrlParams = new URLSearchParams()
+      searchUrlParams.append("page", page.toString())
 
       if (searchParams.search) {
-        params.append("search", searchParams.search)
+        searchUrlParams.append("search", searchParams.search)
       }
       if (searchParams.min_price) {
-        params.append("min_price", searchParams.min_price)
+        searchUrlParams.append("min_price", searchParams.min_price)
       }
       if (searchParams.max_price) {
-        params.append("max_price", searchParams.max_price)
+        searchUrlParams.append("max_price", searchParams.max_price)
       }
       if (searchParams.state_id) {
-        params.append("state_id", searchParams.state_id)
+        searchUrlParams.append("state_id", searchParams.state_id)
+      } else if (selectedState) {
+        searchUrlParams.append("state_id", selectedState.id)
       }
 
-      const url = `${ENDPOINTS.searchProducts}?${params.toString()}`
+      if (selectedLGA) {
+        searchUrlParams.append("lga_id", selectedLGA.id)
+      }
+
+      // Restrict search to this category
+      const categoryId = params.id as string
+      if (categoryId) {
+        searchUrlParams.append("category_id", categoryId)
+      }
+
+      const url = `${ENDPOINTS.searchProducts}?${searchUrlParams.toString()}`
       const response = await fetch(url, {
         headers: {
           Accept: "application/json",
@@ -537,7 +542,6 @@ export default function CategoryPage() {
       if (data.meta) {
         setCurrentPage(data.meta.current_page)
         setTotalPages(data.meta.last_page)
-        setPaginationLinks(data.meta.links)
       }
     } catch (error) {
       console.error("Error searching products:", error)
@@ -577,14 +581,72 @@ export default function CategoryPage() {
     }
   }
 
-  const handlePageChange = (url: string | null) => {
-    if (!url || !params.id) return
+  // Smart Pagination Logic - Mobile Optimized with better page visibility
+  const generateSmartPagination = () => {
+    const pages = []
+    const totalPagesNum = totalPages
+    const currentPageNum = currentPage
 
-    // Extract page number from URL
-    const urlParams = new URLSearchParams(url.split("?")[1])
-    const page = urlParams.get("page")
-    if (page) {
-      fetchCategoryProducts(params.id as string, Number.parseInt(page))
+    if (totalPagesNum <= 5) {
+      // If total pages is 5 or less, show all pages
+      for (let i = 1; i <= totalPagesNum; i++) {
+        pages.push(i)
+      }
+    } else {
+      // Always show page 1
+      pages.push(1)
+
+      if (currentPageNum <= 3) {
+        // Near the beginning: 1 2 3 4 ... last
+        for (let i = 2; i <= 4; i++) {
+          pages.push(i)
+        }
+        pages.push('...')
+        pages.push(totalPagesNum)
+      } else if (currentPageNum >= totalPagesNum - 2) {
+        // Near the end: 1 ... (last-3) (last-2) (last-1) last
+        pages.push('...')
+        for (let i = totalPagesNum - 3; i <= totalPagesNum; i++) {
+          pages.push(i)
+        }
+      } else {
+        // In the middle: 1 ... (current-1) current (current+1) ... last
+        pages.push('...')
+        for (let i = currentPageNum - 1; i <= currentPageNum + 1; i++) {
+          pages.push(i)
+        }
+        pages.push('...')
+        pages.push(totalPagesNum)
+      }
+    }
+
+    // Remove duplicates and sort
+    return [...new Set(pages)].sort((a, b) => {
+      if (a === '...' || b === '...') return 0
+      return Number(a) - Number(b)
+    })
+  }
+
+  // Helper function to handle page navigation
+  const handleSmartPageChange = (page: number) => {
+    if (isSearchActive) {
+      const searchParams: {
+        search?: string
+        min_price?: string
+        max_price?: string
+        state_id?: string
+      } = {}
+      if (searchQuery.trim()) searchParams.search = searchQuery.trim()
+      if (minAmount) searchParams.min_price = minAmount
+      if (maxAmount) searchParams.max_price = maxAmount
+      if (isAuthenticated && useUserLocation && userProfile?.state_id) {
+        searchParams.state_id = userProfile.state_id
+      } else if (filterState) {
+        searchParams.state_id = filterState
+      }
+      searchProducts(page, searchParams)
+    } else {
+      fetchCategoryProducts(params.id as string, page)
     }
   }
 
@@ -616,6 +678,7 @@ export default function CategoryPage() {
       }
     }
 
+    setIsSearchActive(true)
     searchProducts(1, searchParams)
     setShowFilterDialog(false)
   }
@@ -627,11 +690,25 @@ export default function CategoryPage() {
     setMaxAmount("")
     setSelectedState(null)
     setSelectedLGA(null)
+    setIsSearchActive(false)
+    if (params.id) {
+      fetchCategoryProducts(params.id as string, 1)
+    }
   }
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      console.log("Searching for:", searchQuery)
+      setIsSearchActive(true)
+      const searchParams: any = { search: searchQuery.trim() }
+      if (isAuthenticated && useUserLocation && userProfile?.state_id) {
+        searchParams.state_id = userProfile.state_id
+      }
+      searchProducts(1, searchParams)
+    } else {
+      setIsSearchActive(false)
+      if (params.id) {
+        fetchCategoryProducts(params.id as string, 1)
+      }
     }
   }
   const handleBackToHome = () => {
@@ -673,7 +750,7 @@ export default function CategoryPage() {
     return (
       <div
         className="relative rounded-lg p-8 mb-4 md:mb-8 overflow-hidden bg-cover bg-center h-[150px] md:h-[400px] transition-all duration-500 cursor-pointer"
-        style={{ backgroundImage: `url(${currentAdvert.image})` }}
+        style={{ backgroundImage: `url(${getCorrectImageUrl(currentAdvert.image_media_url || currentAdvert.image_url || currentAdvert.image)})` }}
         onClick={() => handleAdvertClick(currentAdvert)}
       >
         {/* Black overlay */}
@@ -869,7 +946,7 @@ export default function CategoryPage() {
                           <span className="font-bold text-sm md:text-lg text-[#CB0207]">
                             {formatPrice(product.price)}
                           </span>
-                          {isAuthenticated && (
+                          {product.is_featured === 1 && (
                             <span className="bg-[#CB0207] text-white text-xs px-2 py-1 rounded-lg font-medium">Ad</span>
                           )}
                         </div>
@@ -887,50 +964,53 @@ export default function CategoryPage() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center space-x-2 mt-12">
-                {paginationLinks.map((link, index) => {
-                  if (link.label.includes("Previous")) {
+                {/* Previous Button - Icon Only */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => handleSmartPageChange(currentPage - 1)}
+                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed p-2"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                {/* Smart Page Numbers */}
+                {generateSmartPagination().map((page, index) => {
+                  if (page === '...') {
                     return (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        size="sm"
-                        disabled={!link.url}
-                        onClick={() => handlePageChange(link.url)}
-                        className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                      >
-                        Previous
-                      </Button>
-                    )
-                  } else if (link.label.includes("Next")) {
-                    return (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        size="sm"
-                        disabled={!link.url}
-                        onClick={() => handlePageChange(link.url)}
-                        className="rounded-xl border-2 border-gray-200 font-medium bg-transparent"
-                      >
-                        Next
-                      </Button>
-                    )
-                  } else if (!isNaN(Number.parseInt(link.label))) {
-                    return (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(link.url)}
-                        className={`rounded-xl border-2 font-medium ${
-                          link.active ? "bg-[#CB0207] text-white border-[#CB0207]" : "border-gray-200 bg-transparent"
-                        }`}
-                      >
-                        {link.label}
-                      </Button>
+                      <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-400 font-medium select-none">
+                        ...
+                      </span>
                     )
                   }
-                  return null
+
+                  return (
+                    <Button
+                      key={page}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSmartPageChange(Number(page))}
+                      className={`rounded-xl border-2 font-medium min-w-[40px] transition-all duration-200 ${currentPage === Number(page)
+                        ? "bg-[#CB0207] text-white border-[#CB0207] shadow-md"
+                        : "border-gray-200 bg-transparent hover:bg-gray-50 hover:border-gray-300"
+                        }`}
+                    >
+                      {page}
+                    </Button>
+                  )
                 })}
+
+                {/* Next Button - Icon Only */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === totalPages}
+                  onClick={() => handleSmartPageChange(currentPage + 1)}
+                  className="rounded-xl border-2 border-gray-200 font-medium bg-transparent hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed p-2"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             )}
 
