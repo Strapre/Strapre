@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Search, Menu, ChevronDown, ChevronRight, Heart, User, LogOut, WifiOff, X, Bell, Play, LayoutGrid, Home } from "lucide-react"
+import { Search, Menu, ChevronDown, ChevronRight, Heart, User, LogOut, WifiOff, X, Bell, Play, LayoutGrid, Home, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ENDPOINTS, apiFetch, authHeaders, getCorrectImageUrl } from "@/lib/api"
+import { MESSAGES_UPDATED_EVENT } from "@/lib/messaging"
 
 interface Category {
   id: string
@@ -140,6 +141,7 @@ export default function Header({
   const [userStore, setUserStore] = useState<UserStore | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [wishlistItems, setWishlistItems] = useState<string[]>([])
+  const [unreadMessages, setUnreadMessages] = useState(0)
   const [internalSearchQuery, setInternalSearchQuery] = useState(searchQuery)
   const [networkError, setNetworkError] = useState(false)
   const [isOnline, setIsOnline] = useState(true)
@@ -208,6 +210,22 @@ export default function Header({
     fetchStates()
   }, [])
 
+  // Unread messages badge: poll every 30s while logged in, and refresh when a chat sends/reads messages
+  useEffect(() => {
+    if (!isAuthenticated) return
+    const refresh = () => {
+      const token = localStorage.getItem("auth_token")
+      if (token) fetchUnreadMessages(token)
+    }
+    refresh()
+    const interval = setInterval(refresh, 30000)
+    window.addEventListener(MESSAGES_UPDATED_EVENT, refresh)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener(MESSAGES_UPDATED_EVENT, refresh)
+    }
+  }, [isAuthenticated])
+
   // Fetch LGAs when state changes
   useEffect(() => {
     if (selectedState) {
@@ -271,6 +289,20 @@ export default function Header({
     }
   }
 
+  // Quiet fetch (no network-error popup) – the badge is non-essential
+  const fetchUnreadMessages = async (token: string) => {
+    try {
+      const response = await fetch(ENDPOINTS.unreadMessagesCount, {
+        headers: authHeaders(token),
+      })
+      if (!response.ok) return
+      const data = await response.json()
+      setUnreadMessages(Number(data?.unread_count) || 0)
+    } catch (error) {
+      console.error("Error fetching unread messages count:", error)
+    }
+  }
+
   const fetchCategories = async () => {
     try {
       const response = await fetchWithErrorHandling(ENDPOINTS.categories)
@@ -309,6 +341,7 @@ export default function Header({
     setUserProfile(null)
     setUserStore(null)
     setWishlistItems([])
+    setUnreadMessages(0)
     router.push("/login")
   }
 
@@ -417,6 +450,22 @@ export default function Header({
                             Home Page
                           </span>
                         </Link>
+                        {isAuthenticated && (
+                          <Link
+                            href="/messages"
+                            className="flex items-center space-x-3 py-3 px-4 hover:bg-gray-50 rounded-xl cursor-pointer transition-all duration-200 group"
+                          >
+                            <MessageCircle className="h-5 w-5 text-gray-500 group-hover:text-[#CB0207] transition-colors" />
+                            <span className="flex-1 text-sm font-medium text-gray-700 group-hover:text-[#CB0207] transition-colors">
+                              Messages
+                            </span>
+                            {unreadMessages > 0 && (
+                              <span className="bg-[#CB0207] text-white text-xs font-bold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
+                                {unreadMessages > 99 ? "99+" : unreadMessages}
+                              </span>
+                            )}
+                          </Link>
+                        )}
                       </div>
 
                       {/* State/LGA Selectors - Mobile */}
@@ -601,6 +650,22 @@ export default function Header({
                   )}
                 </Button>
 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-gray-100 rounded-xl relative"
+                  onClick={() => router.push("/messages")}
+                  title="Messages"
+                  aria-label="Messages"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  {unreadMessages > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-[#CB0207] text-white text-xs rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center">
+                      {unreadMessages > 99 ? "99+" : unreadMessages}
+                    </span>
+                  )}
+                </Button>
+
                 {userProfile && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -622,6 +687,15 @@ export default function Header({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-0">
+                      <DropdownMenuItem className="rounded-lg" onClick={() => router.push("/messages")}>
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Messages
+                        {unreadMessages > 0 && (
+                          <span className="ml-auto bg-[#CB0207] text-white text-xs rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center">
+                            {unreadMessages > 99 ? "99+" : unreadMessages}
+                          </span>
+                        )}
+                      </DropdownMenuItem>
                       <DropdownMenuItem className="rounded-lg" onClick={() => router.push("/notifications")}>
                         <Bell className="h-4 w-4 mr-2" />
                         Notifications
@@ -665,6 +739,20 @@ export default function Header({
                   {wishlistItems.length > 0 && (
                     <span className="absolute -top-1 -right-1 bg-[#CB0207] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                       {wishlistItems.length}
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-gray-100 rounded-xl relative"
+                  onClick={() => router.push("/messages")}
+                  aria-label="Messages"
+                >
+                  <MessageCircle className="h-7 w-7" />
+                  {unreadMessages > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-[#CB0207] text-white text-xs rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center">
+                      {unreadMessages > 99 ? "99+" : unreadMessages}
                     </span>
                   )}
                 </Button>

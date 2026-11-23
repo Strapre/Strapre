@@ -4,10 +4,11 @@
 // To change the backend URL, update BASE_URL only.
 // ============================================================
 
-// export const BASE_URL = "http://localhost:5000/api/v1"
-// export const IMAGE_BASE_URL = "http://localhost:5000"
-export const BASE_URL = "https://api.strapre.com/api/v1"
-export const IMAGE_BASE_URL = "https://api.strapre.com"
+// Override per environment with NEXT_PUBLIC_API_BASE_URL / NEXT_PUBLIC_IMAGE_BASE_URL
+// (e.g. "http://localhost:5000/api/v1" and "http://localhost:5000" for local testing).
+// Defaults are the production values.
+export const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.strapre.com/api/v1"
+export const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || "https://api.strapre.com"
 
 // ── Endpoint paths ────────────────────────────────────────────
 export const ENDPOINTS = {
@@ -64,6 +65,15 @@ export const ENDPOINTS = {
 
   // Notifications
   notifications:   `${BASE_URL}/notifications`,
+
+  // Messaging
+  conversations:   `${BASE_URL}/conversations`,
+  conversationWith: (userId: string) => `${BASE_URL}/conversations/with/${userId}`,
+  conversationMessages: (conversationId: string) => `${BASE_URL}/conversations/${conversationId}/messages`,
+  markConversationRead: (conversationId: string) => `${BASE_URL}/conversations/${conversationId}/read`,
+  messages:        `${BASE_URL}/messages`,
+  markMessagesFromUserRead: (userId: string) => `${BASE_URL}/messages/${userId}/read`,
+  unreadMessagesCount: `${BASE_URL}/messages/unread-count`,
 
   // Reviews / Ratings
   reviews:         (productId: string) => `${BASE_URL}/products/${productId}/reviews`,

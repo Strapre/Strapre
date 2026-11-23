@@ -17,6 +17,8 @@ import {
   AlertTriangle,
   Send,
   Share2,
+  Play,
+  MessageSquare,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -59,6 +61,7 @@ interface ProductStore {
   store_state: string
   store_image?: string
   phone_number: string
+  user_id?: string
 }
 
 interface Review {
@@ -83,6 +86,7 @@ interface Product {
   price: string
   wholesale_price: string
   images: ProductImage[]
+  video_url?: string | null
   store: ProductStore
   average_rating?: number
   reviews?: Review[]
@@ -538,6 +542,27 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
     }
   }
 
+  // The logged-in user owns this product's store -> no "Message Seller"
+  const isOwnProduct = !!product && (
+    (!!product.store?.user_id && !!userProfile?.id && product.store.user_id === userProfile.id) ||
+    (!!userStore?.id && userStore.id === product.store?.id)
+  )
+  const canMessageSeller = !!product?.store?.user_id && !isOwnProduct
+
+  const handleMessageSeller = () => {
+    if (!product?.store?.user_id) return
+    const chatUrl = `/messages?to=${encodeURIComponent(product.store.user_id)}&product=${encodeURIComponent(product.slug)}`
+    if (!isAuthenticated) {
+      // Login page sends the user to redirect_after_login after signing in
+      if (typeof window !== "undefined") {
+        localStorage.setItem("redirect_after_login", chatUrl)
+      }
+      router.push("/login")
+      return
+    }
+    router.push(chatUrl)
+  }
+
   const handleLoginRedirect = () => {
     // Store current URL to return after login
     if (typeof window !== "undefined") {
@@ -616,19 +641,27 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
     }
   }
 
+  // Gallery media: all images, then the product video (if any) as the last slide
+  const hasVideo = !!product?.video_url
+  const videoIndex = product ? product.images.length : 0
+  const mediaCount = (product?.images.length ?? 0) + (hasVideo ? 1 : 0)
+  const isVideoSelected = hasVideo && selectedImageIndex === videoIndex
+
   // Image navigation functions
   const goToPreviousImage = () => {
-    if (!product || product.images.length <= 1) return
-    setSelectedImageIndex((prev) => (prev === 0 ? product.images.length - 1 : prev - 1))
+    if (mediaCount <= 1) return
+    setSelectedImageIndex((prev) => (prev === 0 ? mediaCount - 1 : prev - 1))
   }
 
   const goToNextImage = () => {
-    if (!product || product.images.length <= 1) return
-    setSelectedImageIndex((prev) => (prev === product.images.length - 1 ? 0 : prev + 1))
+    if (mediaCount <= 1) return
+    setSelectedImageIndex((prev) => (prev === mediaCount - 1 ? 0 : prev + 1))
   }
 
   // Touch event handlers
+  // Swiping is disabled on the video slide so it doesn't fight the video's own controls
   const onTouchStart = (e: React.TouchEvent) => {
+    if (isVideoSelected) return
     setTouchEnd(null)
     setTouchStart(e.targetTouches[0].clientX)
   }
@@ -656,6 +689,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   const [dragStart, setDragStart] = useState<number | null>(null)
 
   const onMouseDown = (e: React.MouseEvent) => {
+    if (isVideoSelected) return
     setIsDragging(true)
     setDragStart(e.clientX)
   }
@@ -688,6 +722,8 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Let a focused video use arrow keys for seeking
+      if (e.target instanceof HTMLVideoElement) return
       if (e.key === "ArrowLeft") {
         goToPreviousImage()
       } else if (e.key === "ArrowRight") {
@@ -697,7 +733,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [product])
+  }, [product, mediaCount])
 
   // Star Rating Component
   const StarRating = ({
@@ -882,7 +918,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
             {/* Main Image with Slider */}
             <div
               ref={imageContainerRef}
-              className="relative aspect-square bg-gradient-to-br from-pink-200 to-purple-200 rounded-lg overflow-hidden group cursor-grab active:cursor-grabbing"
+              className={`relative aspect-square rounded-lg overflow-hidden group ${isVideoSelected ? "bg-black" : "bg-gradient-to-br from-pink-200 to-purple-200 cursor-grab active:cursor-grabbing"}`}
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
@@ -891,18 +927,46 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
               onMouseUp={onMouseUp}
               onMouseLeave={onMouseLeave}
             >
-              <Image
-                src={getCorrectImageUrl(product.images[selectedImageIndex]?.url || "")}
-                alt={product.name}
-                fill
-                className="object-cover transition-transform duration-300 ease-in-out select-none"
-                sizes="(max-width: 768px) 100vw, 50vw"
-                draggable={false}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.src = "/placeholder.svg?height=400&width=400"
-                }}
-              />
+              {isVideoSelected ? (
+                <video
+                  key={product.video_url!}
+                  src={product.video_url!}
+                  poster={product.images[0]?.url ? getCorrectImageUrl(product.images[0].url) : undefined}
+                  controls
+                  autoPlay
+                  playsInline
+                  preload="metadata"
+                  className="absolute inset-0 w-full h-full object-contain"
+                >
+                  Your browser does not support video playback.
+                </video>
+              ) : (
+                <Image
+                  src={getCorrectImageUrl(product.images[selectedImageIndex]?.url || "")}
+                  alt={product.name}
+                  fill
+                  className="object-cover transition-transform duration-300 ease-in-out select-none"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  draggable={false}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.src = "/placeholder.svg?height=400&width=400"
+                  }}
+                />
+              )}
+
+              {/* Watch Video shortcut - shown on image slides when the product has a video */}
+              {hasVideo && !isVideoSelected && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedImageIndex(videoIndex)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-black/70 hover:bg-black/85 text-white text-sm font-medium px-3 py-2 rounded-full transition-colors"
+                >
+                  <Play className="h-4 w-4 fill-current" />
+                  Watch video
+                </button>
+              )}
 
               {/* Heart Button */}
               <Button
@@ -925,8 +989,8 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 )}
               </Button>
 
-              {/* Navigation Arrows - Only show if more than 1 image */}
-              {product.images.length > 1 && (
+              {/* Navigation Arrows - Only show if more than 1 slide */}
+              {mediaCount > 1 && (
                 <>
                   <Button
                     variant="ghost"
@@ -947,20 +1011,21 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                 </>
               )}
 
-              {/* Image Counter */}
-              {product.images.length > 1 && (
+              {/* Image Counter & Dots - hidden on the video slide so they don't cover its controls */}
+              {mediaCount > 1 && !isVideoSelected && (
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-sm z-10">
-                  {selectedImageIndex + 1} / {product.images.length}
+                  {selectedImageIndex + 1} / {mediaCount}
                 </div>
               )}
 
               {/* Slide Indicator Dots */}
-              {product.images.length > 1 && (
+              {mediaCount > 1 && !isVideoSelected && (
                 <div className="absolute bottom-4 right-4 flex space-x-2 z-10">
-                  {product.images.map((_, index) => (
+                  {Array.from({ length: mediaCount }).map((_, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
+                      aria-label={hasVideo && index === videoIndex ? "Play video" : `Image ${index + 1}`}
                       className={`w-2 h-2 rounded-full transition-all duration-200 ${selectedImageIndex === index ? "bg-white" : "bg-white/50 hover:bg-white/75"
                         }`}
                     />
@@ -970,7 +1035,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
             </div>
 
             {/* Thumbnail Images */}
-            {product.images.length > 1 && (
+            {mediaCount > 1 && (
               <div className="flex space-x-2 overflow-x-auto">
                 {product.images.map((image, index) => (
                   <button
@@ -992,11 +1057,33 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                     />
                   </button>
                 ))}
+                {hasVideo && (
+                  <button
+                    onClick={() => setSelectedImageIndex(videoIndex)}
+                    aria-label="Play product video"
+                    className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 bg-black ${isVideoSelected ? "border-red-600 scale-105" : "border-gray-200"
+                      }`}
+                  >
+                    {product.images[0]?.url && (
+                      <Image
+                        src={getCorrectImageUrl(product.images[0].url)}
+                        alt={`${product.name} video`}
+                        width={80}
+                        height={80}
+                        className="object-cover w-full h-full opacity-60"
+                      />
+                    )}
+                    <span className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                      <Play className="h-6 w-6 fill-current" />
+                      <span className="text-[10px] font-semibold mt-0.5">VIDEO</span>
+                    </span>
+                  </button>
+                )}
               </div>
             )}
 
             {/* Swipe Instruction */}
-            {product.images.length > 1 && (
+            {mediaCount > 1 && (
               <p className="text-sm text-gray-500 text-center">Swipe, drag, or use arrow keys to navigate images</p>
             )}
           </div>
@@ -1113,9 +1200,20 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
             {/* Action Buttons */}
             <div className="space-y-3">
+              {canMessageSeller && (
+                <Button
+                  onClick={handleMessageSeller}
+                  className="w-full bg-[#CB0207] hover:bg-[#A50206] text-white py-2 flex items-center justify-center space-x-3 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  <span>Message Seller</span>
+                </Button>
+              )}
+
               <Button
                 onClick={() => handleContactAction("whatsapp")}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-2 flex items-center justify-center space-x-3 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                variant="outline"
+                className="w-full border-2 border-green-600 text-green-700 hover:bg-green-50 hover:text-green-800 py-2 flex items-center justify-center space-x-3 rounded-xl font-semibold text-base transition-all duration-200"
               >
                 <MessageCircle className="h-5 w-5" />
                 <span>Message on WhatsApp</span>

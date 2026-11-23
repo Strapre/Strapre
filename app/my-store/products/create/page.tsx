@@ -500,8 +500,8 @@ export default function CreateProductPage() {
       return
     }
 
-    if (productImages.length < 2) {
-      setError("At least 2 product images are required with the video.")
+    if (productImages.length < 1) {
+      setError("At least 1 product image is required with the video.")
       setLoading(false)
       return
     }
@@ -607,7 +607,7 @@ export default function CreateProductPage() {
               <div className="border-b border-gray-200 pb-8 space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Product Media</h3>
-                  <p className="text-sm text-gray-500 mt-1">Upload a product showcase video and at least 2 images (the first will be your cover image)</p>
+                  <p className="text-sm text-gray-500 mt-1">Upload a product showcase video and at least 1 image (the first will be your cover image)</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -735,7 +735,7 @@ export default function CreateProductPage() {
 
                     <div className="text-xs text-gray-500 flex flex-col gap-1 pt-2">
                       <span>• First image will be used as the product cover image.</span>
-                      <span>• Minimum 2 images are required, maximum 5.</span>
+                      <span>• Minimum 1 image is required, maximum 5.</span>
                       <span>• Maximum size 5MB per image.</span>
                     </div>
                   </div>
